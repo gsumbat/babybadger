@@ -1,0 +1,86 @@
+import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, View } from 'react-native';
+
+import { Banner, Button, Card, ErrorText, Field, Icon, Label, Screen, T } from '@/components/ui';
+import { useSession } from '@/lib/session';
+import { errorText, supabase } from '@/lib/supabase';
+import { NOTICE_VERSION, TERMS_VERSION } from '@/lib/types';
+import { color } from '@/theme';
+
+// [LEGAL REVIEW] Placeholder text. Final notice wording depends on state law and must come from counsel.
+const NOTICE = (family: string) => [
+  ['Who is monitoring', `${family} uses BabyBadger to see where the person caring for their children is during a shift. BabyBadger provides the app; the family decides to use it.`],
+  ['What is collected', 'Your phone’s location, clock-in and clock-out times, trips, and entries you add (food, naps, notes, photos).'],
+  ['When', 'Only between clock-in and clock-out. Nothing is collected between shifts. A shift left running closes itself 2 hours after its end time.'],
+  ['Who sees it', 'Parents in this family. Not other families, and not BabyBadger staff except for support you ask for.'],
+  ['How long it’s kept', '[RETENTION PERIOD], then deleted.'],
+  ['Your choices', 'You can see everything the family sees, and you can leave the family at any time. Without location, you can’t clock in for this family.'],
+];
+
+export default function Consent() {
+  const { familyId } = useLocalSearchParams<{ familyId: string }>();
+  const { sitterLinks, profile, refresh } = useSession();
+  const family = sitterLinks.find((l) => l.family_id === familyId)?.family.name ?? 'This family';
+  const [read, setRead] = useState(false);
+  const [agree, setAgree] = useState(false);
+  const [name, setName] = useState(profile?.full_name ?? '');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function sign() {
+    setBusy(true);
+    setErr('');
+    const { error } = await supabase.rpc('sign_consent', { p_family: familyId, p_signed_name: name.trim(), p_notice_version: NOTICE_VERSION, p_terms_version: TERMS_VERSION });
+    setBusy(false);
+    if (error) return setErr(errorText(error));
+    await refresh();
+    router.replace('/sitter');
+  }
+
+  return (
+    <Screen
+      title="Before your first shift"
+      subtitle={family}
+      back
+      footer={<Button label="Sign and continue" onPress={sign} busy={busy} disabled={!read || !agree || name.trim().length < 2} />}>
+      <T variant="title">Location is shared only while you’re working</T>
+      <Card>
+        <View style={{ flexDirection: 'row', height: 14, borderRadius: 7, overflow: 'hidden' }}>
+          <View style={{ flex: 1, backgroundColor: color.muted }} />
+          <View style={{ flex: 2, backgroundColor: color.primary }} />
+          <View style={{ flex: 1, backgroundColor: color.muted }} />
+        </View>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <T variant="small">Off</T>
+          <T variant="strong" style={{ color: color.primary, fontSize: 13 }}>Clock in → Clock out</T>
+          <T variant="small">Off</T>
+        </View>
+      </Card>
+
+      <Label>Monitoring notice</Label>
+      {read ? (
+        <Card>
+          {NOTICE(family).map(([h, b]) => (
+            <View key={h} style={{ gap: 2, marginBottom: 6 }}>
+              <T variant="strong">{h}</T>
+              <T variant="muted">{b}</T>
+            </View>
+          ))}
+          <T variant="small">Version {NOTICE_VERSION}. [LEGAL REVIEW] placeholder wording.</T>
+        </Card>
+      ) : (
+        <Button label="Read the full notice" icon="file-text" kind="tonal" onPress={() => setRead(true)} />
+      )}
+
+      <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: agree, disabled: !read }} onPress={() => read && setAgree((a) => !a)} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', opacity: read ? 1 : 0.5 }}>
+        <Icon name={agree ? 'check-square' : 'square'} tint={agree ? color.primary : color.lineStrong} size={22} />
+        <T style={{ flex: 1 }}>I’ve read and agree to the monitoring notice, the Terms and the Privacy policy.</T>
+      </Pressable>
+      {!read && <T variant="small">Open the notice first; then you can agree.</T>}
+      <Field label="Type your full name to sign" value={name} onChangeText={setName} autoComplete="name" />
+      <Banner icon="shield">A signed copy goes to you and the family. When you clock in, your phone asks for location: choose “Always” so the map works while your phone is locked.</Banner>
+      <ErrorText>{err}</ErrorText>
+    </Screen>
+  );
+}
