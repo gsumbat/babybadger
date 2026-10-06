@@ -1,20 +1,26 @@
+import { router } from 'expo-router';
 import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
 import { Icon, Screen } from '@/components/ui';
+import { availabilityApi, availabilitySummary } from '@/lib/availability';
+import { useQuery } from '@/lib/data';
 import { useSession } from '@/lib/session';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe S39, translated from its HTML (app/src/wireframes/S39.tsx).
 // Left out until built: My profile and What families see, Profile and credentials (personal details, certifications,
-// background check, languages), Work (availability, Get found), Money (hours and pay, invoices and payouts), and the
+// background check, languages), Work's Get found, Money (hours and pay, invoices and payouts), and the
 // S12 settings screen: until it exists, "Settings, privacy and help" asks to sign out.
 const SETTINGS =
   '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>';
 
 export default function Me() {
-  const { profile, sitterLinks, signOut } = useSession();
+  const { profile, session, sitterLinks, signOut } = useSession();
+  const uid = session!.user.id;
+  // sitter_availability arrives with migration 12; until it's run the row just has no summary.
+  const { data: hours } = useQuery(() => availabilityApi.mine(uid).catch(() => []), [uid]);
   const active = sitterLinks.filter((l) => l.status === 'active');
   const name = profile?.full_name || 'You';
   const short = name.split(/\s+/).length > 1 ? `${name.split(/\s+/)[0]} ${name.split(/\s+/).slice(-1)[0][0]}.` : name;
@@ -51,6 +57,24 @@ export default function Me() {
         </View>
       </View>
 
+      <Text style={st.label}>WORK</Text>
+      <View style={st.card}>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/sitter/availability')} style={st.row}>
+          <View style={st.rowIcon}>
+            <Icon name="clock" size={18} />
+          </View>
+          <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
+            <Text style={st.rowTitle}>Availability and time off</Text>
+            {hours?.length ? (
+              <Text style={st.sub12} numberOfLines={1}>
+                {availabilitySummary(hours)}
+              </Text>
+            ) : null}
+          </View>
+          <Icon name="chevron-right" size={18} tint={color.ink2} />
+        </Pressable>
+      </View>
+
       <View style={st.card}>
         <Pressable accessibilityRole="button" onPress={settings} style={st.row}>
           <View style={st.rowIcon}>
@@ -79,6 +103,7 @@ const st = StyleSheet.create({
   name: { fontFamily: font.display, fontSize: 20, color: color.ink, marginVertical: -4.02 },
   sub13: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
   sub12: { fontFamily: font.body, fontSize: 12, color: color.ink2 },
+  label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6 },
   card: { paddingHorizontal: 14, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 46, paddingVertical: 3 },
   rowIcon: { width: 32, height: 32, borderRadius: 10, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },

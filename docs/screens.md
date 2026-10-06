@@ -37,6 +37,13 @@ If a screen needs something no wireframe covers, it goes into the canvas first, 
 | `sitter/family/[id]` | S10 Family | Routines, parents' phone numbers, home address, S12 privacy link |
 | `sitter/(tabs)/me` | S39 Me | My profile, What families see, credentials, background check, languages, availability, pay, invoices |
 | `sitter/(tabs)/messages` | S37 Messages | Messaging (placeholder) |
+| `parent/rules` (+ `/add`, `/rule`) | P74 HouseRules, P75 AddRules, P76 RuleDetail | Preview; per-sitter rules; empty list state (no wireframe); "Write your own rule" title field (not drawn) |
+| `sitter/rules/[familyId]`, `sitter/shift-rules/[shiftId]` | S42 HouseRules, S43 ShiftRules | Screen-time card/timer; care-plan timing on log rows; DUE badges on S44 |
+| `parent/(tabs)/messages`, `sitter/(tabs)/messages` | P10 Messages, S37 Messages | Call button (no phone stored), trip pills, extend-request link; parents can't send photos; empty states not drawn |
+| `parent/invite` → P23 → P24 → `parent/invite/[id]` | P3 (Step 4 of 5) / P3b, P23 InviteAccess, P24, P25 InvitePending, P26 InviteAccepted | Requirements (P28–P32), phone/SMS links (code-based), saved-places line, "See it from Maya's side", P11 profile |
+| `onboarding` (sitter) / `sitter/join` → S1 → S42 → S2 | S51, S1 Invite (component), S42, S2 | Decline reason; S51 "Your name" field shows only for brand-new sitters (not drawn) |
+| `parent/(tabs)/calendar` | P6a CalDay, P6b CalWeek, P6c CalMonth | Waiting/requests, trip/food tags, booking with the tapped date |
+| `sitter/(tabs)/calendar`, `sitter/availability` | S6, S6a CalDay, S6c CalMonth, S11 Availability | Requests, travel time, pay cards, editing/removing time off (needs a design) |
 
 ## HTML is the source
 
@@ -52,8 +59,8 @@ pixels different (mostly text anti-aliasing); the real screens are held to the s
 
 ## Ported from generated layouts
 
-All 41 built screens are rebuilt from `app/src/wireframes/<ID>.tsx` with live data:
-P0, P0b, P1, P3, P3b, P4, P4a, P4b, P4c, P4d, P4e, P5, P6b, P7, P12b, P18, P18e, P19, P19e, P20, P20a, P20b, P20c, P20d, P20e, P20f, P20g, P24, P54, P54b, P55, S2, S2a, S3, S3b, S3d, S4, S5, S9, S10, S39, S44, S45, S50, S51.
+All 61 built screens are rebuilt from `app/src/wireframes/<ID>.tsx` with live data:
+P0, P0b, P1, P3, P3b, P4, P4a, P4b, P4c, P4d, P4e, P5, P6b, P7, P12b, P18, P18e, P19, P19e, P20, P20a, P20b, P20c, P20d, P20e, P20f, P20g, P23, P24, P25, P26, P6a, P6c, P10, P74, P75, P76, P54, P54b, P55, S2, S2a, S3, S3b, S3d, S4, S5, S9, S10, S39, S44, S45, S50, S51, S1, S6a, S6c, S11, S37, S42, S43.
 
 ## How screens are checked
 

@@ -19,7 +19,10 @@ import WF_P20d from './P20d';
 import WF_P20e from './P20e';
 import WF_P20f from './P20f';
 import WF_P20g from './P20g';
+import WF_P23 from './P23';
 import WF_P24 from './P24';
+import WF_P25 from './P25';
+import WF_P26 from './P26';
 import WF_P3 from './P3';
 import WF_P3b from './P3b';
 import WF_P4 from './P4';
@@ -32,9 +35,16 @@ import WF_P5 from './P5';
 import WF_P54 from './P54';
 import WF_P54b from './P54b';
 import WF_P55 from './P55';
+import WF_P6a from './P6a';
 import WF_P6b from './P6b';
+import WF_P6c from './P6c';
 import WF_P7 from './P7';
+import WF_P74 from './P74';
+import WF_P75 from './P75';
+import WF_P76 from './P76';
+import WF_S1 from './S1';
 import WF_S10 from './S10';
+import WF_S11 from './S11';
 import WF_S2 from './S2';
 import WF_S2a from './S2a';
 import WF_S3 from './S3';
@@ -43,6 +53,8 @@ import WF_S39 from './S39';
 import WF_S3b from './S3b';
 import WF_S3d from './S3d';
 import WF_S4 from './S4';
+import WF_S42 from './S42';
+import WF_S43 from './S43';
 import WF_S44 from './S44';
 import WF_S45 from './S45';
 import WF_S48 from './S48';
@@ -50,6 +62,8 @@ import WF_S5 from './S5';
 import WF_S50 from './S50';
 import WF_S51 from './S51';
 import WF_S6 from './S6';
+import WF_S6a from './S6a';
+import WF_S6c from './S6c';
 import WF_S9 from './S9';
 
 export const WIREFRAMES: Record<string, ComponentType> = {
@@ -71,7 +85,10 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P20e: WF_P20e,
   P20f: WF_P20f,
   P20g: WF_P20g,
+  P23: WF_P23,
   P24: WF_P24,
+  P25: WF_P25,
+  P26: WF_P26,
   P3: WF_P3,
   P3b: WF_P3b,
   P4: WF_P4,
@@ -84,9 +101,16 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P54: WF_P54,
   P54b: WF_P54b,
   P55: WF_P55,
+  P6a: WF_P6a,
   P6b: WF_P6b,
+  P6c: WF_P6c,
   P7: WF_P7,
+  P74: WF_P74,
+  P75: WF_P75,
+  P76: WF_P76,
+  S1: WF_S1,
   S10: WF_S10,
+  S11: WF_S11,
   S2: WF_S2,
   S2a: WF_S2a,
   S3: WF_S3,
@@ -95,6 +119,8 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   S3b: WF_S3b,
   S3d: WF_S3d,
   S4: WF_S4,
+  S42: WF_S42,
+  S43: WF_S43,
   S44: WF_S44,
   S45: WF_S45,
   S48: WF_S48,
@@ -102,5 +128,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   S50: WF_S50,
   S51: WF_S51,
   S6: WF_S6,
+  S6a: WF_S6a,
+  S6c: WF_S6c,
   S9: WF_S9,
 };

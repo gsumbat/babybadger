@@ -166,7 +166,7 @@ export default function ParentShift() {
           <Text style={st.cardTitle}>{name}</Text>
           <T variant="muted">{shift.status === 'cancelled' ? 'This shift was cancelled' : 'Her location starts when she clocks in, not before'}</T>
         </View>
-        <Pill label={shift.status === 'cancelled' ? 'Cancelled' : 'Booked'} kind={shift.status === 'cancelled' ? 'bad' : 'info'} />
+        <Pill label={shift.status === 'cancelled' ? 'Cancelled' : 'Confirmed'} kind={shift.status === 'cancelled' ? 'bad' : 'ok'} />
       </Card>
       {kids.length > 0 && (
         <Card style={{ paddingVertical: 4 }}>

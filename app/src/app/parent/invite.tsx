@@ -3,54 +3,97 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Pressable, Share, StyleSheet, View } from 'react-native';
 
+import { KidDot } from '@/components/bits';
 import { Button, ErrorText, Field, Icon, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { firstName, inviteMessage } from '@/lib/format';
+import { inviteApi, kidIdsFor, PAY_OPTIONS, parseRate, payLine, type InviteChoices, type PaySchedule } from '@/lib/invites';
 import { ageLabel } from '@/lib/kid-profile';
 import { useSession } from '@/lib/session';
-import { errorText, supabase } from '@/lib/supabase';
+import { errorText } from '@/lib/supabase';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
-// Wireframes P3 (invite your sitter, from the Home setup list), P3b (invite a sitter, from anywhere else) and
-// P24 (review and send). Home setup opens this with ?from=setup.
+// Wireframes P3 (invite your sitter, from the Home setup list), P3b (invite a sitter, from anywhere else), P23 (who
+// she looks after, what she can do, pay) and P24 (review and send). Home setup opens this with ?from=setup.
+// Sending (or emailing) the invite opens P25 (invite/[id]).
 // Left out until built (P3, P3b): Mobile number (the app shares a code; invites don't store a phone).
+type Step = 'name' | 'access' | 'review';
+
 export default function Invite() {
   const { from } = useLocalSearchParams<{ from?: string }>();
   const fromSetup = from === 'setup';
   const { family, profile } = useSession();
-  const { data: kids } = useQuery(() => api.kids(family!.id), [family!.id]);
+  const { data } = useQuery(async () => {
+    const [kids, parents] = await Promise.all([api.kids(family!.id), api.familyParents(family!.id)]);
+    return { kids, parents };
+  }, [family!.id]);
+  const kids = data?.kids;
+  const [step, setStep] = useState<Step>('name');
   const [copied, setCopied] = useState(false);
   const [name, setName] = useState('');
-  const [code, setCode] = useState<string | null>(null);
+  // P23 choices. Every kid starts chosen and every switch on, as the wireframe draws them.
+  const [unpicked, setUnpicked] = useState<string[]>([]);
+  const [canDrive, setCanDrive] = useState(true);
+  const [canTrip, setCanTrip] = useState(true);
+  const [canMessage, setCanMessage] = useState(true);
+  const [rateText, setRateText] = useState('');
+  const [pay, setPay] = useState<PaySchedule>('weekly');
+  const [invite, setInvite] = useState<{ id: string; code: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const first = name.trim().split(/\s+/)[0] || 'Your sitter';
+  const allKidIds = (kids ?? []).map((k) => k.id);
+  const picked = allKidIds.filter((id) => !unpicked.includes(id));
+  const chosenKids = (kids ?? []).filter((k) => picked.includes(k.id));
+  const rate = parseRate(rateText);
 
-  async function create() {
+  async function review() {
     setBusy(true);
     setErr('');
-    const { data, error } = await supabase.rpc('create_invite', { p_family: family!.id, p_sitter_name: name.trim() });
-    setBusy(false);
-    if (error) return setErr(errorText(error));
-    setCode(data as string);
+    const choices: InviteChoices = { kid_ids: kidIdsFor(picked, allKidIds), can_drive: canDrive, can_trip: canTrip, can_message: canMessage, rate, pay_schedule: pay };
+    try {
+      if (invite) await inviteApi.update(invite.id, name.trim(), choices);
+      else setInvite(await inviteApi.create(family!.id, name.trim(), choices));
+      setStep('review');
+    } catch (e) {
+      setErr(errorText(e));
+    } finally {
+      setBusy(false);
+    }
   }
 
-  // Wireframe P24. Left out until built: sending to a phone number from the app, rate and requirements.
-  if (code) {
+  // Wireframe P24. Left out until built: sending to a phone number from the app and requirements.
+  if (step === 'review' && invite) {
+    const { code } = invite;
     const msg = inviteMessage(family!.name, code);
+    const pending = () => router.replace({ pathname: '/parent/invite/[id]', params: { id: invite.id } });
+    const pill = payLine(rate, pay);
     return (
       <Screen
         title="Review and send"
         back
+        onBack={() => setStep('access')}
         gap={12}
         footer={
           <View style={{ gap: 8, marginTop: -4 }}>
-            <Pressable accessibilityRole="button" onPress={() => Share.share({ message: msg })} style={st.sendBtn}>
+            <Pressable
+              accessibilityRole="button"
+              onPress={async () => {
+                const r = await Share.share({ message: msg });
+                if (r.action === Share.sharedAction) pending();
+              }}
+              style={st.sendBtn}>
               <Text style={st.sendText}>Send by text</Text>
             </Pressable>
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Pressable accessibilityRole="button" onPress={() => Linking.openURL(`mailto:?subject=${encodeURIComponent(`${family!.name} invited you to BabyBadger`)}&body=${encodeURIComponent(msg)}`)} style={st.tonalBtn}>
+              <Pressable
+                accessibilityRole="button"
+                onPress={async () => {
+                  await Linking.openURL(`mailto:?subject=${encodeURIComponent(`${family!.name} invited you to BabyBadger`)}&body=${encodeURIComponent(msg)}`);
+                  pending();
+                }}
+                style={st.tonalBtn}>
                 <Text style={st.tonalText}>Email</Text>
               </Pressable>
               <Pressable
@@ -70,9 +113,9 @@ export default function Invite() {
           <Text style={st.previewTitle}>
             {firstName(profile?.full_name)} invited you to sit for {family!.name.replace(/^The /, 'the ')}
           </Text>
-          {kids?.length ? (
+          {chosenKids.length || pill ? (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-              {kids.map((k) => (
+              {chosenKids.map((k) => (
                 <View key={k.id} style={st.kidPill}>
                   <View style={st.kidPillDot} />
                   <Text style={st.kidPillText}>
@@ -81,6 +124,12 @@ export default function Invite() {
                   </Text>
                 </View>
               ))}
+              {pill ? (
+                <View style={st.kidPill}>
+                  <View style={st.kidPillDot} />
+                  <Text style={st.kidPillText}>{pill}</Text>
+                </View>
+              ) : null}
             </View>
           ) : null}
           <Text style={st.code}>{code}</Text>
@@ -101,6 +150,68 @@ export default function Invite() {
     );
   }
 
+  // Wireframe P23 (app/src/wireframes/P23.tsx). Left out until built: "Set sitter requirements" (P28–P32), and the
+  // trips sub-line ("School, soccer, park": saved places aren't built).
+  if (step === 'access') {
+    const parentNames = (data?.parents ?? []).map((p) => firstName(p.full_name)).join(' and ');
+    return (
+      <Screen
+        title={`Invite ${first}`}
+        back
+        onBack={() => setStep('name')}
+        gap={12}
+        footer={<Button label="Review invite" onPress={review} busy={busy} disabled={!!kids?.length && !picked.length} style={{ marginTop: -4 }} />}>
+        {kids?.length ? (
+          <>
+            <Text style={st.section}>WHO SHE’LL LOOK AFTER</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {kids.map((k) => {
+                const on = picked.includes(k.id);
+                return (
+                  <Pressable
+                    key={k.id}
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: on }}
+                    onPress={() => setUnpicked((u) => (on ? [...u, k.id] : u.filter((id) => id !== k.id)))}
+                    style={[st.kidChip, on && st.kidChipOn]}>
+                    <KidDot kid={k} size={34} />
+                    <Text style={st.kidChipText}>{on ? `✓ ${k.name}` : k.name}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </>
+        ) : null}
+        <Text style={[st.section, { marginTop: 2 }]}>WHAT SHE CAN DO</Text>
+        <View style={st.permCard}>
+          <Perm label="Drive the kids" sub="Needs a verified driver’s license" value={canDrive} onChange={setCanDrive} />
+          <Perm label="Start trips to saved places" value={canTrip} onChange={setCanTrip} />
+          <Perm label="Message both parents" sub={parentNames || undefined} value={canMessage} onChange={setCanMessage} last />
+        </View>
+        <Text style={[st.section, { marginTop: 2 }]}>PAY</Text>
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
+            <Field label="Hourly rate" value={rateText} onChangeText={setRateText} keyboardType="decimal-pad" style={st.rateInput} />
+          </View>
+          <View style={{ flex: 1, minWidth: 0, gap: 6 }}>
+            <Text style={st.payLabel}>Paid</Text>
+            <View style={st.paySeg}>
+              {PAY_OPTIONS.map((o) => {
+                const on = o.value === pay;
+                return (
+                  <Pressable key={o.value} accessibilityRole="button" accessibilityState={{ selected: on }} onPress={() => setPay(o.value)} style={[st.payItem, on && st.payItemOn]}>
+                    <Text style={on ? st.payTextOn : st.payText}>{o.label}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        </View>
+        <ErrorText>{err}</ErrorText>
+      </Screen>
+    );
+  }
+
   const info = (
     <View style={st.info}>
       <Icon name="shield" size={24} tint={color.primary} />
@@ -114,8 +225,8 @@ export default function Invite() {
   const footer = (
     // P3/P3b footer: 12 px above, 10 px gap (Screen's footer has 8 and 8).
     <View style={{ gap: 10, marginTop: 4 }}>
-      <Button label="Continue" onPress={create} busy={busy} disabled={name.trim().length < 2} />
-      <Text style={st.next}>Next: you get a code to send {name.trim() ? first : 'her'}</Text>
+      <Button label="Continue" onPress={() => setStep('access')} disabled={name.trim().length < 2} />
+      <Text style={st.next}>Next: choose what {name.trim() ? first : 'she'} can do and her rate</Text>
     </View>
   );
 
@@ -136,15 +247,15 @@ export default function Invite() {
     <Screen
       gap={14}
       header={
-        // P3 header: back, "Step 2 of 3", Skip for now, 66% progress bar. The extra bottom padding makes up the
+        // P3 header: back, "Step 4 of 5" (the invite is step 4 of the P4a setup list), Skip for now, 80% progress bar. The extra bottom padding makes up the
         // wireframe's 12 px above the title (Screen's content starts 4 px down).
         <View style={st.header}>
           <View style={st.backRow}>
             <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={st.back}>
               <Icon name="chevron-left" size={22} tint={color.ink} strokeWidth={2} />
             </Pressable>
-            <Text style={st.stepText}>Step 2 of 3</Text>
-            <Pressable accessibilityRole="button" onPress={() => router.back()} hitSlop={10}>
+            <Text style={st.stepText}>Step 4 of 5</Text>
+            <Pressable accessibilityRole="button" onPress={() => router.back()} hitSlop={10} style={{ marginLeft: 'auto' }}>
               <Text style={st.skip}>Skip for now</Text>
             </Pressable>
           </View>
@@ -163,7 +274,41 @@ export default function Invite() {
   );
 }
 
+/** P23 "What she can do" row: title, grey sub-line, 50×30 switch. */
+function Perm({ label, sub, value, onChange, last }: { label: string; sub?: string; value: boolean; onChange: (v: boolean) => void; last?: boolean }) {
+  return (
+    <Pressable accessibilityRole="switch" accessibilityState={{ checked: value }} accessibilityLabel={label} onPress={() => onChange(!value)} style={[st.perm, !last && st.line]}>
+      <View style={{ flexShrink: 1 }}>
+        <Text style={st.permTitle}>{label}</Text>
+        {sub ? <Text style={st.permSub}>{sub}</Text> : null}
+      </View>
+      <View style={[st.track, { backgroundColor: value ? color.primary : color.lineStrong }]}>
+        <View style={[st.knob, value ? { right: 3 } : { left: 3 }]} />
+      </View>
+    </Pressable>
+  );
+}
+
 const st = StyleSheet.create({
+  // P23 values
+  section: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6 },
+  // Unchosen kids: the same chip without the tint, check and blue border (only the chosen state is drawn).
+  kidChip: { height: 44, paddingLeft: 4, paddingRight: 14, borderRadius: 999, borderWidth: 2, borderColor: color.line, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', gap: 8 },
+  kidChipOn: { backgroundColor: color.primaryTint, borderColor: color.primary },
+  kidChipText: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
+  permCard: { backgroundColor: '#FFFFFF', borderRadius: 24, paddingHorizontal: 16, ...cardShadow },
+  perm: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 58 },
+  permTitle: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
+  permSub: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
+  track: { width: 50, height: 30, borderRadius: 15, flexShrink: 0 },
+  knob: { position: 'absolute', top: 3, width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFFFFF' },
+  rateInput: { minHeight: 48, height: 48, borderColor: color.lineStrong },
+  payLabel: { fontFamily: font.bodySemi, fontSize: 14, color: color.ink },
+  paySeg: { flexDirection: 'row', gap: 4, padding: 4, backgroundColor: color.muted, borderRadius: 12 },
+  payItem: { flex: 1, minWidth: 0, height: 34, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  payItemOn: { backgroundColor: '#FFFFFF' },
+  payText: { fontFamily: font.bodyMedium, fontSize: 13, color: color.ink2 },
+  payTextOn: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink },
   // P3 values
   header: { paddingTop: 16, paddingHorizontal: 20, paddingBottom: 16, gap: 14 },
   backRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -171,7 +316,7 @@ const st = StyleSheet.create({
   stepText: { flexShrink: 1, fontFamily: font.bodySemi, fontSize: 14, color: color.ink2 }, // P3: no flex-grow, Skip sits right after it
   skip: { fontFamily: font.bodySemi, fontSize: 15, color: color.primary, textDecorationLine: 'underline' },
   progress: { height: 6, borderRadius: 3, backgroundColor: '#DDE3EA', overflow: 'hidden' },
-  progressFill: { width: '66%', height: 6, backgroundColor: color.primary },
+  progressFill: { width: '80%', height: 6, backgroundColor: color.primary },
   title: { fontFamily: font.display, fontSize: 26, color: color.ink, marginVertical: -4.83 },
   lead: { fontFamily: font.body, fontSize: 15, lineHeight: 22, color: color.ink2 },
   next: { fontFamily: font.body, fontSize: 13, color: color.ink2, textAlign: 'center' },

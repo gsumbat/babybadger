@@ -2,7 +2,9 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { InviteReview } from '@/components/InviteReview';
 import { Button, ErrorText, Field, Icon, Screen } from '@/components/ui';
+import { inviteApi, type InvitePreview } from '@/lib/invites';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { color, font } from '@/theme';
@@ -12,6 +14,7 @@ import { Text, TextInput } from '@/components/Text';
 // Invite codes are 6 digits (create_invite in the core migration). The six boxes are drawn under one real number
 // field so typing, pasting and deleting work like any input. "Your name" only shows when the profile has no name yet:
 // accept_invite keeps an existing name, so the field would do nothing otherwise.
+// "See my invite" opens S1 (components/InviteReview.tsx) with what the family shares; accepting it goes on to S2.
 const LENGTH = 6;
 
 /** Wireframe S51: join a family with the parent's invite code. Used by the Join screen and by sitter sign-up. */
@@ -22,7 +25,20 @@ export function JoinCode({ onBack }: { onBack?: () => void }) {
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const [preview, setPreview] = useState<InvitePreview | null>(null);
   const yourName = hasName ? profile!.full_name : name.trim();
+
+  async function see() {
+    setBusy(true);
+    setErr('');
+    try {
+      setPreview(await inviteApi.preview(code));
+    } catch (e) {
+      setErr(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function join() {
     setBusy(true);
@@ -34,6 +50,22 @@ export function JoinCode({ onBack }: { onBack?: () => void }) {
     router.replace(`/sitter/consent/${data as string}`);
   }
 
+  async function decline() {
+    setBusy(true);
+    setErr('');
+    try {
+      await inviteApi.decline(code);
+      setPreview(null);
+      setCode('');
+    } catch (e) {
+      setErr(errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (preview) return <InviteReview invite={preview} onAccept={join} onDecline={decline} busy={busy} err={err} />;
+
   return (
     <Screen
       title="Join a family"
@@ -41,7 +73,7 @@ export function JoinCode({ onBack }: { onBack?: () => void }) {
       onBack={onBack}
       footer={
         <>
-          <Button label="See my invite" onPress={join} busy={busy} disabled={code.length !== LENGTH || yourName.length < 2} />
+          <Button label="See my invite" onPress={see} busy={busy} disabled={code.length !== LENGTH || yourName.length < 2} />
           <Text style={st.footnote}>Codes work once and expire after 7 days.</Text>
         </>
       }>

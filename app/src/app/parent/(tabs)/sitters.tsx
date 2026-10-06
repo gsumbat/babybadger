@@ -1,39 +1,37 @@
-import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
-import { Alert, Pressable, Share, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { Button, ErrorText, Icon, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
-import { dayOf, firstName, inviteMessage } from '@/lib/format';
+import { dayOf, firstName } from '@/lib/format';
+import { inviteApi } from '@/lib/invites';
 import { useSession } from '@/lib/session';
-import { errorText, supabase } from '@/lib/supabase';
+import { errorText } from '@/lib/supabase';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe P54, translated from its HTML (app/src/wireframes/P54.tsx); P54b when there are no sitters and no
-// open invites yet.
+// open invites yet. An invite in progress, or a sitter who still has to sign, opens P25 (parent/invite/[id]); active
+// sitters stay as they are until P11 Sitter profile is built.
 // Left out until built: "When do you need someone?", availability, Find a new sitter (P54 and P54b), meet requests,
 // saved sitters.
 export default function Sitters() {
   const { family } = useSession();
   const fid = family!.id;
-  const { data, error, reload } = useQuery(async () => {
-    const [sitters, invites, shifts] = await Promise.all([api.familySitters(fid), api.openInvites(fid), api.familyShifts(fid)]);
+  const { data, error } = useQuery(async () => {
+    const [sitters, invites, shifts] = await Promise.all([api.familySitters(fid), inviteApi.pending(fid), api.familyShifts(fid)]);
     return { sitters, invites, shifts };
   }, [fid]);
 
-  async function cancel(id: string) {
-    const { error: e } = await supabase.from('invites').update({ cancelled_at: new Date().toISOString() }).eq('id', id);
-    if (e) Alert.alert('Could not cancel', errorText(e));
-    reload();
-  }
-  function manage(inv: { id: string; code: string; sitter_name: string }) {
-    Alert.alert(`Invite to ${inv.sitter_name || 'sitter'}`, `Code ${inv.code}`, [
-      { text: 'Share again', onPress: () => Share.share({ message: inviteMessage(family!.name, inv.code) }) },
-      { text: 'Copy code', onPress: () => Clipboard.setStringAsync(inv.code) },
-      { text: 'Cancel invite', style: 'destructive', onPress: () => cancel(inv.id) },
-      { text: 'Close', style: 'cancel' },
-    ]);
+  const openInvite = (id: string) => router.push({ pathname: '/parent/invite/[id]', params: { id } });
+  // A sitter who joined but hasn't signed: her accepted invite shows how far she's got (P25).
+  async function openSitter(sitterId: string) {
+    try {
+      const id = await inviteApi.acceptedBy(fid, sitterId);
+      if (id) openInvite(id);
+    } catch (e) {
+      Alert.alert('Could not open', errorText(e));
+    }
   }
 
   const sitters = data?.sitters ?? [];
@@ -73,7 +71,7 @@ export default function Sitters() {
           <Text style={st.label}>YOUR POOL · {sitters.length}</Text>
           <View style={st.pool}>
             {sitters.map((s, i) => (
-              <View key={s.sitter_id} style={st.poolItem}>
+              <Pressable key={s.sitter_id} accessibilityRole="button" disabled={s.status === 'active'} onPress={() => openSitter(s.sitter_id)} style={st.poolItem}>
                 <View>
                   <View style={[st.poolAvatar, { backgroundColor: AVATAR[i % AVATAR.length] }]}>
                     <Text style={st.poolLetter}>{(s.profile?.full_name || '?')[0].toUpperCase()}</Text>
@@ -86,7 +84,7 @@ export default function Sitters() {
                 <Text style={st.poolStatus} numberOfLines={1}>
                   {status(s)}
                 </Text>
-              </View>
+              </Pressable>
             ))}
           </View>
         </>
@@ -97,7 +95,7 @@ export default function Sitters() {
           <Text style={st.label}>IN PROGRESS</Text>
           <View style={st.listCard}>
             {data.invites.map((inv, i) => (
-              <Pressable key={inv.id} accessibilityRole="button" onPress={() => manage(inv)} style={[st.row, i < data.invites.length - 1 && st.line]}>
+              <Pressable key={inv.id} accessibilityRole="button" onPress={() => openInvite(inv.id)} style={[st.row, i < data.invites.length - 1 && st.line]}>
                 <View style={[st.smallAvatar, { backgroundColor: '#5F6D74' }]}>
                   <Text style={st.smallLetter}>{(inv.sitter_name || '?')[0].toUpperCase()}</Text>
                 </View>
@@ -107,10 +105,17 @@ export default function Sitters() {
                     Code {inv.code} · expires {dayOf(inv.expires_at)}
                   </Text>
                 </View>
-                <View style={st.pill}>
-                  <View style={[st.pillDot, { backgroundColor: color.warn }]} />
-                  <Text style={st.pillText}>Waiting</Text>
-                </View>
+                {inv.declined_at ? (
+                  <View style={[st.pill, { backgroundColor: color.muted }]}>
+                    <View style={[st.pillDot, { backgroundColor: '#8A979D' }]} />
+                    <Text style={[st.pillText, { color: color.ink2 }]}>Declined</Text>
+                  </View>
+                ) : (
+                  <View style={st.pill}>
+                    <View style={[st.pillDot, { backgroundColor: color.warn }]} />
+                    <Text style={st.pillText}>Waiting</Text>
+                  </View>
+                )}
               </Pressable>
             ))}
           </View>

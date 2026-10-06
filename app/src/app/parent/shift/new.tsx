@@ -6,6 +6,7 @@ import { Avatar, Banner, Button, Chip, ErrorText, Field, Label, Screen, T } from
 import { shiftTaskLines } from '@/lib/care-plan';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
+import { familyRulesState } from '@/lib/house-rules';
 import { parseTimeOnDay } from '@/lib/shift-logic';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
@@ -27,8 +28,11 @@ export default function NewShift() {
   const fid = family!.id;
   const { data } = useQuery(async () => {
     // care_items arrives with migration 06; until it's run booking just starts with no tasks.
-    const [sitters, kids, care] = await Promise.all([api.familySitters(fid), api.kids(fid), api.careItems(fid).catch(() => [])]);
-    return { sitters: sitters.filter((s) => s.status === 'active'), kids, care };
+    const [all, kids, care] = await Promise.all([api.familySitters(fid), api.kids(fid), api.careItems(fid).catch(() => [])]);
+    const sitters = all.filter((s) => s.status === 'active');
+    // House rules gate (migration 09): sitters who haven't agreed to the current Must rules can't be booked yet.
+    const { pending } = await familyRulesState(fid, sitters.map((s) => s.sitter_id));
+    return { sitters, kids, care, pending };
   }, [fid]);
 
   const days = useMemo(() => nextDays(7), []);
@@ -45,9 +49,14 @@ export default function NewShift() {
   const startAt = parseTimeOnDay(start, days[day]);
   let endAt = parseTimeOnDay(end, days[day]);
   if (startAt && endAt && endAt <= startAt) endAt = new Date(+endAt + 24 * 3600_000); // overnight
-  const chosenSitter = sitterId ?? data?.sitters[0]?.sitter_id;
-  const valid = !!chosenSitter && !!startAt && !!endAt;
-  const planned = data && startAt && endAt ? shiftTaskLines(data.care, startAt, endAt, kidIds, (id) => data.kids.find((k) => k.id === id)?.name).join('\n') : '';
+  const chosenSitter = sitterId ?? (data?.sitters.find((s) => !data.pending.includes(s.sitter_id)) ?? data?.sitters[0])?.sitter_id;
+  const notAgreed = !!chosenSitter && !!data?.pending.includes(chosenSitter);
+  // Only the kids this sitter's invite covers (P23; kid_ids null = every kid). Migration 11 adds the column.
+  const sitterKidIds = (data?.sitters.find((s) => s.sitter_id === chosenSitter) as { kid_ids?: string[] | null } | undefined)?.kid_ids;
+  const allowedKids = (data?.kids ?? []).filter((k) => !sitterKidIds?.length || sitterKidIds.includes(k.id));
+  const shiftKidIds = kidIds.length ? kidIds.filter((id) => allowedKids.some((k) => k.id === id)) : allowedKids.map((k) => k.id);
+  const valid = !!chosenSitter && !notAgreed && !!startAt && !!endAt;
+  const planned = data && startAt && endAt ? shiftTaskLines(data.care, startAt, endAt, shiftKidIds, (id) => data.kids.find((k) => k.id === id)?.name).join('\n') : '';
   const tasks = typed ?? planned;
 
   async function book() {
@@ -63,7 +72,7 @@ export default function NewShift() {
       setBusy(false);
       return setErr(errorText(error));
     }
-    const kids = kidIds.length ? kidIds : (data?.kids ?? []).map((k) => k.id);
+    const kids = shiftKidIds;
     const taskRows = tasks.split('\n').map((t) => t.trim()).filter(Boolean).map((title, position) => ({ shift_id: shift.id, title, position }));
     const results = await Promise.all([
       kids.length ? supabase.from('shift_kids').insert(kids.map((kid_id) => ({ shift_id: shift.id, kid_id }))) : Promise.resolve({ error: null }),
@@ -104,6 +113,11 @@ export default function NewShift() {
           );
         })}
       </View>
+      {notAgreed && (
+        <Banner kind="warn" icon="user-x">
+          {firstName(data?.sitters.find((s) => s.sitter_id === chosenSitter)?.profile?.full_name)} hasn’t agreed to your house rules yet. You can book her once she agrees in the app.
+        </Banner>
+      )}
       <Label>Day</Label>
       <View style={{ flexDirection: 'row', gap: 4 }}>
         {days.slice(0, 7).map((d, i) => (
@@ -118,12 +132,12 @@ export default function NewShift() {
         <TimeField label="Ends" value={end} onChange={setEnd} placeholder="7:00 PM" />
       </View>
       {(!startAt || !endAt) && <T variant="small">Type times like 3:00 PM or 15:00.</T>}
-      {!!data?.kids.length && (
+      {!!allowedKids.length && (
         <>
           <Label>Kids</Label>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-            {data.kids.map((k) => (
-              <Chip key={k.id} label={k.name} on={kidIds.length === 0 || kidIds.includes(k.id)} onPress={() => setKidIds((ids) => (ids.includes(k.id) ? ids.filter((x) => x !== k.id) : [...(ids.length ? ids : data.kids.map((x) => x.id)).filter((x) => x !== k.id)]))} />
+            {allowedKids.map((k) => (
+              <Chip key={k.id} label={k.name} on={shiftKidIds.includes(k.id)} onPress={() => setKidIds(shiftKidIds.includes(k.id) ? shiftKidIds.filter((x) => x !== k.id) : [...shiftKidIds, k.id])} />
             ))}
           </View>
         </>

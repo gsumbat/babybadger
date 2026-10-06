@@ -198,7 +198,9 @@ def view_style(s, parent_row, grid_cell_w=None):
     d = s.get('display', '')
     if d in ('flex', 'inline-flex'):
         out['flexDirection'] = json.dumps(s.get('flex-direction', 'row'))
-        if d == 'inline-flex':
+        # inline-flex shrink-wraps in a block parent (column here), but inside a flex row it's an ordinary item that
+        # follows the row's align-items (pills centred in their row), so no alignSelf there.
+        if d == 'inline-flex' and not parent_row:
             out['alignSelf'] = json.dumps('flex-start')
     elif d == 'grid':
         out['flexDirection'] = json.dumps('column')
@@ -219,6 +221,10 @@ def view_style(s, parent_row, grid_cell_w=None):
         if k in s and px(s[k]) is not None:
             v = px(s[k])
             out[rn] = json.dumps(v) if isinstance(v, str) else v
+    # margin-left/right/top: auto pushes an item to the far side of its row or column ("Skip for now" in P3).
+    for k, rn in [('margin-left', 'marginLeft'), ('margin-right', 'marginRight'), ('margin-top', 'marginTop')]:
+        if s.get(k, '').strip() == 'auto':
+            out[rn] = json.dumps('auto')
     if 'flex-basis' in s and px(s['flex-basis']) is not None:
         out['flexBasis'] = px(s['flex-basis']) if not isinstance(px(s['flex-basis']), str) else json.dumps(px(s['flex-basis']))
     if 'padding' in s:

@@ -39,6 +39,7 @@ function Routes() {
       {/* Generated wireframe layouts, for side-by-side checks during development only. */}
       <Stack.Protected guard={__DEV__}>
         <Stack.Screen name="wireframe/[id]" />
+        <Stack.Screen name="dev-login" />
       </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="sign-in" />

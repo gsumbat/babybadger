@@ -1,11 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 
 import { Button, ErrorText, Field, Icon, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
+import { sitterRulesState } from '@/lib/house-rules';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { NOTICE_VERSION, TERMS_VERSION } from '@/lib/types';
@@ -28,8 +29,19 @@ const NOTICE = (parents: string) => [
 const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 export default function Consent() {
-  const { familyId } = useLocalSearchParams<{ familyId: string }>();
-  const { sitterLinks, profile, refresh } = useSession();
+  const { familyId, rules } = useLocalSearchParams<{ familyId: string; rules?: string }>();
+  const { sitterLinks, profile, session, refresh } = useSession();
+  // House rules (S42) come before the notice when the family has Must rules she hasn't agreed to yet.
+  useEffect(() => {
+    if (rules || !familyId || !session) return;
+    let live = true;
+    sitterRulesState(familyId, session.user.id).then((r) => {
+      if (live && r.needsAgreement) router.replace(`/sitter/rules/${familyId}?next=consent`);
+    });
+    return () => {
+      live = false;
+    };
+  }, [familyId, rules, session]);
   const family = sitterLinks.find((l) => l.family_id === familyId)?.family.name ?? 'This family';
   const { data: parents } = useQuery(() => api.familyParents(familyId!), [familyId]);
   const parentNames = (parents ?? []).map((p) => p.full_name).filter(Boolean).join(' and ');

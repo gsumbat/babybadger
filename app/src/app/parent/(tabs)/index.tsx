@@ -8,6 +8,7 @@ import { ActionGrid, dayPart, ErrorText, HomeHeader, Icon, initialsOf, Screen } 
 import { api, useQuery, useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
 import { describeLog, parentHomeState, workedMinutes } from '@/lib/shift-logic';
+import { rulesApi } from '@/lib/house-rules';
 import { useSession } from '@/lib/session';
 import { kv } from '@/lib/storage';
 import type { Kid, Shift } from '@/lib/types';
@@ -16,17 +17,18 @@ import { Text } from '@/components/Text';
 
 // Wireframes P4 (live), P4a (setup), P4e (setup skipped), P4b (idle), P4c (starting soon), P4d (ended), translated
 // from their HTML (app/src/wireframes/P4*.tsx). Left out until built: Message / Call / Ask for photo, kids' devices and
-// places, Needs you (invoices, requests), Approve hours, "On my way", the house rules step.
+// places, Needs you (invoices, requests), Approve hours, "On my way".
 
-// Optional steps (the care plan) count toward "n of 4 done" but don't keep the setup checklist open on their own.
-type Step = { done: boolean; locked?: boolean; optional?: boolean; title: string; next: string; sub: string; go: '/parent/kid/new' | '/parent/care' | '/parent/invite?from=setup' | '/parent/shift/new' };
+// Optional steps (house rules, the care plan) count toward "n of 5 done" but don't keep the setup checklist open on their own.
+type Step = { done: boolean; locked?: boolean; optional?: boolean; title: string; next: string; sub: string; go: '/parent/kid/new' | '/parent/rules' | '/parent/care' | '/parent/invite?from=setup' | '/parent/shift/new' };
 export default function ParentHome() {
   const { family, profile } = useSession();
   const fid = family!.id;
   const { data, error } = useQuery(async () => {
     // care_items arrives with migration 06; until it's run the care plan step just shows as not done.
-    const [shifts, kids, sitters, care] = await Promise.all([api.familyShifts(fid), api.kids(fid), api.familySitters(fid), api.careItems(fid).catch(() => [])]);
-    return { shifts, kids, sitters, careCount: care.length };
+    // house_rules arrives with migration 09; same fallback.
+    const [shifts, kids, sitters, care, rules] = await Promise.all([api.familyShifts(fid), api.kids(fid), api.familySitters(fid), api.careItems(fid).catch(() => []), rulesApi.rules(fid).catch(() => [])]);
+    return { shifts, kids, sitters, careCount: care.length, rulesCount: rules.length };
   }, [fid]);
 
   const state = data ? parentHomeState(data.shifts) : null;
@@ -38,6 +40,7 @@ export default function ParentHome() {
   const steps: Step[] = data
     ? [
         { done: kidsDone, title: 'Add your kids', next: 'add your kids', sub: kidsDone ? data.kids.map((k) => k.name).join(' and ') : 'Names, birthdays, foods to avoid', go: '/parent/kid/new' },
+        { done: data.rulesCount > 0, optional: true, title: 'House rules', next: 'house rules', sub: 'Optional · Must rules need her OK before booking', go: '/parent/rules' },
         { done: data.careCount > 0, optional: true, title: 'Write the care plan', next: 'write the care plan', sub: 'Optional · tasks, meals, routines', go: '/parent/care' },
         { done: sitterDone, title: 'Invite your sitter', next: 'invite your sitter', sub: 'Someone you trust', go: '/parent/invite?from=setup' },
         { done: data.shifts.length > 0, locked: !!bookLock, title: 'Book the first shift', next: 'book the first shift', sub: bookLock || 'Pick a day and time', go: '/parent/shift/new' },
@@ -92,13 +95,14 @@ export default function ParentHome() {
 
       {/* P4a has no grid. Tiles not built yet are left out: Find a sitter, Kids & devices, Ask my pool, Pay sitter, Requirements. */}
       {explore ? (
-        // P4e: "Invite a sitter" and "Care plan" are built; House rules and Kids & devices are left out.
+        // P4e: "Invite a sitter", "House rules" and "Care plan" are built; Kids & devices is left out.
         <>
           <View style={{ gap: 8, marginTop: 2 }}>
             <Text style={st.label}>WHAT DO YOU NEED?</Text>
             <ActionGrid
               items={[
                 { icon: 'users', label: 'Invite a sitter', onPress: () => router.push('/parent/invite') },
+                { icon: 'shield', label: 'House rules', onPress: () => router.push('/parent/rules') },
                 { icon: 'list', label: 'Care plan', onPress: () => router.push('/parent/care') },
               ]}
               height={76}

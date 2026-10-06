@@ -9,6 +9,7 @@ import { LogTimeline } from '@/components/LogTimeline';
 import { Banner, Button, Card, ChoicePill, ErrorText, Field, Icon, type IconName, Loading, Screen } from '@/components/ui';
 import { api, useQuery, useShiftLive } from '@/lib/data';
 import { firstName, timeOf } from '@/lib/format';
+import { rulesApi, shiftRuleRows } from '@/lib/house-rules';
 import { type SharingMode, startSharing, stopSharing } from '@/lib/location-sharing';
 import { useSession } from '@/lib/session';
 import { formatClock, workedMinutes } from '@/lib/shift-logic';
@@ -24,6 +25,8 @@ const TILES: { kind: LogKind | 'more'; label: string; icon: IconName }[] = [
   { kind: 'more', label: 'More logs', icon: 'plus' },
 ];
 const MOODS = ['Great day', 'Bit tired', 'Upset tummy'];
+// S4 House rules strip: bell from the wireframe.
+const BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="#7A4E0E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>';
 // Checkbox tick from the wireframes (2.6 stroke).
 const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
@@ -34,6 +37,8 @@ export default function SitterShift() {
   const { bundle, error, reload } = useShiftLive(id);
   const fid = bundle?.shift.family_id;
   const { data: parents } = useQuery(() => (fid ? api.familyParents(fid) : Promise.resolve([])), [fid]);
+  // House rules (migration 09); until it runs there are none and the strip stays hidden.
+  const { data: rules } = useQuery(() => (fid ? rulesApi.rules(fid).catch(() => []) : Promise.resolve([])), [fid]);
   const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<SharingMode | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -59,6 +64,7 @@ export default function SitterShift() {
   const secs = shift.clock_in_at ? Math.max(0, Math.floor((now - +new Date(shift.clock_in_at)) / 1000)) : 0;
   const done = tasks.filter((t) => t.done_at).length;
   const parent = firstName(parents?.[0]?.full_name) || 'the family';
+  const rulesDue = shiftRuleRows(rules ?? [], logs, kids, shift.clock_in_at, new Date(now)).filter((r) => r.state === 'due').length;
 
   async function toggle(taskId: string, isDone: boolean) {
     const { error: e } = await supabase.rpc('set_task_done', { p_task: taskId, p_done: isDone });
@@ -216,6 +222,17 @@ export default function SitterShift() {
           })}
         </View>
       )}
+      {/* S4's House rules strip -> S43. */}
+      {!!rules?.length && (
+        <Pressable accessibilityRole="button" onPress={() => router.push(`/sitter/shift-rules/${shift.id}`)} style={st.rules}>
+          <SvgXml xml={BELL} width={20} height={20} />
+          <Text style={st.rulesText}>
+            <Text style={st.rulesBold}>House rules</Text>
+            {rulesDue ? ` · ${rulesDue} ${rulesDue === 1 ? 'log' : 'logs'} due` : ''}
+          </Text>
+          <Icon name="chevron-right" size={18} tint={color.warnInk} />
+        </Pressable>
+      )}
       {kids.filter((k) => k.avoid_foods || k.allergies).map((k) => (
         <View key={k.id} style={st.avoid}>
           <Text style={st.avoidText}>
@@ -250,6 +267,9 @@ const st = StyleSheet.create({
   taskTitle: { fontFamily: font.bodyMedium, fontSize: 15, color: color.ink },
   taskDone: { fontFamily: font.body, fontSize: 15, color: color.quiet, textDecorationLine: 'line-through' },
   taskSub: { fontFamily: font.body, fontSize: 13, color: color.quiet },
+  rules: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: color.warnTint, borderRadius: 12 },
+  rulesText: { fontFamily: font.body, fontSize: 14, color: color.ink, flexGrow: 1, flexShrink: 1 },
+  rulesBold: { fontFamily: font.bodyBold, color: color.warnInk },
   avoid: { backgroundColor: color.badTint, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14 },
   avoidText: { fontFamily: font.body, fontSize: 14, color: '#6E2215' },
   avoidBold: { fontFamily: font.bodyBold, color: color.badInk },

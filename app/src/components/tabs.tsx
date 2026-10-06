@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, type IconName } from '@/components/ui';
+import { useUnread } from '@/lib/messages';
 import { color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
@@ -13,18 +14,21 @@ type TabDef = { name: string; title: string; icon: IconName; badge?: number };
 // Bottom menu from the wireframes (P4, S3 nav): white bar, icon in a tinted pill when active, 11px label underneath.
 function TabBar({ state, descriptors, navigation, defs }: BottomTabBarProps & { defs: TabDef[] }) {
   const insets = useSafeAreaInsets();
+  // Messages tab: unread count (S37 nav "3", ", 3 unread").
+  const { total: unread } = useUnread(defs.some((d) => d.name === 'messages'));
   return (
     <View style={[st.bar, { paddingBottom: Math.max(insets.bottom, 22) }]} accessibilityRole="tablist">
       {state.routes.map((route, i) => {
-        const def = defs.find((d) => d.name === route.name);
-        if (!def) return null;
+        const found = defs.find((d) => d.name === route.name);
+        if (!found) return null;
+        const def = found.name === 'messages' && unread ? { ...found, badge: unread } : found;
         const on = state.index === i;
         const press = () => {
           const e = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
           if (!on && !e.defaultPrevented) navigation.navigate(route.name, route.params);
         };
         return (
-          <Pressable key={route.key} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={descriptors[route.key].options.title ?? def.title} onPress={press} style={st.item}>
+          <Pressable key={route.key} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={`${descriptors[route.key].options.title ?? def.title}${def.name === 'messages' && def.badge ? `, ${def.badge} unread` : ''}`} onPress={press} style={st.item}>
             <View style={[st.iconPill, on && st.iconPillOn]}>
               <Icon name={def.icon} size={24} tint={on ? color.primary : color.quiet} />
               {def.badge ? (
@@ -39,6 +43,11 @@ function TabBar({ state, descriptors, navigation, defs }: BottomTabBarProps & { 
       })}
     </View>
   );
+}
+
+/** Height of the tab bar above (the thread composer rides above it, then above the keyboard). */
+export function tabBarHeight(bottomInset: number) {
+  return 1 + 8 + 52 + Math.max(bottomInset, 22);
 }
 
 export function AppTabs({ tabs }: { tabs: TabDef[] }) {

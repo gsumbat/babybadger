@@ -1,10 +1,12 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 
 import { ErrorText, HomeHeader, Icon, type IconName, initialsOf, Screen } from '@/components/ui';
 import { api, useQuery, useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
+import { familyPossessive, sitterRulesState } from '@/lib/house-rules';
 import { startSharing } from '@/lib/location-sharing';
 import { useSession } from '@/lib/session';
 import { clockInState, formatClock } from '@/lib/shift-logic';
@@ -15,7 +17,7 @@ import { Text } from '@/components/Text';
 
 // Wireframes S3 (shift today), S3b (no shift today) and S3d (nothing booked), translated from their HTML
 // (app/src/wireframes/S3*.tsx). Left out until built: Running late, Needs-you items other than consent, earnings and
-// payout, most tools, and S3d's "Set your availability" button (S11).
+// payout and most tools. Availability and Time off (tools, S3d's "Set your availability") open S11.
 // Times follow the wireframe: "3:00 – 7:00 PM" on the today card, "7:30 – 10 PM" elsewhere.
 export default function SitterHome() {
   const { session, profile, sitterLinks } = useSession();
@@ -31,6 +33,13 @@ export default function SitterHome() {
   const today = new Date(now);
   const famName = (fid: string) => sitterLinks.find((l) => l.family_id === fid)?.family.name ?? 'Family';
   const needsConsent = sitterLinks.filter((l) => l.status === 'needs_consent');
+  // Families that changed their Must house rules since she last agreed (S42 before her next shift).
+  const activeIds = sitterLinks.filter((l) => l.status === 'active').map((l) => l.family_id);
+  const { data: rulesDue } = useQuery(async () => {
+    const states = await Promise.all(activeIds.map(async (fid) => ({ fid, ...(await sitterRulesState(fid, uid)) })));
+    return states.filter((x) => x.needsAgreement).map((x) => x.fid);
+  }, [activeIds, uid]);
+  const needsRules = sitterLinks.filter((l) => rulesDue?.includes(l.family_id));
   const active = shifts?.find((s) => s.status === 'active');
   const upcoming = (shifts ?? []).filter((s) => s.status === 'scheduled' && new Date(s.ends_at).getTime() > now);
   const next = upcoming[0];
@@ -54,6 +63,8 @@ export default function SitterHome() {
     const { error: e } = await supabase.rpc('clock_in', { p_shift: s.id });
     if (e) {
       setBusy(undefined);
+      // Refused until she agrees to the family's current house rules: open them (S42).
+      if (/house rules/i.test(e.message)) return router.push(`/sitter/rules/${s.family_id}`);
       return Alert.alert('Can’t clock in yet', errorText(e));
     }
     const mode = await startSharing(s.id);
@@ -105,6 +116,9 @@ export default function SitterHome() {
             </View>
             <Text style={st.emptyTitle}>No shifts booked</Text>
             <Text style={st.emptyText}>When a family books you, the shift shows up here and you get a notification.</Text>
+            <Pressable accessibilityRole="button" onPress={() => router.push('/sitter/availability')} style={st.availBtn}>
+              <Text style={st.availText}>Set your availability</Text>
+            </Pressable>
           </View>
           {sitterLinks.length > 0 && (
             <Pressable accessibilityRole="button" onPress={() => router.navigate('/sitter/families')} style={st.familiesRow}>
@@ -121,13 +135,27 @@ export default function SitterHome() {
         </>
       )}
 
-      {needsConsent.length > 0 && (
+      {needsConsent.length + needsRules.length > 0 && (
         <>
           <View style={st.labelRow}>
             <Text style={st.label}>NEEDS YOU</Text>
-            <Text style={st.labelCount}>{needsConsent.length}</Text>
+            <Text style={st.labelCount}>{needsConsent.length + needsRules.length}</Text>
           </View>
           <View style={st.listCard}>
+            {needsRules.map((l, i) => (
+              <Pressable key={`rules-${l.family_id}`} accessibilityRole="button" onPress={() => router.push(`/sitter/rules/${l.family_id}`)} style={[st.needRow, (i < needsRules.length - 1 || needsConsent.length > 0) && st.line]}>
+                <View style={[st.needIcon, { backgroundColor: color.warnTint }]}>
+                  <Icon name="file-text" size={20} tint={color.warnInk} />
+                </View>
+                <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
+                  <Text style={st.needTitle}>Agree to {familyPossessive(l.family.name).title} house rules</Text>
+                  <Text style={st.needSub} numberOfLines={1}>
+                    Needed before your next shift
+                  </Text>
+                </View>
+                <Icon name="chevron-right" size={18} tint={color.ink2} />
+              </Pressable>
+            ))}
             {needsConsent.map((l, i) => (
               <Pressable key={l.family_id} accessibilityRole="button" onPress={() => router.push(`/sitter/consent/${l.family_id}`)} style={[st.needRow, i < needsConsent.length - 1 && st.line]}>
                 <View style={[st.needIcon, { backgroundColor: color.warnTint }]}>
@@ -156,11 +184,12 @@ export default function SitterHome() {
       <View style={st.labelRow}>
         <Text style={st.label}>TOOLS</Text>
       </View>
-      {/* Only My details is built; the other tiles keep their empty slots so it stays the wireframe's width. */}
+      {/* Built tools in the wireframe's order (Availability, Time off, ..., My details); the last tile keeps its empty
+          slot so the tiles stay the wireframe's width. */}
       <View style={{ flexDirection: 'row', gap: 8 }}>
+        <Tool icon="clock" label="Availability" onPress={() => router.push('/sitter/availability')} />
+        <Tool xml={TIME_OFF} label="Time off" onPress={() => router.push('/sitter/availability')} />
         <Tool icon="edit-2" label="My details" onPress={() => router.navigate('/sitter/me')} />
-        <View style={{ flex: 1 }} />
-        <View style={{ flex: 1 }} />
         <View style={{ flex: 1 }} />
       </View>
     </Screen>
@@ -202,10 +231,14 @@ function Stat({ v, l }: { v: string; l: string }) {
   );
 }
 
-function Tool({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
+// S3 "Time off" tool icon: a calendar with a cross.
+const TIME_OFF =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9.5 13.5l5 5M14.5 13.5l-5 5"/></svg>';
+
+function Tool({ icon, xml, label, onPress }: { icon?: IconName; xml?: string; label: string; onPress: () => void }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [st.tool, pressed && { opacity: 0.85 }]}>
-      <Icon name={icon} size={22} />
+      {xml ? <SvgXml xml={xml} width={22} height={22} /> : icon ? <Icon name={icon} size={22} /> : null}
       <Text style={st.toolText}>{label}</Text>
     </Pressable>
   );
@@ -309,5 +342,8 @@ const st = StyleSheet.create({
   familiesRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   familiesTitle: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
   familiesSub: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
+  // S3d "Set your availability": outlined, 54 high, 8 below the text.
+  availBtn: { alignSelf: 'stretch', marginTop: 8, height: 54, borderRadius: 999, borderWidth: 1.5, borderColor: color.primary, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  availText: { fontFamily: font.displayBold, fontSize: 17, color: color.primary, textAlign: 'center' },
   toolText: { fontFamily: font.bodyBold, fontSize: 12, lineHeight: 14, color: color.primaryStrong, textAlign: 'center' },
 });

@@ -23,4 +23,9 @@ sed '/create extension if not exists pg_net/d' migrations/20261006000005_push.sq
 $P -d t -f migrations/20261006000006_care_plan.sql
 $P -d t -f migrations/20261006000007_kid_gender.sql
 $P -d t -f migrations/20261006000008_care_repeat.sql
+$P -d t -f migrations/20261006000009_house_rules.sql
+$P -d t -f migrations/20261006000010_messages.sql
+$P -d t -f migrations/20261006000011_invite_access.sql
+$P -d t -f migrations/20261006000012_availability.sql
+$P -d t -f migrations/20261006000013_invite_preview_birthdate.sql
 $P -d t -f tests/rls_scenarios.sql

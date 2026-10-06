@@ -19,7 +19,8 @@ export type IconName = ComponentProps<typeof Feather>['name'];
 /** Wireframe icon when the wireframes have one (see wfIcons), Feather otherwise. */
 export function Icon({ name, size = 20, tint = color.primary, strokeWidth }: { name: IconName; size?: number; tint?: string; strokeWidth?: number }) {
   const xml = wfSvg(name, tint, strokeWidth ?? (name === 'plus' ? 2 : 1.8));
-  if (xml) return <SvgXml xml={xml} width={size} height={size} />;
+  // Icons never shrink next to long text (the wireframes' flex-shrink: 0).
+  if (xml) return <SvgXml xml={xml} width={size} height={size} style={{ flexShrink: 0 }} />;
   return <Feather name={name} size={size} color={tint} />;
 }
 
