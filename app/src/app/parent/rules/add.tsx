@@ -47,7 +47,7 @@ export default function AddRules() {
       subtitle="Most chosen by parents"
       back
       gap={10}
-      footer={<Button label={n === 1 ? 'Add 1 rule' : `Add ${n} rules`} onPress={add} busy={busy} disabled={!n} />}>
+      footer={<Button label={n === 0 ? 'Add rules' : n === 1 ? 'Add 1 rule' : `Add ${n} rules`} onPress={add} busy={busy} disabled={!n} />}>
       {CHIP_SECTIONS.map((s) => (
         <View key={s.category} style={{ gap: 6 }}>
           <Text style={st.label}>{s.label}</Text>
