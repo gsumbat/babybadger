@@ -16,15 +16,21 @@ import {
 } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { SvgXml } from 'react-native-svg';
 
 import { cardShadow, color, font, radius, space } from '@/theme';
+
+import { wfSvg } from './wfIcons';
 
 // Height of the Previous / Next / Done bar shown above the keyboard (see app/_layout).
 const KEYBOARD_TOOLBAR = 42;
 
 export type IconName = ComponentProps<typeof Feather>['name'];
 
-export function Icon({ name, size = 20, tint = color.primary }: { name: IconName; size?: number; tint?: string }) {
+/** Wireframe icon when the wireframes have one (see wfIcons), Feather otherwise. */
+export function Icon({ name, size = 20, tint = color.primary, strokeWidth }: { name: IconName; size?: number; tint?: string; strokeWidth?: number }) {
+  const xml = wfSvg(name, tint, strokeWidth ?? (name === 'plus' ? 2 : 1.8));
+  if (xml) return <SvgXml xml={xml} width={size} height={size} />;
   return <Feather name={name} size={size} color={tint} />;
 }
 
@@ -42,6 +48,7 @@ export function Screen({
   header,
   bleedTop,
   caption,
+  gap,
 }: {
   children: ReactNode;
   title?: string;
@@ -61,9 +68,11 @@ export function Screen({
   bleedTop?: boolean;
   /** Small text next to the back button, with the title stacked below (wireframe S2). */
   caption?: string;
+  /** Space between content blocks; wireframes use 10-12. */
+  gap?: number;
 }) {
   const [footerH, setFooterH] = useState(0);
-  const body = <View style={s.content}>{children}</View>;
+  const body = <View style={[s.content, gap !== undefined && { gap }]}>{children}</View>;
   const backBtn = (
     <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack ?? (() => router.back())} style={s.back}>
       <Icon name="chevron-left" size={22} tint={color.ink} />
@@ -422,7 +431,7 @@ const s = StyleSheet.create({
   progressFill: { height: 6, borderRadius: 3, backgroundColor: color.primary },
   subtitle: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
   content: { paddingHorizontal: space.xl, paddingTop: 4, gap: space.m },
-  footer: { paddingHorizontal: space.xl, paddingTop: 8, paddingBottom: 24, gap: 8, backgroundColor: 'transparent' },
+  footer: { paddingHorizontal: space.xl, paddingTop: 8, paddingBottom: 32, gap: 8, backgroundColor: 'transparent' },
   card: { backgroundColor: color.surface, borderRadius: radius.card, padding: space.l, gap: space.s, ...cardShadow },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
   label: { fontFamily: font.bodyBold, fontSize: 13, letterSpacing: 0.6, color: color.ink2 },

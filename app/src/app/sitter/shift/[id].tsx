@@ -5,17 +5,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { cardStyle, SafetyBox, TaskRows } from '@/components/bits';
 import { LogTimeline } from '@/components/LogTimeline';
-import { Banner, Button, Card, Chip, ErrorText, Field, Icon, type IconName, Label, Loading, Screen, Stat, T } from '@/components/ui';
-import { useShiftLive } from '@/lib/data';
-import { timeOf } from '@/lib/format';
+import { Banner, Button, Card, Chip, ErrorText, Field, Icon, type IconName, Loading, Screen, Stat, T } from '@/components/ui';
+import { api, useQuery, useShiftLive } from '@/lib/data';
+import { firstName, timeOf } from '@/lib/format';
 import { type SharingMode, startSharing, stopSharing } from '@/lib/location-sharing';
 import { useSession } from '@/lib/session';
 import { formatClock, workedMinutes } from '@/lib/shift-logic';
 import { errorText, supabase } from '@/lib/supabase';
 import type { LogKind } from '@/lib/types';
-import { color, font } from '@/theme';
+import { cardShadow, color, font } from '@/theme';
 
 const TILES: { kind: LogKind | 'more'; label: string; icon: IconName }[] = [
+  // Wireframe S4 shows Trip first; trips aren't built yet, so the row starts at Food.
   { kind: 'food', label: 'Food', icon: 'coffee' },
   { kind: 'nap', label: 'Nap', icon: 'moon' },
   { kind: 'photo', label: 'Photo', icon: 'camera' },
@@ -28,6 +29,8 @@ export default function SitterShift() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { sitterLinks } = useSession();
   const { bundle, error, reload } = useShiftLive(id);
+  const fid = bundle?.shift.family_id;
+  const { data: parents } = useQuery(() => (fid ? api.familyParents(fid) : Promise.resolve([])), [fid]);
   const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<SharingMode | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -132,10 +135,19 @@ export default function SitterShift() {
     );
   }
 
+  // Wireframe S4, translated from its HTML (app/src/wireframes/S4.tsx).
+  const parent = firstName(parents?.[0]?.full_name) || 'the family';
   return (
-    <Screen bleedTop scroll footer={<Button label="Clock out" kind="outline" onPress={() => setClosing(true)} />}>
-      <View style={[st.top, { paddingTop: insets.top + 16 }]}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+    <Screen
+      bleedTop
+      gap={10}
+      footer={
+        <Pressable accessibilityRole="button" onPress={() => setClosing(true)} style={st.clockOut}>
+          <Text style={st.clockOutText}>Clock out</Text>
+        </Pressable>
+      }>
+      <View style={[st.top, { paddingTop: insets.top + 24 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <Text style={st.topSmall}>On shift · {family}</Text>
           <View style={st.sharing}>
             <View style={[st.dot, { backgroundColor: mode === 'denied' ? color.bad : color.ok }]} />
@@ -150,47 +162,76 @@ export default function SitterShift() {
       <View style={st.tiles}>
         {TILES.map((t) => (
           <Pressable key={t.kind} accessibilityRole="button" onPress={() => openLog(t.kind)} style={({ pressed }) => [st.tile, pressed && { opacity: 0.85 }]}>
-            <Icon name={t.icon} size={22} tint={color.ink} />
+            <Icon name={t.icon} size={24} />
             <Text style={st.tileText}>{t.label}</Text>
           </Pressable>
         ))}
       </View>
 
       {mode === 'foreground' && <Banner kind="warn" icon="alert-triangle">Keep this screen open: background location needs the full app build (not Expo Go).</Banner>}
-      {mode === 'denied' && <Banner kind="bad" icon="map-pin">Location is off. Allow it for BabyBadger in Settings so the family can see the map.</Banner>}
+      {mode === 'denied' && <Banner kind="bad" icon="alert-triangle">Location is off. Allow it for BabyBadger in Settings so the family can see the map.</Banner>}
 
       {tasks.length > 0 && (
-        <Card style={{ paddingVertical: 10 }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={st.cardTitle}>Tasks from the family</Text>
-            <T variant="muted">
+        <View style={st.taskCard}>
+          <View style={st.taskHead}>
+            <Text style={st.taskHeadTitle}>Tasks from {parent}</Text>
+            <Text style={st.taskHeadCount}>
               {done} of {tasks.length}
-            </T>
+            </Text>
           </View>
-          <TaskRows tasks={tasks} onToggle={(t) => toggle(t.id, !t.done_at)} />
-        </Card>
+          {tasks.map((t) => {
+            const isDone = !!t.done_at;
+            return (
+              <Pressable key={t.id} accessibilityRole="checkbox" accessibilityState={{ checked: isDone }} onPress={() => toggle(t.id, !isDone)} style={st.taskRow}>
+                <View style={[st.box, isDone && st.boxOn]}>{isDone ? <Icon name="check" size={16} tint="#FFFFFF" strokeWidth={2.6} /> : null}</View>
+                <View style={{ flexShrink: 1 }}>
+                  <Text style={isDone ? st.taskDone : st.taskTitle}>{t.title}</Text>
+                  {isDone ? <Text style={st.taskSub}>Done {timeOf(t.done_at!)}</Text> : t.due_at ? <Text style={st.taskSub}>{timeOf(t.due_at)}</Text> : null}
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
       )}
-      <SafetyBox kids={kids} />
-
-      <Label>Today’s log</Label>
-      <Card>
-        <LogTimeline logs={logs} kids={kids} />
-      </Card>
+      {kids.filter((k) => k.avoid_foods || k.allergies).map((k) => (
+        <View key={k.id} style={st.avoid}>
+          <Text style={st.avoidText}>
+            <Text style={st.avoidBold}>{k.name} · food to avoid: </Text>
+            {[k.avoid_foods, k.allergies && `allergic to ${k.allergies}`].filter(Boolean).join(' · ')}
+          </Text>
+        </View>
+      ))}
     </Screen>
   );
 }
 
 const st = StyleSheet.create({
-  top: { backgroundColor: color.primary, marginHorizontal: -20, marginTop: -4, paddingHorizontal: 20, paddingBottom: 52, gap: 4 },
-  topSmall: { fontFamily: font.bodySemi, fontSize: 15, color: '#FFFFFF' },
-  timer: { fontFamily: font.display, fontSize: 44, color: '#FFFFFF' },
-  topSub: { fontFamily: font.body, fontSize: 14, color: '#FFFFFF', opacity: 0.88 },
+  // values below come from wireframe S4
+  top: { backgroundColor: color.primary, marginHorizontal: -20, marginTop: -4, paddingHorizontal: 20, paddingBottom: 56, gap: 6 },
+  topSmall: { fontFamily: font.bodySemi, fontSize: 15, color: '#FFFFFF', flexShrink: 1 },
+  timer: { fontFamily: font.display, fontSize: 44, color: '#FFFFFF', marginVertical: -9.24, letterSpacing: 1 },
+  topSub: { fontFamily: font.body, fontSize: 14, color: '#FFFFFF', opacity: 0.85 },
   sharing: { backgroundColor: '#FFFFFF', borderRadius: 999, paddingHorizontal: 10, height: 28, flexDirection: 'row', alignItems: 'center', gap: 6 },
   sharingText: { fontFamily: font.bodyBold, fontSize: 12, color: color.primary },
   dot: { width: 8, height: 8, borderRadius: 4 },
-  tiles: { flexDirection: 'row', gap: 8, marginTop: -48 },
-  tile: { flex: 1, height: 76, borderRadius: 20, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', gap: 6, shadowColor: color.edge, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 1, shadowRadius: 0, elevation: 2 },
+  tiles: { flexDirection: 'row', gap: 8, marginTop: -46 },
+  tile: { flex: 1, height: 76, borderRadius: 24, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', gap: 6, ...cardShadow },
   tileText: { fontFamily: font.bodySemi, fontSize: 13, color: color.ink },
+  taskCard: { backgroundColor: '#FFFFFF', borderRadius: 24, paddingVertical: 6, paddingHorizontal: 16, ...cardShadow },
+  taskHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 },
+  taskHeadTitle: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink },
+  taskHeadCount: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
+  taskRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, borderTopWidth: 1, borderTopColor: color.divider },
+  box: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: color.lineStrong, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  boxOn: { borderColor: color.primary, backgroundColor: color.primary },
+  taskTitle: { fontFamily: font.bodyMedium, fontSize: 15, color: color.ink },
+  taskDone: { fontFamily: font.body, fontSize: 15, color: color.quiet, textDecorationLine: 'line-through' },
+  taskSub: { fontFamily: font.body, fontSize: 13, color: color.quiet },
+  avoid: { backgroundColor: color.badTint, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14 },
+  avoidText: { fontFamily: font.body, fontSize: 14, color: '#6E2215' },
+  avoidBold: { fontFamily: font.bodyBold, color: color.badInk },
+  clockOut: { height: 52, borderRadius: 999, borderWidth: 1.5, borderColor: color.primary, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  clockOutText: { fontFamily: font.displayBold, fontSize: 17, color: color.primary },
   cardTitle: { fontFamily: font.bodyBold, fontSize: 16, color: color.ink },
   worked: { fontFamily: font.display, fontSize: 32, color: color.ink },
   fieldLabel: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2 },

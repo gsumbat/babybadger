@@ -60,6 +60,12 @@ export const api = {
       await supabase.from('invites').select('*').eq('family_id', familyId).is('accepted_at', null).is('cancelled_at', null).gt('expires_at', new Date().toISOString()).order('created_at', { ascending: false }),
     ) as Invite[];
   },
+  /** Parents of a family (sitters may read them once they've joined). */
+  async familyParents(familyId: string) {
+    const links = must(await supabase.from('family_parents').select('user_id').eq('family_id', familyId)) as { user_id: string }[];
+    const ids = links.map((l) => l.user_id);
+    return ids.length ? (must(await supabase.from('profiles').select('id, full_name, role').in('id', ids)) as Profile[]) : [];
+  },
   async profilesById(ids: string[]) {
     if (!ids.length) return {} as Record<string, Profile>;
     const rows = must(await supabase.from('profiles').select('id, full_name, role').in('id', ids)) as Profile[];
