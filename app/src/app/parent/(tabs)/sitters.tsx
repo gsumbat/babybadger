@@ -1,9 +1,9 @@
 import { router } from 'expo-router';
-import { Alert, Share } from 'react-native';
+import { Alert, Share, View } from 'react-native';
 
 import { Avatar, Button, Card, ErrorText, Label, Pill, Row, Screen, T } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
-import { inviteMessage } from '@/lib/format';
+import { dayOf, inviteMessage } from '@/lib/format';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 
@@ -44,19 +44,18 @@ export default function Sitters() {
         <>
           <Label>Waiting to join</Label>
           {data.invites.map((inv) => (
-            <Card key={inv.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-              <Avatar name={inv.sitter_name || '?'} size={40} />
-              <Row
-                title={`${inv.sitter_name || 'Invite'} · code ${inv.code}`}
-                sub={`Expires ${new Date(inv.expires_at).toLocaleDateString()}`}
-                right={
-                  <>
-                    <Button label="Share" kind="ghost" style={{ height: 36 }} onPress={() => Share.share({ message: inviteMessage(family!.name, inv.code) })} />
-                    <Button label="Cancel" kind="ghost" style={{ height: 36 }} onPress={() => cancel(inv.id)} />
-                  </>
-                }
-                last
-              />
+            <Card key={inv.id} style={{ gap: 8 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <Avatar name={inv.sitter_name || '?'} size={40} />
+                <View style={{ flex: 1 }}>
+                  <T variant="strong">{inv.sitter_name || 'Invite'} · code {inv.code}</T>
+                  <T variant="small">Expires {dayOf(inv.expires_at)}</T>
+                </View>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <Button label="Share code" icon="share" kind="tonal" style={{ flex: 1, height: 40 }} onPress={() => Share.share({ message: inviteMessage(family!.name, inv.code) })} />
+                <Button label="Cancel" kind="ghost" style={{ height: 40 }} onPress={() => cancel(inv.id)} />
+              </View>
             </Card>
           ))}
         </>
