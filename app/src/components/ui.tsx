@@ -1,10 +1,9 @@
 import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
-import type { ComponentProps, ReactNode } from 'react';
+import { useState, type ComponentProps, type ReactNode } from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -14,9 +13,13 @@ import {
   type TextStyle,
   type ViewStyle,
 } from 'react-native';
+import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { cardShadow, color, font, radius, space } from '@/theme';
+
+// Height of the Previous / Next / Done bar shown above the keyboard (see app/_layout).
+const KEYBOARD_TOOLBAR = 42;
 
 export type IconName = ComponentProps<typeof Feather>['name'];
 
@@ -49,6 +52,7 @@ export function Screen({
   /** Override the back button (e.g. go to the previous step instead of leaving). */
   onBack?: () => void;
 }) {
+  const [footerH, setFooterH] = useState(0);
   const body = <View style={s.content}>{children}</View>;
   const backBtn = (
     <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack ?? (() => router.back())} style={s.back}>
@@ -94,13 +98,25 @@ export function Screen({
         </View>
       ) : null}
       {scroll ? (
-        <ScrollView contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
+        // Scrolls the focused field above the keyboard (and above the sticky footer), the standard iOS/Android form behavior.
+        <KeyboardAwareScrollView
+          bottomOffset={footerH + KEYBOARD_TOOLBAR + 16}
+          contentContainerStyle={{ paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive">
           {body}
-        </ScrollView>
+        </KeyboardAwareScrollView>
       ) : (
         <View style={{ flex: 1 }}>{body}</View>
       )}
-      {footer ? <View style={s.footer}>{footer}</View> : null}
+      {footer ? (
+        // The main button rides up with the keyboard so Continue / Save stays reachable while typing.
+        <KeyboardStickyView offset={{ closed: 0, opened: -KEYBOARD_TOOLBAR + 16 }}>
+          <View style={[s.footer, { backgroundColor: bg }]} onLayout={(e) => setFooterH(e.nativeEvent.layout.height)}>
+            {footer}
+          </View>
+        </KeyboardStickyView>
+      ) : null}
     </SafeAreaView>
   );
 }

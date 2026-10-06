@@ -5,6 +5,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { KeyboardProvider, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { Loading } from '@/components/ui';
@@ -51,10 +52,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <SessionProvider>
-        <StatusBar style="dark" />
-        <Routes />
-      </SessionProvider>
+      <KeyboardProvider>
+        <SessionProvider>
+          <StatusBar style="dark" />
+          <Routes />
+        </SessionProvider>
+        {/* iOS-style bar above the keyboard: previous / next field and Done (number pads have no return key). */}
+        <KeyboardToolbar doneText="Done" />
+      </KeyboardProvider>
     </SafeAreaProvider>
   );
 }
