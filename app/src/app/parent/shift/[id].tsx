@@ -1,16 +1,17 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { KidDot, kidSub, SafetyBox, TaskRows } from '@/components/bits';
 import { LiveMap } from '@/components/LiveMap';
 import { LogTimeline, PhotoThumb } from '@/components/LogTimeline';
-import { Avatar, Button, Card, ErrorText, Loading, Pill, Screen, T } from '@/components/ui';
+import { Avatar, Button, Card, ErrorText, Icon, Loading, Pill, Screen, T } from '@/components/ui';
 import { useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
 import { describeLog, workedMinutes } from '@/lib/shift-logic';
 import { errorText, supabase } from '@/lib/supabase';
 import { cardShadow, color, font } from '@/theme';
+import { Text } from '@/components/Text';
 
 // Live view (P4 detail) while on shift, report (P5) after clock-out, details before.
 export default function ParentShift() {
@@ -55,7 +56,21 @@ export default function ParentShift() {
     const hm = (iso: string) => timeOf(iso).replace(/\s?[AP]M$/i, '');
     const who = (ids: string[]) => (ids.length === 0 || (kids.length > 1 && ids.length === kids.length) ? (kids.length > 1 ? 'both' : '') : ids.map((i) => kids.find((k) => k.id === i)?.name).filter(Boolean).join(', '));
     return (
-      <Screen title="Shift report" subtitle={`${name} · ${new Date(shift.starts_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`} back>
+      <Screen
+        header={
+          // P5 header: 20 px title and 14 px subtitle (the shared back header is 22 / 13).
+          <View style={st.head}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={st.backBtn}>
+              <Icon name="chevron-left" size={22} tint={color.ink} strokeWidth={2} />
+            </Pressable>
+            <View style={{ flexShrink: 1 }}>
+              <Text style={st.headTitle}>Shift report</Text>
+              <Text style={st.headSub}>
+                {name} · {new Date(shift.starts_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+              </Text>
+            </View>
+          </View>
+        }>
         <View style={st.blue}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
             <View style={{ flexShrink: 1 }}>
@@ -105,9 +120,14 @@ export default function ParentShift() {
         {photos.length > 0 && (
           <View style={st.card}>
             <Text style={st.cardTitle}>Photos</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-              {photos.map((l) => (
-                <PhotoThumb key={l.id} path={l.photo_path!} style={{ width: '31%', flexGrow: 1 }} />
+            <View style={{ gap: 8 }}>
+              {Array.from({ length: Math.ceil(photos.length / 3) }, (_, r) => (
+                <View key={r} style={{ flexDirection: 'row', gap: 8 }}>
+                  {[0, 1, 2].map((c) => {
+                    const l = photos[r * 3 + c];
+                    return l ? <PhotoThumb key={l.id} path={l.photo_path!} style={st.thumb} /> : <View key={c} style={st.thumb} />;
+                  })}
+                </View>
               ))}
             </View>
           </View>
@@ -168,12 +188,17 @@ export default function ParentShift() {
 
 const st = StyleSheet.create({
   // P5 values
+  head: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 16, paddingHorizontal: 20, paddingBottom: 8 }, // + 4 content top = 12
+  backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  headTitle: { fontFamily: font.display, fontSize: 20, color: color.ink },
+  headSub: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
+  thumb: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, height: 64, borderRadius: 10 },
   blue: { backgroundColor: color.primary, borderRadius: 20, padding: 16, gap: 12 },
   blueSmall: { fontFamily: font.body, fontSize: 13, color: '#FFFFFF', opacity: 0.8 },
   blueBig: { fontFamily: font.display, fontSize: 32, color: '#FFFFFF', marginVertical: -6.63 },
   mapBox: { borderRadius: 20, borderWidth: 1, borderColor: color.line, overflow: 'hidden' },
   card: { gap: 10, paddingVertical: 14, paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
-  smallPill: { height: 24, paddingHorizontal: 8, borderRadius: 999, backgroundColor: color.okTint, justifyContent: 'center' },
+  smallPill: { flexDirection: 'row', alignSelf: 'flex-start', alignItems: 'center', height: 24, paddingHorizontal: 8, borderRadius: 999, backgroundColor: color.okTint },
   smallPillText: { fontFamily: font.bodyBold, fontSize: 12, color: color.okInk },
   summary: { fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink2 },
   logTime: { width: 40, fontFamily: font.body, fontSize: 14, color: color.quiet },

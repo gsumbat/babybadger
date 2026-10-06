@@ -1,8 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { WIREFRAMES } from '@/wireframes';
+import { Text } from '@/components/Text';
 
 // Development only: shows a wireframe exactly as generated from its HTML, to compare with the real screen.
 export default function WireframePreview() {

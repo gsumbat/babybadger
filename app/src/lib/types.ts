@@ -17,7 +17,40 @@ export type Kid = {
   health_notes?: string;
   pediatrician?: string;
   comfort_item?: string;
+  gender?: 'girl' | 'boy' | null;
 };
+
+export type CareType = 'nap' | 'bottle' | 'meal' | 'diaper' | 'bedtime' | 'medicine' | 'activity' | 'other';
+
+/** Care plan entry (P7, P20, P20a). kid_id null = whole-family task. Times are "HH:MM:SS"; days is a
+ * weekday bitmask, Sun=1 ... Sat=64. */
+export type CareItem = {
+  id: string;
+  family_id: string;
+  kid_id: string | null;
+  type: CareType;
+  title: string;
+  starts: string | null;
+  ends: string | null;
+  days: number;
+  /** Repeats every N minutes inside the shift (30–720, P20 "Every 3 hrs"); null = once. Migration 08. */
+  every_minutes: number | null;
+  /** Per-type extras (P20a, migration 08): bottle amount + unit + milk, diaper potty, medicine dose. {} when none. */
+  details: CareDetails;
+  how: string;
+  created_at: string;
+};
+
+export type Milk = 'formula' | 'breast milk' | 'whole milk';
+
+/** A bottle's amount unit (P20a "Unit" dropdown). */
+export type BottleUnit = 'oz' | 'ml';
+
+/** Only the keys of the item's own type are kept: bottle {amount, unit, milk}, diaper {potty}, medicine {dose}.
+ * `amount_oz` is the old bottle shape (before the Unit dropdown): read as {amount, unit: 'oz'}, never written. */
+export type CareDetails = { amount?: number; unit?: BottleUnit; amount_oz?: number; milk?: Milk; potty?: boolean; dose?: string };
+
+export type CareItemInput = Pick<CareItem, 'kid_id' | 'type' | 'title' | 'starts' | 'ends' | 'days' | 'every_minutes' | 'details' | 'how'>;
 
 export type SitterLink = {
   family_id: string;

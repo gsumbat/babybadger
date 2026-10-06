@@ -1,9 +1,10 @@
 // Web / fallback: maps need a native build. Shows the latest position as text and a simple route sketch.
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { routeLengthM } from '@/lib/shift-logic';
 import type { LocationPoint } from '@/lib/types';
 import { color, font } from '@/theme';
+import { Text } from '@/components/Text';
 
 export function LiveMap({ points, height = 220, flush }: { points: LocationPoint[]; height?: number; flush?: boolean }) {
   const last = points[points.length - 1];

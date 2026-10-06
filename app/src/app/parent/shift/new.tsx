@@ -1,14 +1,17 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar, Banner, Button, Chip, ErrorText, Field, Label, Screen, T } from '@/components/ui';
+import { shiftTaskLines } from '@/lib/care-plan';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { parseTimeOnDay } from '@/lib/shift-logic';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { color, font } from '@/theme';
+import { Text } from '@/components/Text';
+import { TimeField } from '@/components/TimeField';
 
 function nextDays(n: number) {
   return Array.from({ length: n }, (_, i) => {
@@ -23,8 +26,9 @@ export default function NewShift() {
   const { family, session } = useSession();
   const fid = family!.id;
   const { data } = useQuery(async () => {
-    const [sitters, kids] = await Promise.all([api.familySitters(fid), api.kids(fid)]);
-    return { sitters: sitters.filter((s) => s.status === 'active'), kids };
+    // care_items arrives with migration 06; until it's run booking just starts with no tasks.
+    const [sitters, kids, care] = await Promise.all([api.familySitters(fid), api.kids(fid), api.careItems(fid).catch(() => [])]);
+    return { sitters: sitters.filter((s) => s.status === 'active'), kids, care };
   }, [fid]);
 
   const days = useMemo(() => nextDays(7), []);
@@ -33,7 +37,8 @@ export default function NewShift() {
   const [start, setStart] = useState('3:00 PM');
   const [end, setEnd] = useState('7:00 PM');
   const [kidIds, setKidIds] = useState<string[]>([]);
-  const [tasks, setTasks] = useState('Pick up Ava at 3:15\nSnack\nDinner at 6');
+  // Until the parent types in it, the tasks box follows the care plan items that fall inside the shift.
+  const [typed, setTyped] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
@@ -42,6 +47,8 @@ export default function NewShift() {
   if (startAt && endAt && endAt <= startAt) endAt = new Date(+endAt + 24 * 3600_000); // overnight
   const chosenSitter = sitterId ?? data?.sitters[0]?.sitter_id;
   const valid = !!chosenSitter && !!startAt && !!endAt;
+  const planned = data && startAt && endAt ? shiftTaskLines(data.care, startAt, endAt, kidIds, (id) => data.kids.find((k) => k.id === id)?.name).join('\n') : '';
+  const tasks = typed ?? planned;
 
   async function book() {
     if (!valid) return;
@@ -67,6 +74,14 @@ export default function NewShift() {
     if (e2) return setErr(errorText(e2));
     router.replace(`/parent/shift/${shift.id}`);
   }
+
+  // Same rule as the locked step on Home (P4a): kids first, so the sitter has their safety info (P19).
+  if (data && data.kids.length === 0)
+    return (
+      <Screen title="Book a shift" back footer={<Button label="Add a child" onPress={() => router.replace('/parent/kid/new')} />}>
+        <Banner kind="warn" icon="user-x">Add your kids first. The sitter sees their food to avoid and allergies on every shift.</Banner>
+      </Screen>
+    );
 
   if (data && data.sitters.length === 0)
     return (
@@ -99,12 +114,8 @@ export default function NewShift() {
         ))}
       </View>
       <View style={{ flexDirection: 'row', gap: 12 }}>
-        <View style={{ flex: 1 }}>
-          <Field label="Starts" value={start} onChangeText={setStart} placeholder="3:00 PM" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Field label="Ends" value={end} onChangeText={setEnd} placeholder="7:00 PM" />
-        </View>
+        <TimeField label="Starts" value={start} onChange={setStart} placeholder="3:00 PM" />
+        <TimeField label="Ends" value={end} onChange={setEnd} placeholder="7:00 PM" />
       </View>
       {(!startAt || !endAt) && <T variant="small">Type times like 3:00 PM or 15:00.</T>}
       {!!data?.kids.length && (
@@ -117,7 +128,7 @@ export default function NewShift() {
           </View>
         </>
       )}
-      <Field label="Tasks, one per line" value={tasks} onChangeText={setTasks} multiline />
+      <Field label="Tasks, one per line" value={tasks} onChangeText={setTyped} placeholder={'Pick up Ava at 3:15\nSnack\nDinner at 6'} multiline />
       <ErrorText>{err}</ErrorText>
     </Screen>
   );
@@ -129,6 +140,7 @@ const st = StyleSheet.create({
   personText: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
   day: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 14, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line, gap: 2 },
   dayOn: { backgroundColor: color.primary, borderColor: color.primary },
-  dow: { fontFamily: font.body, fontSize: 12, color: color.ink2 },
-  num: { fontFamily: font.bodyBold, fontSize: 17, color: color.ink },
+  // Day labels match the P6b / S6 week strip.
+  dow: { fontFamily: font.body, fontSize: 12, color: '#5F6D74' },
+  num: { fontFamily: font.displayBold, fontSize: 17, color: color.ink, marginVertical: -3.62 },
 });

@@ -80,6 +80,13 @@ export function routeLengthM(points: Pick<LocationPoint, 'lat' | 'lng'>[]): numb
   return total;
 }
 
+/** What the sitter picked on S48 (stored as wet / dirty / both / dry so older logs read the same). */
+export const DIAPER_LABELS: Record<string, string> = { wet: '#1', dirty: '#2', both: 'Both', dry: 'Dry' };
+
+export function diaperLabel(v: string | undefined): string {
+  return v ? (DIAPER_LABELS[v] ?? v) : '';
+}
+
 /** One line for a log entry, used in the timeline and the report. */
 export function describeLog(log: Pick<LogEntry, 'kind' | 'data'>): { title: string; detail: string } {
   const d = log.data ?? {};
@@ -91,7 +98,7 @@ export function describeLog(log: Pick<LogEntry, 'kind' | 'data'>): { title: stri
     case 'activity':
       return { title: cap(d.what || 'Activity'), detail: [d.duration, d.note].filter(Boolean).join(' · ') };
     case 'diaper':
-      return { title: d.potty ? `Potty: ${d.potty}` : 'Diaper', detail: [d.diaper, d.note].filter(Boolean).join(' · ') };
+      return { title: d.potty ? `Potty: ${d.potty}` : 'Diaper', detail: [diaperLabel(d.diaper), d.note].filter(Boolean).join(' · ') };
     case 'photo':
       return { title: 'Photo update', detail: d.caption ?? '' };
     case 'note':

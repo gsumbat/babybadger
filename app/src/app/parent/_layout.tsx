@@ -9,7 +9,11 @@ export default function ParentLayout() {
       <Stack.Screen name="shift/[id]" />
       <Stack.Screen name="shift/new" options={{ presentation: 'modal' }} />
       <Stack.Screen name="invite" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="kid/[id]" />
       <Stack.Screen name="kid/new" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="kid/routine" />
+      <Stack.Screen name="care/index" />
+      <Stack.Screen name="care/item" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }

@@ -29,12 +29,12 @@ export default function WF_P24() {
             <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
               <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
               </View>
-              <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Ava, 7</Text>
+              <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Ava, 7 yrs 2 mos</Text>
             </View>
             <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
               <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
               </View>
-              <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Leo, 4</Text>
+              <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Leo, 4 yrs 5 mos</Text>
             </View>
             <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
               <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>

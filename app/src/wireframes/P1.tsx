@@ -19,7 +19,7 @@ export default function WF_P1() {
       <View style={{ flexDirection: "column", height: 440, paddingTop: 56, paddingRight: 24, paddingBottom: 0, paddingLeft: 24, backgroundColor: "#47698A", borderBottomRightRadius: 32, borderBottomLeftRadius: 32, overflow: "hidden", flexShrink: 1, minHeight: 0 }}>
         <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, flexGrow: 1, paddingBottom: 28 }}>
           <Image source={require('@/assets/images/badger-mascot.png')} style={{ flexShrink: 0, width: 188, height: 230 }} contentFit="contain" />
-          <Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 40, color: "#FFFFFF", marginVertical: -31.54, letterSpacing: 0 }}><Text style={{ fontFamily: font.display, fontSize: 40, color: "#FFFFFF", letterSpacing: 0 }}>BabyBadger</Text></Text>
+          <Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 40, color: "#FFFFFF", marginVertical: -12.04, letterSpacing: 0 }}><Text style={{ fontFamily: font.display, fontSize: 40, color: "#FFFFFF", letterSpacing: 0 }}>BabyBadger</Text></Text>
         </View>
       </View>
       <View style={{ flexDirection: "column", gap: 10, flexGrow: 1, paddingTop: 28, paddingRight: 24, paddingBottom: 0, paddingLeft: 24 }}>

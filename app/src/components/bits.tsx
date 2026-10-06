@@ -1,5 +1,5 @@
 // Small pieces shared by parent and sitter screens (wireframe patterns).
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ageLabel, safetyLine } from '@/lib/kid-profile';
 import { timeOf } from '@/lib/format';
@@ -7,6 +7,7 @@ import type { Kid, Task } from '@/lib/types';
 import { cardShadow, color, font, radius } from '@/theme';
 
 import { Icon } from './ui';
+import { Text } from '@/components/Text';
 
 export function Progress({ value, total, tint = color.primary }: { value: number; total: number; tint?: string }) {
   return (

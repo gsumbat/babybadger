@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { kidShade } from '@/components/bits';
 import { ErrorText, Icon, Screen } from '@/components/ui';
@@ -7,9 +7,11 @@ import { api, useQuery } from '@/lib/data';
 import { ageLabel } from '@/lib/kid-profile';
 import { useSession } from '@/lib/session';
 import { cardShadow, color, font } from '@/theme';
+import { Text } from '@/components/Text';
 
 // Wireframe S10, translated from its HTML (app/src/wireframes/S10.tsx).
-// Left out until built: routines (screen time, bedtime), parents' phone numbers, home address.
+// Left out until built: routines (screen time, bedtime), parents' phone numbers, home address, the S12 privacy
+// screen (so the location-sharing card has no chevron yet).
 export default function SitterFamily() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { sitterLinks } = useSession();
@@ -50,7 +52,7 @@ export default function SitterFamily() {
                 </View>
                 <Text style={st.kidName}>
                   {k.name}
-                  {k.birthdate ? `, ${ageLabel(k.birthdate).replace(' years', '')}` : ''}
+                  {k.birthdate ? `, ${ageLabel(k.birthdate)}` : ''}
                 </Text>
                 <Text style={st.kidSub}>{[k.health_notes, k.comfort_item && `comfort: ${k.comfort_item}`, k.notes].filter(Boolean).join(' · ') || 'No notes yet'}</Text>
               </View>
@@ -73,7 +75,7 @@ export default function SitterFamily() {
                   </View>
                   {phone.length >= 7 ? (
                     <Pressable accessibilityRole="button" accessibilityLabel={`Call pediatrician for ${k.name}`} onPress={() => Linking.openURL(`tel:${phone}`)} style={st.call}>
-                      <Icon name="phone" size={20} />
+                      <Icon name="phone" size={20} strokeWidth={2} />
                     </Pressable>
                   ) : null}
                 </View>
@@ -82,11 +84,11 @@ export default function SitterFamily() {
           </View>
         </>
       )}
-      <View style={[st.card, st.shareRow]}>
-        <Icon name="shield" size={20} />
+      <View style={st.shareRow}>
+        <Icon name="shield" size={22} />
         <View style={{ flexGrow: 1, flexShrink: 1 }}>
           <Text style={st.emName}>Location sharing with this family</Text>
-          <Text style={st.shareSub}>Only while clocked in · notice signed</Text>
+          <Text style={st.shareSub}>Only while clocked in · consent signed</Text>
         </View>
       </View>
     </Screen>
@@ -96,14 +98,15 @@ export default function SitterFamily() {
 function BackButton() {
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={st.back}>
-      <Icon name="chevron-left" size={22} tint={color.ink} />
+      <Icon name="chevron-left" size={22} tint={color.ink} strokeWidth={2} />
     </Pressable>
   );
 }
 
 // Values from wireframe S10.
 const st = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 16, paddingHorizontal: 20, paddingBottom: 12 },
+  // paddingBottom 12 in the wireframe; Screen's content adds 4 on top.
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 16, paddingHorizontal: 20, paddingBottom: 8 },
   back: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   familyDot: { width: 12, height: 12, borderRadius: 6, backgroundColor: '#2F6FD6' },
   title: { fontFamily: font.display, fontSize: 22, color: color.ink, flexShrink: 1 },
@@ -122,6 +125,6 @@ const st = StyleSheet.create({
   emName: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
   emSub: { fontFamily: font.body, fontSize: 13, color: '#5F6D74' },
   call: { width: 44, height: 44, borderRadius: 22, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
-  shareRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60 },
-  shareSub: { fontFamily: font.body, fontSize: 12, color: color.ink2 },
+  shareRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
+  shareSub: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
 });

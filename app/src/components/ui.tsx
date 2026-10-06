@@ -1,19 +1,7 @@
 import Feather from '@expo/vector-icons/Feather';
 import { router } from 'expo-router';
 import { useState, type ComponentProps, type ReactNode } from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  useWindowDimensions,
-  type StyleProp,
-  type TextInputProps,
-  type TextStyle,
-  type ViewStyle,
-} from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View, useWindowDimensions, type StyleProp, type TextInputProps, type TextStyle, type ViewStyle } from 'react-native';
 import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
@@ -21,6 +9,7 @@ import { SvgXml } from 'react-native-svg';
 import { cardShadow, color, font, radius, space } from '@/theme';
 
 import { wfSvg } from './wfIcons';
+import { Text, TextInput } from '@/components/Text';
 
 // Height of the Previous / Next / Done bar shown above the keyboard (see app/_layout).
 const KEYBOARD_TOOLBAR = 42;
@@ -300,7 +289,7 @@ export function ErrorText({ children }: { children?: string }) {
 export function HomeHeader({ eyebrow, title, sub, initials, onAvatar, variant = 'parent' }: { eyebrow: string; title: string; sub?: string; initials: string; onAvatar?: () => void; variant?: 'parent' | 'sitter' }) {
   const sitter = variant === 'sitter';
   return (
-    <View style={[s.homeHeader, sitter && { paddingTop: 18, paddingBottom: 10 }]}>
+    <View style={[s.homeHeader, sitter && { paddingTop: 18, paddingBottom: 6 }]}>
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={s.eyebrow}>{eyebrow}</Text>
         <Text style={[s.homeTitle, sitter && { marginVertical: -5.22 }]} numberOfLines={1}>
@@ -329,15 +318,17 @@ export function dayPart(d = new Date()) {
 
 export type Action = { icon: IconName; label: string; onPress?: () => void; dot?: boolean };
 /** "What do you need?" / "Tools" grid: 4 tinted tiles per row. */
-export function ActionGrid({ items }: { items: Action[] }) {
+/** Tiles are 70 tall (P4, P4c, P4d) or 76 (P4b, P4e). Icons sit at the same height in every tile so a row lines up;
+ * a two-line label grows downward. */
+export function ActionGrid({ items, height = 70 }: { items: Action[]; height?: number }) {
   const { width } = useWindowDimensions();
   const w = Math.floor((Math.min(width, 520) - space.xl * 2 - 24) / 4);
   return (
     <View style={s.grid}>
       {items.map((a) => (
-        <Pressable key={a.label} accessibilityRole="button" onPress={a.onPress} style={({ pressed }) => [s.tile, { width: w }, pressed && { opacity: 0.8 }]}>
+        <Pressable key={a.label} accessibilityRole="button" onPress={a.onPress} style={({ pressed }) => [s.tile, { width: w, height, paddingTop: Math.floor((height - 41) / 2) }, pressed && { opacity: 0.8 }]}>
           <View>
-            <Icon name={a.icon} size={22} tint={color.primaryStrong} />
+            <Icon name={a.icon} size={22} tint={color.primary} strokeWidth={1.8} />
             {a.dot ? <View style={s.tileDot} /> : null}
           </View>
           <Text style={s.tileText} numberOfLines={2}>
@@ -468,13 +459,14 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 6 },
   rowLine: { borderBottomWidth: 1, borderBottomColor: color.divider },
   rowIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
-  homeHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: space.xl, paddingTop: 20, paddingBottom: 12 },
+  // Bottom 12 in P4-P4e (10 in S3); Screen's content adds 4, so 8 here.
+  homeHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: space.xl, paddingTop: 20, paddingBottom: 8 },
   eyebrow: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
   homeTitle: { fontFamily: font.display, fontSize: 24, color: color.ink },
   initials: { width: 44, height: 44, borderRadius: 22, backgroundColor: color.ink, alignItems: 'center', justifyContent: 'center' },
   initialsText: { fontFamily: font.bodyBold, fontSize: 16, color: '#FFFFFF' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tile: { height: 70, borderRadius: 18, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 4 },
+  tile: { borderRadius: 18, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'flex-start', gap: 5, paddingHorizontal: 4 },
   tileText: { fontFamily: font.bodyBold, fontSize: 12, lineHeight: 14, color: color.primaryStrong, textAlign: 'center' },
   tileDot: { position: 'absolute', right: -4, top: -2, width: 9, height: 9, borderRadius: 5, backgroundColor: '#D9822B' },
   seg: { flexDirection: 'row', gap: 4, backgroundColor: color.muted, borderRadius: radius.pill, padding: 4 },

@@ -1,11 +1,12 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SvgXml } from 'react-native-svg';
 
 import { SafetyBox, TaskRows } from '@/components/bits';
 import { LogTimeline } from '@/components/LogTimeline';
-import { Banner, Button, Card, ChoicePill, ErrorText, Field, Icon, type IconName, Loading, Screen, T } from '@/components/ui';
+import { Banner, Button, Card, ChoicePill, ErrorText, Field, Icon, type IconName, Loading, Screen } from '@/components/ui';
 import { api, useQuery, useShiftLive } from '@/lib/data';
 import { firstName, timeOf } from '@/lib/format';
 import { type SharingMode, startSharing, stopSharing } from '@/lib/location-sharing';
@@ -14,15 +15,17 @@ import { formatClock, workedMinutes } from '@/lib/shift-logic';
 import { errorText, supabase } from '@/lib/supabase';
 import type { LogKind } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
+import { Text } from '@/components/Text';
 
 const TILES: { kind: LogKind | 'more'; label: string; icon: IconName }[] = [
-  // Wireframe S4 shows Trip first; trips aren't built yet, so the row starts at Food.
+  // Wireframe S4 shows Trip first; trips aren't built yet, so the row starts at Food (Nap is under More logs).
   { kind: 'food', label: 'Food', icon: 'coffee' },
-  { kind: 'nap', label: 'Nap', icon: 'moon' },
   { kind: 'photo', label: 'Photo', icon: 'camera' },
   { kind: 'more', label: 'More logs', icon: 'plus' },
 ];
 const MOODS = ['Great day', 'Bit tired', 'Upset tummy'];
+// Checkbox tick from the wireframes (2.6 stroke).
+const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 // Wireframes S4 (on shift) and S9 (wrap up the shift).
 export default function SitterShift() {
@@ -98,17 +101,24 @@ export default function SitterShift() {
   if (closing) {
     const mins = workedMinutes(shift, new Date(now));
     return (
+      // Wireframe S9, translated from its HTML (app/src/wireframes/S9.tsx). Left out until built: Fix times, Trips, report an injury.
       <Screen
-        title="Wrap up the shift"
-        subtitle={family}
-        back
-        onBack={() => setClosing(false)}
+        header={
+          // S9 header: 16 top, 12 below the title (8 here + the content's 4).
+          <View style={st.wrapHeader}>
+            <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => setClosing(false)} style={st.back}>
+              <Icon name="chevron-left" size={22} tint={color.ink} strokeWidth={2} />
+            </Pressable>
+            <View style={{ flexShrink: 1 }}>
+              <Text style={st.wrapTitle}>Wrap up the shift</Text>
+              <Text style={st.wrapSub}>{family}</Text>
+            </View>
+          </View>
+        }
         footer={
           <>
             <Button label="Clock out and send report" onPress={clockOut} busy={busy} />
-            <T variant="small" style={{ textAlign: 'center' }}>
-              Location sharing stops the moment you clock out.
-            </T>
+            <Text style={st.footNote}>Location sharing stops the moment you clock out.</Text>
           </>
         }>
         <View style={st.workedCard}>
@@ -133,10 +143,8 @@ export default function SitterShift() {
             <Text style={st.statNum}>{logs.filter((l) => l.kind === 'food').length}</Text>
             <Text style={st.statLbl}>Meals</Text>
           </View>
-          <View style={[st.statTile, { backgroundColor: color.primaryTint }]}>
-            <Text style={[st.statNum, { color: color.primaryStrong }]}>{logs.length}</Text>
-            <Text style={[st.statLbl, { color: color.primaryStrong }]}>Logs</Text>
-          </View>
+          {/* Trips aren't built yet: its slot stays empty so the tiles keep the wireframe's width. */}
+          <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0 }} />
         </View>
         <View style={{ gap: 8 }}>
           <Text style={st.fieldLabel}>How did it go?</Text>
@@ -146,7 +154,7 @@ export default function SitterShift() {
             ))}
           </View>
         </View>
-        <Field label={`Note for ${parent}`} value={note} onChangeText={setNote} multiline placeholder="Anything parents should know" style={{ minHeight: 100 }} />
+        <Field label={`Note for ${parent}`} value={note} onChangeText={setNote} multiline placeholder="Anything parents should know" style={{ minHeight: 96, height: 96, paddingBottom: 12 }} />
       </Screen>
     );
   }
@@ -198,7 +206,7 @@ export default function SitterShift() {
             const isDone = !!t.done_at;
             return (
               <Pressable key={t.id} accessibilityRole="checkbox" accessibilityState={{ checked: isDone }} onPress={() => toggle(t.id, !isDone)} style={st.taskRow}>
-                <View style={[st.box, isDone && st.boxOn]}>{isDone ? <Icon name="check" size={16} tint="#FFFFFF" strokeWidth={2.6} /> : null}</View>
+                <View style={[st.box, isDone && st.boxOn]}>{isDone ? <SvgXml xml={CHECK} width={16} height={16} /> : null}</View>
                 <View style={{ flexShrink: 1 }}>
                   <Text style={isDone ? st.taskDone : st.taskTitle}>{t.title}</Text>
                   {isDone ? <Text style={st.taskSub}>Done {timeOf(t.done_at!)}</Text> : t.due_at ? <Text style={st.taskSub}>{timeOf(t.due_at)}</Text> : null}
@@ -253,8 +261,13 @@ const st = StyleSheet.create({
   workedLabel: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
   worked: { fontFamily: font.display, fontSize: 32, color: color.ink, marginVertical: -6.63 },
   workedRange: { fontFamily: font.body, fontSize: 13, color: '#5F6D74' },
-  statTile: { flex: 1, gap: 2, padding: 12, borderRadius: 16 },
+  statTile: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, gap: 2, padding: 12, borderRadius: 16 },
   statNum: { fontFamily: font.display, fontSize: 20, color: color.ink },
   statLbl: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
   fieldLabel: { fontFamily: font.bodySemi, fontSize: 14, color: color.ink },
+  wrapHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 16, paddingHorizontal: 20, paddingBottom: 8 },
+  back: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  wrapTitle: { fontFamily: font.display, fontSize: 20, color: color.ink },
+  wrapSub: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
+  footNote: { fontFamily: font.body, fontSize: 13, color: color.ink2, textAlign: 'center' },
 });

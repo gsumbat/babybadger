@@ -16,6 +16,12 @@ code copies those designs.
 - Baloo 2 titles: don't give a single-line Baloo title a `lineHeight` smaller than its natural height (it shifts
   on iOS); use the equal negative `marginVertical` the converter writes. Wrapped titles keep their lineHeight.
 - Dates are US format (MM/DD/YYYY). Copy is plain and short.
+- Times are always picked with the phone's time wheel (hour, minute, AM/PM), never typed: use `TimeField` from
+  `app/src/components/TimeField.tsx` (the wireframes' dropdown box), or wrap a custom box in `TimeWheel` when the
+  wireframe draws the time differently (S45). Never a plain TextInput for a time.
+- Dropdowns use `SelectField` from `app/src/components/SelectField.tsx` (the wireframes' select box).
+- Text and TextInput come from `@/components/Text` (caps iOS text scaling so sizes match the wireframes).
+- Every UI change goes into both the app and the canvas wireframe, in the same step.
 
 ## Where the designs live
 
@@ -34,7 +40,7 @@ code copies those designs.
   Privacy rules live in the database: location and logs only from the shift's sitter while the shift is active;
   parents read only their family; sitters see kids only after accepting the invite and signing the notice.
 - Supabase project: `https://odsszoefdgepjdfvpwnn.supabase.co` (keys in `app/.env.local`, never committed).
-  Email sign-in with a code (8 digits on this project). Built-in email is rate limited; custom SMTP (Resend) is planned.
+  Email sign-in with a 6-digit code. Built-in email is rate limited; custom SMTP (Resend) is planned.
 
 ## Commands
 

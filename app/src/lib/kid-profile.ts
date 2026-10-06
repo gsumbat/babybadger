@@ -32,14 +32,16 @@ export function ageInMonths(iso: string, today = new Date()): number {
   return Math.max(0, months);
 }
 
-/** "3 months", "14 months", "1 year", "6 years". */
+/** "Newborn", "6 months", "1 year", "14 months", "2 yrs 4 mos", "7 yrs". Months matter for small kids, so they
+ * show at every age; whole years drop the months. */
 export function ageLabel(iso: string | null, today = new Date()): string {
   if (!iso) return '';
   const m = ageInMonths(iso, today);
   if (m < 1) return 'Newborn';
-  if (m < 24) return m < 12 || m % 12 !== 0 ? `${m} month${m === 1 ? '' : 's'}` : '1 year';
+  if (m < 24) return m === 12 ? '1 year' : `${m} month${m === 1 ? '' : 's'}`;
   const y = Math.floor(m / 12);
-  return `${y} years`;
+  const r = m % 12;
+  return r ? `${y} yrs ${r} mo${r === 1 ? '' : 's'}` : `${y} yrs`;
 }
 
 /** Foods parents most often keep away from a child this age (choking hazards and early-years rules). */
@@ -57,4 +59,23 @@ export const KID_COLORS = ['#E8B9BE', '#2F6FD6', '#D9822B', '#8676B3', '#1F8A4D'
 export function safetyLine(k: { name: string; avoid_foods?: string; allergies?: string }): string | null {
   const parts = [k.avoid_foods && `avoid ${k.avoid_foods}`, k.allergies && `allergic to ${k.allergies}`].filter(Boolean);
   return parts.length ? `${k.name} · ${parts.join(' · ')}` : null;
+}
+
+/** P55 "This week": shifts (not cancelled) starting Monday-Sunday of today's week, and the latest completed shift. */
+export function kidWeek<S extends { starts_at: string; status: string }>(shifts: S[], today = new Date()) {
+  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - ((today.getDay() + 6) % 7));
+  const nextMonday = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + 7);
+  const count = shifts.filter((s) => {
+    const t = new Date(s.starts_at);
+    return s.status !== 'cancelled' && t >= monday && t < nextMonday;
+  }).length;
+  const last = shifts.filter((s) => s.status === 'completed').sort((a, b) => b.starts_at.localeCompare(a.starts_at))[0];
+  return { count, last };
+}
+
+/** Pronouns from the optional gender: "her"/"his"/"their" (possessive) and "her"/"him"/"them" (object). */
+export function pronouns(gender?: 'girl' | 'boy' | null) {
+  if (gender === 'girl') return { poss: 'her', obj: 'her' };
+  if (gender === 'boy') return { poss: 'his', obj: 'him' };
+  return { poss: 'their', obj: 'them' };
 }

@@ -1,8 +1,9 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { hasDetails, normalizeCareItem } from './care-plan';
 import { supabase } from './supabase';
-import type { Invite, Kid, LocationPoint, LogEntry, Profile, Shift, SitterLink, Task } from './types';
+import type { CareItemInput, Invite, Kid, LocationPoint, LogEntry, Profile, Shift, SitterLink, Task } from './types';
 
 /** Load data when the screen gains focus; returns [data, reload, loading, error]. */
 export function useQuery<T>(fn: () => Promise<T>, deps: unknown[]): { data: T | undefined; reload: () => Promise<void>; loading: boolean; error: string } {
@@ -34,6 +35,17 @@ export function useQuery<T>(fn: () => Promise<T>, deps: unknown[]): { data: T | 
   return { data, reload: run, loading, error };
 }
 
+type CareRow = Parameters<typeof normalizeCareItem>[0];
+
+/** every_minutes null and details {} are the column defaults (migration 08). Leaving them out keeps items without
+ * a repeat or extras saving before that migration runs; `keep` sends them anyway to clear a saved value. */
+function withoutEmptyExtras<T extends Partial<CareItemInput>>(fields: T, keep: { every_minutes?: boolean; details?: boolean } = {}) {
+  const row: Partial<CareItemInput> = { ...fields };
+  if ('every_minutes' in row && row.every_minutes == null && !keep.every_minutes) delete row.every_minutes;
+  if ('details' in row && !hasDetails(row.details) && !keep.details) delete row.details;
+  return row;
+}
+
 function must<T>(r: { data: T | null; error: { message: string } | null }): T {
   if (r.error) throw new Error(r.error.message);
   return r.data as T;
@@ -48,6 +60,17 @@ export const api = {
   },
   async kids(familyId: string) {
     return must(await supabase.from('kids').select('*').eq('family_id', familyId).order('created_at')) as Kid[];
+  },
+  async kid(id: string) {
+    return must(await supabase.from('kids').select('*').eq('id', id).single()) as Kid;
+  },
+  /** Shifts this kid is on (shift_kids), newest first. */
+  async kidShifts(kidId: string) {
+    const rows = must(await supabase.from('shift_kids').select('shift:shifts(*)').eq('kid_id', kidId)) as unknown as { shift: Shift | null }[];
+    return rows
+      .map((r) => r.shift)
+      .filter((s): s is Shift => !!s)
+      .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
   },
   async familySitters(familyId: string) {
     const links = must(await supabase.from('family_sitters').select('*').eq('family_id', familyId).neq('status', 'removed')) as SitterLink[];
@@ -65,6 +88,27 @@ export const api = {
     const links = must(await supabase.from('family_parents').select('user_id').eq('family_id', familyId)) as { user_id: string }[];
     const ids = links.map((l) => l.user_id);
     return ids.length ? (must(await supabase.from('profiles').select('id, full_name, role').in('id', ids)) as Profile[]) : [];
+  },
+  /** Care plan (P7): every item in the family, whole-family tasks and each kid's day. */
+  async careItems(familyId: string) {
+    return (must(await supabase.from('care_items').select('*').eq('family_id', familyId).order('created_at')) as CareRow[]).map(normalizeCareItem);
+  },
+  /** One kid's day (P20). */
+  async kidCareItems(kidId: string) {
+    return (must(await supabase.from('care_items').select('*').eq('kid_id', kidId).order('created_at')) as CareRow[]).map(normalizeCareItem);
+  },
+  async careItem(id: string) {
+    return normalizeCareItem(must(await supabase.from('care_items').select('*').eq('id', id).single()) as CareRow);
+  },
+  async createCareItem(familyId: string, fields: CareItemInput) {
+    return normalizeCareItem(must(await supabase.from('care_items').insert({ ...withoutEmptyExtras(fields), family_id: familyId }).select().single()) as CareRow);
+  },
+  /** `keep` lists the extras the saved row already has, so they are cleared even when the new value is empty. */
+  async updateCareItem(id: string, fields: Partial<CareItemInput>, keep: { every_minutes?: boolean; details?: boolean } = {}) {
+    return normalizeCareItem(must(await supabase.from('care_items').update(withoutEmptyExtras(fields, keep)).eq('id', id).select().single()) as CareRow);
+  },
+  async deleteCareItem(id: string) {
+    must(await supabase.from('care_items').delete().eq('id', id));
   },
   async profilesById(ids: string[]) {
     if (!ids.length) return {} as Record<string, Profile>;

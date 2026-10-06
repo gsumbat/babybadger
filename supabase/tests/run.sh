@@ -20,4 +20,7 @@ $P -d t -f migrations/20261005000003_grants.sql
 $P -d t -f migrations/20261005000004_kid_profile.sql
 # pg_net is a Supabase extension; the stub above stands in for it.
 sed '/create extension if not exists pg_net/d' migrations/20261006000005_push.sql | $P -d t
+$P -d t -f migrations/20261006000006_care_plan.sql
+$P -d t -f migrations/20261006000007_kid_gender.sql
+$P -d t -f migrations/20261006000008_care_repeat.sql
 $P -d t -f tests/rls_scenarios.sql

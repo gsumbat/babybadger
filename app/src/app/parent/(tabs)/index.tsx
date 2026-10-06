@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { KidDot, kidSub } from '@/components/bits';
 import { LiveMap } from '@/components/LiveMap';
@@ -8,30 +9,46 @@ import { api, useQuery, useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
 import { describeLog, parentHomeState, workedMinutes } from '@/lib/shift-logic';
 import { useSession } from '@/lib/session';
+import { kv } from '@/lib/storage';
 import type { Kid, Shift } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
+import { Text } from '@/components/Text';
 
-// Wireframes P4 (live), P4a (setup), P4b (idle), P4c (starting soon), P4d (ended), translated from their HTML
-// (app/src/wireframes/P4*.tsx). Left out until built: Message / Call / Ask for photo, kids' devices and places,
-// Needs you (invoices, requests), Approve hours, "On my way", requirements and care plan steps.
+// Wireframes P4 (live), P4a (setup), P4e (setup skipped), P4b (idle), P4c (starting soon), P4d (ended), translated
+// from their HTML (app/src/wireframes/P4*.tsx). Left out until built: Message / Call / Ask for photo, kids' devices and
+// places, Needs you (invoices, requests), Approve hours, "On my way", the house rules step.
+
+// Optional steps (the care plan) count toward "n of 4 done" but don't keep the setup checklist open on their own.
+type Step = { done: boolean; locked?: boolean; optional?: boolean; title: string; next: string; sub: string; go: '/parent/kid/new' | '/parent/care' | '/parent/invite?from=setup' | '/parent/shift/new' };
 export default function ParentHome() {
   const { family, profile } = useSession();
   const fid = family!.id;
   const { data, error } = useQuery(async () => {
-    const [shifts, kids, sitters] = await Promise.all([api.familyShifts(fid), api.kids(fid), api.familySitters(fid)]);
-    return { shifts, kids, sitters };
+    // care_items arrives with migration 06; until it's run the care plan step just shows as not done.
+    const [shifts, kids, sitters, care] = await Promise.all([api.familyShifts(fid), api.kids(fid), api.familySitters(fid), api.careItems(fid).catch(() => [])]);
+    return { shifts, kids, sitters, careCount: care.length };
   }, [fid]);
 
   const state = data ? parentHomeState(data.shifts) : null;
   const sitterName = (id: string) => firstName(data?.sitters.find((s) => s.sitter_id === id)?.profile?.full_name);
-  const steps = data
+  // Booking opens once the kids are added (each went through the P19 safety step) and a sitter has joined and signed.
+  const kidsDone = !!data && data.kids.length > 0;
+  const sitterDone = !!data && data.sitters.some((s) => s.status === 'active');
+  const bookLock = !kidsDone ? 'Opens after you add your kids' : !sitterDone ? 'Opens when your sitter joins and signs' : '';
+  const steps: Step[] = data
     ? [
-        { done: data.kids.length > 0, title: 'Add your kids', sub: data.kids.length ? data.kids.map((k) => k.name).join(' and ') : 'Names, birthdays, foods to avoid', go: '/parent/kid/new' as const },
-        { done: data.sitters.some((s) => s.status === 'active'), title: 'Invite your sitter', sub: 'Someone you already trust', go: '/parent/invite' as const },
-        { done: data.shifts.length > 0, title: 'Book the first shift', sub: 'Pick a day and time', go: '/parent/shift/new' as const },
+        { done: kidsDone, title: 'Add your kids', next: 'add your kids', sub: kidsDone ? data.kids.map((k) => k.name).join(' and ') : 'Names, birthdays, foods to avoid', go: '/parent/kid/new' },
+        { done: data.careCount > 0, optional: true, title: 'Write the care plan', next: 'write the care plan', sub: 'Optional · tasks, meals, routines', go: '/parent/care' },
+        { done: sitterDone, title: 'Invite your sitter', next: 'invite your sitter', sub: 'Someone you trust', go: '/parent/invite?from=setup' },
+        { done: data.shifts.length > 0, locked: !!bookLock, title: 'Book the first shift', next: 'book the first shift', sub: bookLock || 'Pick a day and time', go: '/parent/shift/new' },
       ]
     : [];
-  const setup = steps.length > 0 && steps.some((s) => !s.done) && state?.kind === 'idle' && !state.next;
+  // "Skip for now" on P4a is remembered on this phone; the P4e card brings the checklist back.
+  const skipKey = `bb_setup_skipped_${fid}`;
+  const [skipped, setSkipped] = useState(() => kv.get(skipKey) === '1');
+  const incomplete = steps.some((s) => !s.done && !s.optional) && state?.kind === 'idle' && !state.next;
+  const setup = incomplete && !skipped;
+  const explore = incomplete && skipped;
 
   return (
     <Screen
@@ -46,31 +63,76 @@ export default function ParentHome() {
       }>
       <ErrorText>{error}</ErrorText>
 
-      {setup && <Setup steps={steps} />}
+      {setup && (
+        <Setup
+          steps={steps}
+          onSkip={() => {
+            kv.set(skipKey, '1');
+            setSkipped(true);
+          }}
+        />
+      )}
+      {explore && (
+        <FinishSetup
+          steps={steps}
+          lock={bookLock && bookLock.replace('Opens', 'Booking opens')}
+          onOpen={() => {
+            kv.remove(skipKey);
+            setSkipped(false);
+          }}
+        />
+      )}
       {state?.kind === 'live' && <Live shift={state.shift} sitter={sitterName(state.shift.sitter_id)} />}
       {state?.kind === 'soon' && <Soon shift={state.shift} minutes={state.minutes} sitter={sitterName(state.shift.sitter_id)} />}
       {state?.kind === 'ended' && (
         <Ended shift={state.shift} sitter={sitterName(state.shift.sitter_id)} next={data!.shifts.find((s) => s.status === 'scheduled' && new Date(s.starts_at) > new Date())} sitterName={sitterName} />
       )}
       {state?.kind === 'idle' && state.next && <NextShift shift={state.next} sitter={sitterName(state.next.sitter_id)} />}
-      {!setup && data && data.kids.length > 0 && (state?.kind === 'idle' || state?.kind === 'ended') && <Kids kids={data.kids} />}
+      {!setup && data && data.kids.length > 0 && state?.kind === 'idle' && <Kids kids={data.kids} add={!explore} />}
 
-      <Text style={[st.label, { marginTop: 4 }]}>WHAT DO YOU NEED?</Text>
-      <ActionGrid
-        items={[
-          { icon: 'plus', label: 'Book a shift', onPress: () => router.push('/parent/shift/new') },
-          { icon: 'users', label: 'Invite a sitter', onPress: () => router.push('/parent/invite') },
-          { icon: 'smartphone', label: 'Add a child', onPress: () => router.push('/parent/kid/new') },
-          { icon: 'calendar', label: 'Calendar', onPress: () => router.navigate('/parent/calendar') },
-        ]}
-      />
+      {/* P4a has no grid. Tiles not built yet are left out: Find a sitter, Kids & devices, Ask my pool, Pay sitter, Requirements. */}
+      {explore ? (
+        // P4e: "Invite a sitter" and "Care plan" are built; House rules and Kids & devices are left out.
+        <>
+          <View style={{ gap: 8, marginTop: 2 }}>
+            <Text style={st.label}>WHAT DO YOU NEED?</Text>
+            <ActionGrid
+              items={[
+                { icon: 'users', label: 'Invite a sitter', onPress: () => router.push('/parent/invite') },
+                { icon: 'list', label: 'Care plan', onPress: () => router.push('/parent/care') },
+              ]}
+              height={76}
+            />
+          </View>
+          <LiveNote />
+        </>
+      ) : state && !setup ? (
+        // P4/P4c/P4d: the grid sits 12 below the content; P4b: inside the content (gap 10). Label to grid: 8.
+        <View style={{ gap: 8, marginTop: state.kind === 'soon' || state.kind === 'ended' ? 2 : 0 }}>
+          <Text style={st.label}>WHAT DO YOU NEED?</Text>
+          <ActionGrid
+            items={[
+              { icon: 'plus', label: 'Book a shift', onPress: () => router.push('/parent/shift/new') },
+              ...(state.kind === 'idle' ? [{ icon: 'message-square' as const, label: 'Message', onPress: () => router.navigate('/parent/messages') }] : []),
+            ]}
+            height={state.kind === 'idle' ? 76 : 70}
+          />
+        </View>
+      ) : null}
     </Screen>
   );
 }
 
+/** "3:00 – 7:00 PM": the start drops AM/PM when both ends share it (wireframes P4b-P4d). */
+function span(start: string, end: string) {
+  const [a, b] = [timeOf(start), timeOf(end)];
+  const ap = (t: string) => t.match(/\s?([AP]M)$/i)?.[1];
+  return ap(a) && ap(a) === ap(b) ? `${a.replace(/\s?[AP]M$/i, '')} – ${b}` : `${a} – ${b}`;
+}
+
 function LabelRow({ children, link, onLink }: { children: string; link?: string; onLink?: () => void }) {
   return (
-    <View style={[st.labelRow]}>
+    <View style={[st.labelRow, { marginTop: 2 }]}>
       <Text style={st.label}>{children}</Text>
       {link ? (
         <Text style={st.link} onPress={onLink}>
@@ -81,18 +143,18 @@ function LabelRow({ children, link, onLink }: { children: string; link?: string;
   );
 }
 
-function Avatar({ name, size, letterSize, display = true }: { name: string; size: number; letterSize: number; display?: boolean }) {
+function Avatar({ name, size, letterSize, face = font.display }: { name: string; size: number; letterSize: number; face?: string }) {
   return (
     <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ fontFamily: display ? font.display : font.bodyBold, fontSize: letterSize, color: '#FFFFFF' }}>{(name[0] || '?').toUpperCase()}</Text>
+      <Text style={{ fontFamily: face, fontSize: letterSize, color: '#FFFFFF' }}>{(name[0] || '?').toUpperCase()}</Text>
     </View>
   );
 }
 
 // P4a
-function Setup({ steps }: { steps: { done: boolean; title: string; sub: string; go: '/parent/kid/new' | '/parent/invite' | '/parent/shift/new' }[] }) {
+function Setup({ steps, onSkip }: { steps: Step[]; onSkip: () => void }) {
   const done = steps.filter((s) => s.done).length;
-  const current = steps.findIndex((s) => !s.done);
+  const current = steps.findIndex((s) => !s.done && !s.locked);
   return (
     <>
       <View style={st.labelRow}>
@@ -106,11 +168,23 @@ function Setup({ steps }: { steps: { done: boolean; title: string; sub: string; 
       </View>
       {steps.map((s, i) => {
         const now = i === current;
+        if (s.locked && !s.done)
+          return (
+            <View key={s.title} accessibilityState={{ disabled: true }} style={[st.step, st.stepLocked]}>
+              <View style={[st.num, { backgroundColor: '#E1E6EC' }]}>
+                <Icon name="lock" size={16} tint="#5F6D74" strokeWidth={2} />
+              </View>
+              <View style={{ flexGrow: 1, flexShrink: 1 }}>
+                <Text style={[st.stepTitle, { color: '#5F6D74' }]}>{s.title}</Text>
+                <Text style={[st.sub12, { color: '#5F6D74' }]}>{s.sub}</Text>
+              </View>
+            </View>
+          );
         return (
           <Pressable key={s.title} accessibilityRole="button" onPress={() => router.push(s.go)} style={[st.step, now && st.stepNow]}>
             {s.done ? (
               <View style={[st.num, { backgroundColor: color.ok }]}>
-                <Icon name="check" size={18} tint="#FFFFFF" strokeWidth={2.6} />
+                <Icon name="check" size={16} tint="#FFFFFF" strokeWidth={2.8} />
               </View>
             ) : now ? (
               <View style={[st.num, { backgroundColor: color.primary }]}>
@@ -125,14 +199,61 @@ function Setup({ steps }: { steps: { done: boolean; title: string; sub: string; 
               <Text style={[st.stepTitle, s.done && { color: color.ink2, textDecorationLine: 'line-through' }]}>{s.title}</Text>
               <Text style={st.sub12}>{s.sub}</Text>
             </View>
-            <Icon name="chevron-right" size={18} tint={color.ink2} />
+            {s.done ? null : <Icon name="chevron-right" size={18} tint={color.ink2} />}
           </Pressable>
         );
       })}
-      <View style={st.dashed}>
-        <Text style={{ fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.ink2 }}>When a sitter is on shift, this screen turns into the live map with your kids’ plan.</Text>
-      </View>
+      <LiveNote />
+      <Text accessibilityRole="button" onPress={onSkip} style={st.skip}>
+        Skip for now, explore the app
+      </Text>
     </>
+  );
+}
+
+function LiveNote() {
+  return (
+    <View style={st.dashed}>
+      <Text style={{ fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.ink2 }}>When a sitter is on shift, this screen turns into the live map with your kids’ plan.</Text>
+    </View>
+  );
+}
+
+// P4e: the checklist folded into one card; tapping it brings P4a back.
+function FinishSetup({ steps, lock, onOpen }: { steps: Step[]; lock: string; onOpen: () => void }) {
+  const done = steps.filter((s) => s.done).length;
+  const i = steps.findIndex((s) => !s.done && !s.locked);
+  const next = steps[i];
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel="Finish setting up" onPress={onOpen} style={st.finish}>
+      <View style={st.labelRow}>
+        <Text style={st.label}>FINISH SETTING UP</Text>
+        <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: color.ink }}>
+          {done} of {steps.length} done
+        </Text>
+      </View>
+      <View style={st.setupTrack}>
+        <View style={[st.setupFill, { width: `${(done / steps.length) * 100}%` }]} />
+      </View>
+      {next ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <View style={[st.num, { backgroundColor: color.primary }]}>
+            <Text style={[st.numText, { color: '#FFFFFF' }]}>{i + 1}</Text>
+          </View>
+          <View style={{ flexGrow: 1, flexShrink: 1 }}>
+            <Text style={st.stepTitle}>Next: {next.next}</Text>
+            <Text style={st.sub12}>{next.sub}</Text>
+          </View>
+          <Icon name="chevron-right" size={18} tint={color.ink2} />
+        </View>
+      ) : null}
+      {lock ? (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Icon name="lock" size={16} tint="#5F6D74" strokeWidth={2} />
+          <Text style={{ fontFamily: font.body, fontSize: 13, color: '#5F6D74', flexShrink: 1 }}>{lock}</Text>
+        </View>
+      ) : null}
+    </Pressable>
   );
 }
 
@@ -149,7 +270,7 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
     <>
       <Pressable onPress={() => router.push(`/parent/shift/${shift.id}`)} style={st.liveCard}>
         <View style={st.liveTop}>
-          <Avatar name={sitter} size={44} letterSize={16} display={false} />
+          <Avatar name={sitter} size={44} letterSize={16} face={font.bodyBold} />
           <View style={{ flexGrow: 1, flexShrink: 1 }}>
             <Text style={st.liveTitle}>
               {sitter} is with {bundle.kids.map((k) => k.name).join(' and ') || 'the kids'}
@@ -215,7 +336,7 @@ function Soon({ shift, minutes, sitter }: { shift: Shift; minutes: number; sitte
             <Text style={st.blueSmall}>{sitter} starts in</Text>
             <Text style={st.blueBig}>{minutes === 0 ? 'now' : `${minutes} min`}</Text>
             <Text style={[st.blueSmall, { fontSize: 14, opacity: 0.9 }]}>
-              {timeOf(shift.starts_at)} – {timeOf(shift.ends_at)}
+              {span(shift.starts_at, shift.ends_at)}
             </Text>
           </View>
           <Avatar name={sitter} size={52} letterSize={23} />
@@ -287,16 +408,16 @@ function Ended({ shift, sitter, next, sitterName }: { shift: Shift; sitter: stri
             COMING UP
           </LabelRow>
           <Pressable onPress={() => router.push(`/parent/shift/${next.id}`)} style={st.comingCard}>
-            <Avatar name={sitterName(next.sitter_id)} size={36} letterSize={16} />
+            <Avatar name={sitterName(next.sitter_id)} size={36} letterSize={16} face={font.displayBold} />
             <View style={{ flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: color.ink }}>
-                {dayOf(next.starts_at)} · {timeOf(next.starts_at)} – {timeOf(next.ends_at)}
+                {dayOf(next.starts_at)} · {span(next.starts_at, next.ends_at)}
               </Text>
               <Text style={st.sub12}>{sitterName(next.sitter_id)}</Text>
             </View>
             <View style={st.pill}>
-              <View style={[st.greenDot8, { width: 7, height: 7, backgroundColor: color.primary }]} />
-              <Text style={[st.pillText, { color: color.primaryStrong }]}>Booked</Text>
+              <View style={[st.greenDot8, { width: 7, height: 7 }]} />
+              <Text style={st.pillText}>Confirmed</Text>
             </View>
           </Pressable>
         </>
@@ -322,16 +443,16 @@ function NextShift({ shift, sitter }: { shift: Shift; sitter: string }) {
     <Pressable onPress={() => router.push(`/parent/shift/${shift.id}`)} style={st.nextCard}>
       <View style={st.labelRow}>
         <Text style={st.label}>NEXT SHIFT</Text>
-        <View style={[st.pill, { backgroundColor: color.primaryTint }]}>
-          <View style={[st.greenDot8, { width: 7, height: 7, backgroundColor: color.primary }]} />
-          <Text style={[st.pillText, { color: color.primaryStrong }]}>Booked</Text>
+        <View style={st.pill}>
+          <View style={[st.greenDot8, { width: 7, height: 7 }]} />
+          <Text style={st.pillText}>Confirmed</Text>
         </View>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <Avatar name={sitter} size={48} letterSize={21} />
         <View style={{ flexShrink: 1 }}>
           <Text style={st.when}>
-            {dayOf(shift.starts_at)} · {timeOf(shift.starts_at)} – {timeOf(shift.ends_at)}
+            {dayOf(shift.starts_at)} · {span(shift.starts_at, shift.ends_at)}
           </Text>
           <Text style={st.sub14}>
             {sitter}
@@ -344,21 +465,22 @@ function NextShift({ shift, sitter }: { shift: Shift; sitter: string }) {
   );
 }
 
-function Kids({ kids }: { kids: Kid[] }) {
+function Kids({ kids, add = true }: { kids: Kid[]; add?: boolean }) {
   return (
     <>
-      <LabelRow link="Add" onLink={() => router.push('/parent/kid/new')}>
+      <LabelRow link={add ? 'Add' : undefined} onLink={() => router.push('/parent/kid/new')}>
         KIDS
       </LabelRow>
       <View style={[st.listCard, { paddingHorizontal: 16 }]}>
         {kids.map((k, i) => (
-          <View key={k.id} style={[st.kidRow, i < kids.length - 1 && st.line]}>
+          <Pressable key={k.id} accessibilityRole="button" onPress={() => router.push(`/parent/kid/${k.id}`)} style={[st.kidRow, i < kids.length - 1 && st.line]}>
             <KidDot kid={k} />
             <View style={{ flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: color.ink }}>{k.name}</Text>
-              {kidSub(k) ? <Text style={st.sub12}>{kidSub(k)}</Text> : null}
+              {kidSub(k) ? <Text style={[st.sub12, { lineHeight: 17, marginTop: 2 }]}>{kidSub(k)}</Text> : null}
             </View>
-          </View>
+            <Icon name="chevron-right" size={18} tint={color.ink2} />
+          </Pressable>
         ))}
       </View>
     </>
@@ -380,10 +502,15 @@ const st = StyleSheet.create({
   setupTrack: { height: 8, borderRadius: 4, backgroundColor: '#DDE3EA', overflow: 'hidden' },
   setupFill: { height: 8, backgroundColor: color.primary },
   step: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
-  stepNow: { backgroundColor: color.primaryTint, borderRadius: 16, borderWidth: 2, borderColor: color.primary },
+  stepNow: { backgroundColor: color.primaryTint, borderRadius: 16, borderWidth: 2, borderColor: color.primary, shadowOpacity: 0, elevation: 0 },
   num: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
   numText: { fontFamily: font.displayBold, fontSize: 15, color: '#5F6D74' },
   stepTitle: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink },
+  // P4a locked step: flat grey card, lock in a grey circle, no chevron.
+  stepLocked: { backgroundColor: '#EEF1F4', shadowOpacity: 0, elevation: 0 },
+  skip: { fontFamily: font.bodySemi, fontSize: 15, color: color.primary, textDecorationLine: 'underline', textAlign: 'center', marginTop: 2 },
+  // P4e Finish setting up card.
+  finish: { backgroundColor: '#FFFFFF', borderRadius: 24, paddingVertical: 14, paddingHorizontal: 16, gap: 10, ...cardShadow },
   dashed: { paddingVertical: 12, paddingHorizontal: 14, backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1.5, borderColor: color.lineStrong, borderStyle: 'dashed' },
   // P4
   liveCard: { backgroundColor: '#FFFFFF', borderRadius: 24, overflow: 'hidden', ...cardShadow },
@@ -408,13 +535,14 @@ const st = StyleSheet.create({
   endCard: { gap: 14, padding: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   endTitle: { fontFamily: font.displayBold, fontSize: 19, color: color.ink, marginVertical: -3.72 },
   statsBox: { flexDirection: 'row', gap: 4, paddingVertical: 10, paddingHorizontal: 4, backgroundColor: color.canvas, borderRadius: 14 },
-  primaryBtn: { height: 50, borderRadius: 999, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' },
-  primaryBtnText: { fontFamily: font.displayBold, fontSize: 17, color: '#FFFFFF' },
+  primaryBtn: { height: 50, borderRadius: 999, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
+  primaryBtnText: { fontFamily: font.displayBold, fontSize: 17, color: color.primary },
   comingCard: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   pill: { height: 26, paddingHorizontal: 10, borderRadius: 999, backgroundColor: color.okTint, flexDirection: 'row', alignItems: 'center', gap: 6 },
   pillText: { fontFamily: font.bodyBold, fontSize: 12, color: color.okInk },
   // P4b
   nextCard: { gap: 10, paddingVertical: 14, paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   when: { fontFamily: font.display, fontSize: 20, color: color.ink, marginVertical: -4.02 },
-  kidRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56 },
+  // Room above and below each kid so long food/allergy lines never touch the divider or the card edge.
+  kidRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingVertical: 12 },
 });

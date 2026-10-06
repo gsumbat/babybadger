@@ -2,15 +2,18 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { BoxChoice, Button, Chip, ChoicePill, ErrorText, Field, Icon, type IconName, Label, Screen, Segmented, SheetHeader, T } from '@/components/ui';
 import { useShiftLive } from '@/lib/data';
+import { DIAPER_LABELS } from '@/lib/shift-logic';
 import { timeOf } from '@/lib/format';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import type { LogKind } from '@/lib/types';
 import { color, font } from '@/theme';
+import { Text, TextInput } from '@/components/Text';
+import { TimeWheel } from '@/components/TimeField';
 
 const cap = (x: string) => x[0].toUpperCase() + x.slice(1);
 const opts = (xs: string[]) => xs.map((x) => ({ value: x, label: cap(x) }));
@@ -25,15 +28,33 @@ const KINDS: { kind: LogKind; label: string; icon: IconName }[] = [
 
 const TITLES: Record<LogKind, string> = { food: 'Log food', nap: 'Log a nap', activity: 'Log an activity', diaper: 'Diaper or potty', note: 'Add a note', photo: 'Photo update' };
 
-function Choice({ label, options, value, onChange }: { label: string; options: string[]; value: string; onChange: (v: string) => void }) {
+function Choice({ label, options, value, onChange, labels }: { label: string; options: string[]; value: string; onChange: (v: string) => void; labels?: Record<string, string> }) {
   return (
     <View style={{ gap: 8 }}>
       <Label>{label}</Label>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {options.map((o) => <Chip key={o} label={cap(o)} on={value === o} onPress={() => onChange(o)} />)}
+        {options.map((o) => <Chip key={o} label={labels?.[o] ?? cap(o)} on={value === o} onPress={() => onChange(o)} />)}
       </View>
     </View>
   );
+}
+
+/** "1 h 25 min" between two typed times like "3:45 PM" and "5:10 PM" (wireframe S45, under Woke up). */
+function napLength(from?: string, to?: string) {
+  const mins = (t?: string) => {
+    const m = t?.trim().match(/^(\d{1,2}):(\d{2})\s*([AP]M)?$/i);
+    if (!m) return null;
+    let h = +m[1] % 12;
+    if (m[3]?.toUpperCase() === 'PM' || (!m[3] && +m[1] === 12)) h += 12;
+    if (!m[3] && +m[1] > 12) h = +m[1];
+    return h * 60 + +m[2];
+  };
+  const a = mins(from);
+  const b = mins(to);
+  if (a === null || b === null) return '';
+  const d = (b - a + 1440) % 1440;
+  if (!d) return '';
+  return d >= 60 ? `${Math.floor(d / 60)} h ${d % 60} min` : `${d} min`;
 }
 
 export default function AddLog() {
@@ -107,28 +128,38 @@ export default function AddLog() {
     (kind === 'note' && !!f.text?.trim()) ||
     (kind === 'photo' && !!photo);
 
-  // Wireframe S44: "Add a log" chooser.
+  // Wireframe S44: "Add a log" chooser, two rows of three. Left out until built (needs house rules): the
+  // "The Lees asked for…" line, DUE badges and "See what's due".
   if (!kind)
     return (
-      <Screen bleedTop header={<SheetHeader title="Add a log" />}>
-        <T variant="muted">Pick what happened. The parents see it right away.</T>
-        <View style={st.grid}>
-          {KINDS.map((x) => (
-            <Pressable key={x.kind} accessibilityRole="button" onPress={() => setPicked(x.kind)} style={({ pressed }) => [st.kindTile, pressed && { opacity: 0.85 }]}>
-              <Icon name={x.icon} size={26} tint={color.primaryStrong} />
-              <Text style={st.kindText}>{x.label}</Text>
-            </Pressable>
+      <Screen bleedTop bg={color.surface} gap={14} header={<SheetHeader title="Add a log" />}>
+        <View style={{ gap: 10 }}>
+          {[KINDS.slice(0, 3), KINDS.slice(3)].map((row) => (
+            <View key={row[0].kind} style={{ flexDirection: 'row', gap: 10 }}>
+              {row.map((x) => (
+                <Pressable key={x.kind} accessibilityRole="button" onPress={() => setPicked(x.kind)} style={({ pressed }) => [st.kindTile, pressed && { opacity: 0.85 }]}>
+                  <Icon name={x.icon} size={28} tint={color.primary} />
+                  <Text style={st.kindText}>{x.label}</Text>
+                </Pressable>
+              ))}
+            </View>
           ))}
         </View>
       </Screen>
     );
 
-  // Wireframes S5 (food), S45 (nap), S46-S49.
+  // Wireframes S5 (food, 16 between groups, semibold labels), S45 (nap, 14, bold labels), S46-S49.
+  const q = kind === 'nap' ? [st.q, { fontFamily: font.bodyBold }] : st.q;
   return (
-    <Screen bleedTop header={<SheetHeader title={TITLES[kind]} />} footer={<Button label={kind === 'photo' ? 'Send to the parents' : 'Save and notify parents'} onPress={save} busy={busy} disabled={!valid} />}>
+    <Screen
+      bleedTop
+      bg={color.surface}
+      gap={kind === 'food' ? 16 : kind === 'nap' ? 14 : undefined}
+      header={<SheetHeader title={TITLES[kind]} />}
+      footer={<Button label={kind === 'photo' ? 'Send to the parents' : 'Save and notify parents'} onPress={save} busy={busy} disabled={!valid} />}>
       {kids.length > 1 && (
         <View style={{ gap: 8 }}>
-          <Text style={st.q}>Who</Text>
+          <Text style={q}>Who</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {kids.map((kid) => (
               <ChoicePill key={kid.id} label={kid.name} tint={color.accentTint} on={whoValue === kid.id} onPress={() => setWho([kid.id])} />
@@ -142,13 +173,15 @@ export default function AddLog() {
         <>
           <Segmented square options={opts(['snack', 'breakfast', 'lunch', 'dinner'])} value={f.meal} onChange={set('meal')} />
           <Field label="What did they eat?" value={f.what ?? ''} onChangeText={set('what')} placeholder="Apple slices, crackers" />
-          <Text style={st.q}>How much?</Text>
-          <BoxChoice options={opts(['none', 'some', 'most', 'all'])} value={f.amount} onChange={set('amount')} />
+          <View style={{ gap: 8 }}>
+            <Text style={st.q}>How much?</Text>
+            <BoxChoice options={opts(['none', 'some', 'most', 'all'])} value={f.amount} onChange={set('amount')} />
+          </View>
           {photo ? (
             <Image source={{ uri: photo.uri }} style={{ height: 160, borderRadius: 18 }} contentFit="cover" />
           ) : (
             <Pressable accessibilityRole="button" onPress={() => pick(true)} style={st.addPhoto}>
-              <Icon name="camera" size={18} />
+              <Icon name="camera" size={22} />
               <Text style={st.addPhotoText}>Add a photo</Text>
             </Pressable>
           )}
@@ -158,27 +191,64 @@ export default function AddLog() {
       {kind === 'nap' && (
         <>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <View style={st.timeBox}>
+            <TimeWheel
+              title="Fell asleep"
+              value={f.started_at ?? ''}
+              onChange={set('started_at')}
+              style={st.timeBox}
+              fallback={
+                <View style={st.timeBox}>
+                  <Text style={st.timeLabel}>Fell asleep</Text>
+                  <TextInput value={f.started_at ?? ''} onChangeText={set('started_at')} style={st.timeValue} />
+                </View>
+              }>
               <Text style={st.timeLabel}>Fell asleep</Text>
-              <TextInput value={f.started_at ?? ''} onChangeText={set('started_at')} style={st.timeValue} />
-            </View>
+              <Text style={st.timeValue}>{f.started_at ?? ''}</Text>
+            </TimeWheel>
             {!asleep && (
-              <View style={st.timeBox}>
+              <TimeWheel
+                title="Woke up"
+                value={f.ended_at ?? ''}
+                onChange={set('ended_at')}
+                style={st.timeBox}
+                fallback={
+                  <View style={st.timeBox}>
+                    <Text style={st.timeLabel}>Woke up</Text>
+                    <TextInput value={f.ended_at ?? ''} onChangeText={set('ended_at')} placeholder={timeOf(new Date())} placeholderTextColor={color.quiet} style={st.timeValue} />
+                    {napLength(f.started_at, f.ended_at) ? <Text style={st.timeSub}>{napLength(f.started_at, f.ended_at)}</Text> : null}
+                  </View>
+                }>
                 <Text style={st.timeLabel}>Woke up</Text>
-                <TextInput value={f.ended_at ?? ''} onChangeText={set('ended_at')} placeholder={timeOf(new Date())} placeholderTextColor={color.quiet} style={st.timeValue} />
-              </View>
+                <Text style={[st.timeValue, !f.ended_at && { color: color.quiet }]}>{f.ended_at || timeOf(new Date())}</Text>
+                {napLength(f.started_at, f.ended_at) ? <Text style={st.timeSub}>{napLength(f.started_at, f.ended_at)}</Text> : null}
+              </TimeWheel>
             )}
           </View>
-          <View style={st.switchRow}>
-            <View style={{ flex: 1 }}>
-              <T variant="strong">Still sleeping</T>
-              <T variant="small">Log the start now, the end later</T>
+          {/* S45 switch: 50×30 track, 24 knob. */}
+          <Pressable
+            accessibilityRole="switch"
+            accessibilityState={{ checked: asleep }}
+            onPress={() => {
+              setAsleep(!asleep);
+              if (!asleep) set('ended_at')('');
+            }}
+            style={st.switchRow}>
+            <View style={{ flexShrink: 1 }}>
+              <Text style={st.switchTitle}>Still sleeping</Text>
+              <Text style={st.switchSub}>Log the start now, the end later</Text>
             </View>
-            <Switch value={asleep} onValueChange={(v) => { setAsleep(v); if (v) set('ended_at')(''); }} trackColor={{ true: color.primary, false: color.lineStrong }} />
+            <View style={[st.track, asleep && { backgroundColor: color.primary }]}>
+              <View style={[st.knob, asleep ? { right: 3 } : { left: 3 }]} />
+            </View>
+          </Pressable>
+          <View style={{ gap: 8 }}>
+            <Text style={q}>How did it go?</Text>
+            <BoxChoice options={opts(['easily', 'took a while', 'woke up upset'])} value={f.how} onChange={set('how')} />
           </View>
-          <Text style={st.q}>How did it go?</Text>
-          <BoxChoice options={opts(['easily', 'took a while', 'woke up upset'])} value={f.how} onChange={set('how')} />
-          <Field label="Note (optional)" value={f.note ?? ''} onChangeText={set('note')} />
+          <View style={{ gap: 6 }}>
+            <Text style={q}>Note (optional)</Text>
+            <TextInput value={f.note ?? ''} onChangeText={set('note')} multiline style={st.napNote} />
+          </View>
         </>
       )}
 
@@ -195,7 +265,8 @@ export default function AddLog() {
 
       {kind === 'diaper' && (
         <>
-          <Choice label="Diaper" options={['wet', 'dirty', 'both', 'dry']} value={f.diaper} onChange={set('diaper')} />
+          {/* S48: shown as #1 / #2 / Both / Dry, stored as wet / dirty / both / dry. */}
+          <Choice label="Diaper" options={['wet', 'dirty', 'both', 'dry']} labels={DIAPER_LABELS} value={f.diaper} onChange={set('diaper')} />
           <Choice label="Potty try" options={['not today', 'tried', 'success!']} value={f.potty} onChange={set('potty')} />
           <Field label="Anything unusual?" value={f.note ?? ''} onChangeText={set('note')} placeholder="Rash, etc." />
         </>
@@ -233,13 +304,19 @@ export default function AddLog() {
 
 const st = StyleSheet.create({
   q: { fontFamily: font.bodySemi, fontSize: 14, color: color.ink },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  kindTile: { width: '31%', flexGrow: 1, height: 92, borderRadius: 20, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center', gap: 8 },
-  kindText: { fontFamily: font.bodyBold, fontSize: 14, color: color.primaryStrong },
+  kindTile: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, height: 92, borderRadius: 20, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center', gap: 8 },
+  kindText: { fontFamily: font.displayBold, fontSize: 16, color: color.primaryStrong },
   addPhoto: { height: 64, borderRadius: 999, borderWidth: 2, borderStyle: 'dashed', borderColor: '#C9D3DD', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   addPhotoText: { fontFamily: font.displayBold, fontSize: 15, color: color.primary },
-  timeBox: { flex: 1, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: color.lineStrong },
+  timeBox: { flexGrow: 1, flexShrink: 1, flexBasis: 0, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: color.lineStrong },
   timeLabel: { fontFamily: font.bodyBold, fontSize: 12, color: color.ink2 },
   timeValue: { fontFamily: font.display, fontSize: 20, color: color.ink, padding: 0 },
-  switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  timeSub: { fontFamily: font.body, fontSize: 12, color: color.ink2 },
+  // S45 values
+  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 44 },
+  switchTitle: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
+  switchSub: { fontFamily: font.body, fontSize: 12, color: color.ink2 },
+  track: { width: 50, height: 30, borderRadius: 15, backgroundColor: color.lineStrong, flexShrink: 0 },
+  knob: { position: 'absolute', top: 3, width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFFFFF' },
+  napNote: { minHeight: 50, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1, borderColor: color.lineStrong, fontFamily: font.body, fontSize: 16, lineHeight: 22, color: color.ink, textAlignVertical: 'top' },
 });

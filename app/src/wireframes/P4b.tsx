@@ -62,23 +62,23 @@ export default function WF_P4b() {
           <View style={{ flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A", textDecorationLine: "underline" }}>Devices</Text></View>
         </View>
         <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>{/* -> P55-ChildProfile.dc.html */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64, paddingTop: 12, paddingRight: 0, paddingBottom: 12, paddingLeft: 0, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>{/* -> P55-ChildProfile.dc.html */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 18 }}>
               <Text style={{ fontFamily: font.displayBold, fontSize: 16, color: "#FFFFFF" }}>A</Text>
             </View>
             <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Ava · Lincoln Elementary</Text>
-              <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960" }}>From her phone · 5 min ago · 64%</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 17, marginTop: 2 }}>From her phone · 5 min ago · 64%</Text>
             </View>
             <SvgXml xml={SVG[0]} width={18} height={18} />
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56 }}>{/* -> P64-LeoProfile.dc.html */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64, paddingTop: 12, paddingRight: 0, paddingBottom: 12, paddingLeft: 0 }}>{/* -> P64-LeoProfile.dc.html */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#8676B3", borderRadius: 18 }}>
               <Text style={{ fontFamily: font.displayBold, fontSize: 16, color: "#FFFFFF" }}>L</Text>
             </View>
             <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Leo · Sunshine Daycare</Text>
-              <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960" }}>From his tracker · 3 min ago · 78%</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 17, marginTop: 2 }}>From his tracker · 3 min ago · 78%</Text>
             </View>
             <SvgXml xml={SVG[1]} width={18} height={18} />
           </View>
@@ -112,37 +112,37 @@ export default function WF_P4b() {
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>WHAT DO YOU NEED?</Text>
           <View style={{ flexDirection: "column", gap: 8 }}>
             <View style={{ flexDirection: "row", gap: 8 }}>
-              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 76, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P6-Calendar.dc.html */}
+              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 76, paddingTop: 17, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P6-Calendar.dc.html */}
                 <SvgXml xml={SVG[6]} width={22} height={22} />
                 <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Book a shift</Text>
               </View>
-              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 76, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P48-Find.dc.html */}
+              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 76, paddingTop: 17, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P48-Find.dc.html */}
                 <SvgXml xml={SVG[7]} width={22} height={22} />
                 <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Find a sitter</Text>
               </View>
-              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 76, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P45-PoolAsk.dc.html */}
+              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 76, paddingTop: 17, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P45-PoolAsk.dc.html */}
                 <SvgXml xml={SVG[8]} width={22} height={22} />
                 <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Ask my pool</Text>
               </View>
-              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 76, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P10-Messages.dc.html */}
+              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 76, paddingTop: 17, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P10-Messages.dc.html */}
                 <SvgXml xml={SVG[9]} width={22} height={22} />
                 <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Message</Text>
               </View>
             </View>
             <View style={{ flexDirection: "row", gap: 8 }}>
-              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 76, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P7-CarePlan.dc.html */}
+              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 76, paddingTop: 17, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P7-CarePlan.dc.html */}
                 <SvgXml xml={SVG[10]} width={22} height={22} />
                 <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Care plan</Text>
               </View>
-              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 76, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P13-KidsDevices.dc.html */}
+              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 76, paddingTop: 17, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P13-KidsDevices.dc.html */}
                 <SvgXml xml={SVG[11]} width={22} height={22} />
                 <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Kids & devices</Text>
               </View>
-              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 76, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P33-InvoicePay.dc.html */}
+              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 76, paddingTop: 17, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P33-InvoicePay.dc.html */}
                 <SvgXml xml={SVG[12]} width={22} height={22} />
                 <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Pay sitter</Text>
               </View>
-              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 76, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P7a-SitterRequirements.dc.html */}
+              <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 76, paddingTop: 17, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P7a-SitterRequirements.dc.html */}
                 <SvgXml xml={SVG[13]} width={22} height={22} />
                 <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Requirements</Text>
               </View>

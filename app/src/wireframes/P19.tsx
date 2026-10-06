@@ -35,14 +35,14 @@ export default function WF_P19() {
         </View>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>FOOD TO AVOID</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A", flexShrink: 1 }}>
-            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A" }}>✓ Honey</Text>
+          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#F6DCD6", borderRadius: 999, borderWidth: 1.5, borderColor: "#C2412D", flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#A1321F" }}>✓ Honey</Text>
           </View>
-          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A", flexShrink: 1 }}>
-            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A" }}>✓ Whole nuts</Text>
+          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#F6DCD6", borderRadius: 999, borderWidth: 1.5, borderColor: "#C2412D", flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#A1321F" }}>✓ Whole nuts</Text>
           </View>
-          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A", flexShrink: 1 }}>
-            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A" }}>✓ Whole grapes</Text>
+          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#F6DCD6", borderRadius: 999, borderWidth: 1.5, borderColor: "#C2412D", flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#A1321F" }}>✓ Whole grapes</Text>
           </View>
           <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Cow’s milk</Text>

@@ -152,4 +152,85 @@ do $$ begin
   if (select body->0->>'title' from net.sent) <> 'Urgent: Note' then raise exception 'FAIL urgent title: %', (select body->0->>'title' from net.sent); end if;
 end $$;
 
+-- 14. Care plan: parents manage their own family's items; an active sitter only reads them;
+--     other parents, invited (not yet signed) and removed sitters see nothing.
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000000e', 'new-sitter@example.com');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
+insert into ctx values ('fam2', (select public.create_family('The Park family', 'Sam Park')::text));
+insert into kids (family_id, name) select v::uuid, 'Kai' from ctx where k = 'fam2';
+insert into ctx select 'kai', id::text from kids where name = 'Kai';
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+insert into care_items (family_id, type, title, starts, days) select v::uuid, 'activity', 'Pick up Ava', '15:15', 62 from ctx where k = 'fam';
+insert into care_items (family_id, kid_id, type, starts, ends) select f.v::uuid, k.id, 'nap', '13:00', '15:00' from ctx f, kids k where f.k = 'fam' and k.name = 'Ava';
+update care_items set how = 'Blue bunny in the crib' where type = 'nap';
+update care_items set every_minutes = 180 where type = 'nap';
+insert into ctx values ('code2', (select public.create_invite((select v::uuid from ctx where k='fam'), 'New')));
+do $$ declare n int; begin
+  if (select count(*) from care_items) <> 2 then raise exception 'FAIL parent cannot see her care plan'; end if;
+  if (select how from care_items where type = 'nap') <> 'Blue bunny in the crib' then raise exception 'FAIL parent cannot edit care plan'; end if;
+  if (select every_minutes from care_items where type = 'nap') <> 180 then raise exception 'FAIL parent cannot set a repeat'; end if;
+  begin
+    update care_items set every_minutes = 10 where type = 'nap';
+    raise exception 'FAIL repeat under 30 minutes accepted';
+  exception when check_violation then null; end;
+  -- can't write into another family, or attach another family's kid
+  begin
+    insert into care_items (family_id, type) select v::uuid, 'meal' from ctx where k = 'fam2';
+    raise exception 'FAIL parent wrote another family''s care plan';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into care_items (family_id, kid_id, type) select f.v::uuid, (select v::uuid from ctx where k = 'kai'), 'meal' from ctx f where f.k = 'fam';
+    raise exception 'FAIL parent attached another family''s kid';
+  exception when insufficient_privilege then null; end;
+  delete from care_items where type = 'activity';
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL parent cannot delete a care item'; end if;
+end $$;
+insert into care_items (family_id, type, title) select v::uuid, 'other', 'Water the plants' from ctx where k = 'fam';
+
+-- other parent: nothing to see, change or delete
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
+do $$ declare n int; begin
+  if (select count(*) from care_items) <> 0 then raise exception 'FAIL other parent sees care plan'; end if;
+  update care_items set title = 'x';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL other parent edited care plan'; end if;
+  delete from care_items;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL other parent deleted care plan'; end if;
+end $$;
+
+-- active sitter (Maya): reads, can't write
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+do $$ declare n int; begin
+  if (select count(*) from care_items) <> 2 then raise exception 'FAIL active sitter cannot read care plan'; end if;
+  update care_items set title = 'x';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL sitter edited care plan'; end if;
+  delete from care_items;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL sitter deleted care plan'; end if;
+  begin
+    insert into care_items (family_id, type) select v::uuid, 'meal' from ctx where k = 'fam';
+    raise exception 'FAIL sitter added to care plan';
+  exception when insufficient_privilege then null; end;
+end $$;
+
+-- invited sitter who hasn't signed the notice: nothing
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000e');
+select public.accept_invite((select v from ctx where k='code2'), 'New Sitter');
+do $$ begin
+  if (select count(*) from care_items) <> 0 then raise exception 'FAIL invited sitter sees care plan before signing'; end if;
+end $$;
+
+-- removed sitter: nothing
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+update family_sitters set status = 'removed' where sitter_id = '00000000-0000-0000-0000-00000000000b';
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+do $$ begin
+  if (select count(*) from care_items) <> 0 then raise exception 'FAIL removed sitter sees care plan'; end if;
+end $$;
+reset role;
+
 select 'ALL RLS SCENARIOS PASSED' as result;

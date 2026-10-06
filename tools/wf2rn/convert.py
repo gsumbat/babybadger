@@ -167,6 +167,9 @@ def text_style(t):
         out['color'] = json.dumps(color_of(t['color']))
     # Baloo's natural line box is 1.6em; a smaller lineHeight shifts glyphs on iOS, so it's left to the font.
     lh = px(t['line-height']) if 'line-height' in t else None
+    # A unitless line-height (line-height: 1) is a multiple of the font size, not pixels.
+    if isinstance(lh, (int, float)) and re.fullmatch(r'\s*[\d.]+\s*', t['line-height']):
+        lh = round(lh * (px(t.get('font-size', '16px')) or 16), 2)
     if isinstance(lh, (int, float)):
         if fam == 'baloo' and t.get('__len', 0) * (px(t.get('font-size', '16px')) or 16) * 0.52 > 340:
             out['lineHeight'] = lh

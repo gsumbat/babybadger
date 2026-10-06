@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { clockInState, describeLog, formatDuration, parentHomeState, parseTimeOnDay, routeLengthM, workedMinutes } from '../shift-logic';
+import { clockInState, describeLog, diaperLabel, formatDuration, parentHomeState, parseTimeOnDay, routeLengthM, workedMinutes } from '../shift-logic';
 import type { Shift } from '../types';
 
 const base: Shift = {
@@ -73,5 +73,12 @@ describe('describeLog', () => {
   });
   it('summarises a running nap', () => {
     expect(describeLog({ kind: 'nap', data: { started_at: '3:45 PM' } }).title).toBe('Nap started');
+  });
+  it('shows diapers as #1 / #2 / Both / Dry', () => {
+    expect(describeLog({ kind: 'diaper', data: { diaper: 'wet' } })).toEqual({ title: 'Diaper', detail: '#1' });
+    expect(describeLog({ kind: 'diaper', data: { diaper: 'dirty', note: 'Rash' } }).detail).toBe('#2 · Rash');
+    expect(diaperLabel('both')).toBe('Both');
+    expect(diaperLabel('dry')).toBe('Dry');
+    expect(diaperLabel(undefined)).toBe('');
   });
 });

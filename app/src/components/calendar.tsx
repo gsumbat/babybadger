@@ -1,13 +1,14 @@
 // Week calendar shared by the parent and sitter Calendar tabs, translated from wireframe P6b (S6 is the same layout).
 // Left out until built: the Day and Month views.
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { timeOf } from '@/lib/format';
 import type { Shift } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
 
 import { Icon } from './ui';
+import { Text } from '@/components/Text';
 
 const sameDay = (a: Date, b: Date) => a.toDateString() === b.toDateString();
 const short = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });

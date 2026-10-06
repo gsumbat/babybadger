@@ -56,6 +56,15 @@ export default function WF_P18() {
           <View style={{}}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>First name</Text></View>
           <TextInput placeholder="" defaultValue="Mia" placeholderTextColor="#6B7980" style={{ height: 48, minWidth: 0, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, borderRadius: 8, borderWidth: 1.0, borderColor: "#C3CCD5", fontFamily: font.body, fontSize: 16, color: "#1B2328" }} />
         </View>
+        <View style={{ flexDirection: "column", gap: 6 }}>
+          <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Gender (optional)</Text>
+          <View style={{ flexDirection: "column", gap: 4, paddingTop: 4, paddingRight: 4, paddingBottom: 4, paddingLeft: 4, backgroundColor: "#E8ECF1", borderRadius: 12 }}>
+            <View style={{ flexDirection: "row", gap: 4 }}>
+              <View style={{ height: 40, backgroundColor: "#FFFFFF", borderRadius: 9, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0, justifyContent: "center" }}><Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#1B2328" }}>Girl</Text></View>
+              <View style={{ height: 40, backgroundColor: "transparent", borderRadius: 9, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0, justifyContent: "center" }}><Text style={{ fontFamily: font.bodyMedium, fontSize: 15, color: "#4B5960" }}>Boy</Text></View>
+            </View>
+          </View>
+        </View>
         <View style={{ flexDirection: "column", gap: 10 }}>
           <View style={{ flexDirection: "row", gap: 10 }}>
             <View style={{ flexDirection: "column", gap: 6, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
