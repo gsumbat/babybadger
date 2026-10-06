@@ -52,8 +52,8 @@ export default function SignIn() {
       {!configured && <Banner kind="warn" icon="alert-triangle">Supabase isn’t set up yet. Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY to app/.env (see README).</Banner>}
       {sent ? (
         <>
-          <T>We sent a 6-digit code to {email}.</T>
-          <Field label="Code" value={code} onChangeText={setCode} keyboardType="number-pad" autoComplete="one-time-code" maxLength={6} placeholder="123456" />
+          <T>We sent a sign-in code to {email}.</T>
+          <Field label="Code" value={code} onChangeText={(t) => setCode(t.replace(/\D/g, ""))} keyboardType="number-pad" autoComplete="one-time-code" maxLength={10} placeholder="Code from the email" />
         </>
       ) : (
         <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholder="you@example.com" />
