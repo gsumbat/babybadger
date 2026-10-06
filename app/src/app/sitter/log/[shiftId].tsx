@@ -2,9 +2,9 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 
-import { BoxChoice, Button, Chip, ErrorText, Field, Icon, type IconName, Label, Screen, Segmented, SheetHeader, T } from '@/components/ui';
+import { BoxChoice, Button, Chip, ChoicePill, ErrorText, Field, Icon, type IconName, Label, Screen, Segmented, SheetHeader, T } from '@/components/ui';
 import { useShiftLive } from '@/lib/data';
 import { timeOf } from '@/lib/format';
 import { useSession } from '@/lib/session';
@@ -49,7 +49,6 @@ export default function AddLog() {
     meal: 'snack', amount: 'all', how: 'easily', duration: '30 min', diaper: 'wet', potty: '', category: 'good news',
     started_at: timeOf(new Date()),
   });
-  const [urgent, setUrgent] = useState(false);
   const [asleep, setAsleep] = useState(false);
   const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [busy, setBusy] = useState(false);
@@ -90,7 +89,7 @@ export default function AddLog() {
         photo: ['caption'],
       }[kind!];
       for (const key of keep) if (f[key]) data[key] = f[key];
-      const { error } = await supabase.from('logs').insert({ shift_id: shiftId, author_id: session!.user.id, kind, kid_ids: chosen, data, photo_path, urgent });
+      const { error } = await supabase.from('logs').insert({ shift_id: shiftId, author_id: session!.user.id, kind, kid_ids: chosen, data, photo_path, urgent: false });
       if (error) throw error;
       router.back();
     } catch (e) {
@@ -112,7 +111,7 @@ export default function AddLog() {
   if (!kind)
     return (
       <Screen bleedTop header={<SheetHeader title="Add a log" />}>
-        <T variant="muted">Pick what happened. Parents get it right away.</T>
+        <T variant="muted">Pick what happened. The parents see it right away.</T>
         <View style={st.grid}>
           {KINDS.map((x) => (
             <Pressable key={x.kind} accessibilityRole="button" onPress={() => setPicked(x.kind)} style={({ pressed }) => [st.kindTile, pressed && { opacity: 0.85 }]}>
@@ -132,16 +131,16 @@ export default function AddLog() {
           <Text style={st.q}>Who</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {kids.map((kid) => (
-              <Chip key={kid.id} label={kid.name} on={whoValue === kid.id} onPress={() => setWho([kid.id])} />
+              <ChoicePill key={kid.id} label={kid.name} tint={color.accentTint} on={whoValue === kid.id} onPress={() => setWho([kid.id])} />
             ))}
-            <Chip label={kids.length === 2 ? 'Both' : 'All'} on={whoValue === 'all'} onPress={() => setWho([])} />
+            <ChoicePill label={kids.length === 2 ? 'Both' : 'All'} tint={color.accentTint} on={whoValue === 'all'} onPress={() => setWho([])} />
           </View>
         </View>
       )}
 
       {kind === 'food' && (
         <>
-          <Segmented options={opts(['snack', 'breakfast', 'lunch', 'dinner'])} value={f.meal} onChange={set('meal')} />
+          <Segmented square options={opts(['snack', 'breakfast', 'lunch', 'dinner'])} value={f.meal} onChange={set('meal')} />
           <Field label="What did they eat?" value={f.what ?? ''} onChangeText={set('what')} placeholder="Apple slices, crackers" />
           <Text style={st.q}>How much?</Text>
           <BoxChoice options={opts(['none', 'some', 'most', 'all'])} value={f.amount} onChange={set('amount')} />
@@ -158,9 +157,17 @@ export default function AddLog() {
 
       {kind === 'nap' && (
         <>
-          <View style={{ flexDirection: 'row', gap: 12 }}>
-            <View style={{ flex: 1 }}><Field label="Fell asleep" value={f.started_at ?? ''} onChangeText={set('started_at')} /></View>
-            {!asleep && <View style={{ flex: 1 }}><Field label="Woke up" value={f.ended_at ?? ''} onChangeText={set('ended_at')} placeholder={timeOf(new Date())} /></View>}
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <View style={st.timeBox}>
+              <Text style={st.timeLabel}>Fell asleep</Text>
+              <TextInput value={f.started_at ?? ''} onChangeText={set('started_at')} style={st.timeValue} />
+            </View>
+            {!asleep && (
+              <View style={st.timeBox}>
+                <Text style={st.timeLabel}>Woke up</Text>
+                <TextInput value={f.ended_at ?? ''} onChangeText={set('ended_at')} placeholder={timeOf(new Date())} placeholderTextColor={color.quiet} style={st.timeValue} />
+              </View>
+            )}
           </View>
           <View style={st.switchRow}>
             <View style={{ flex: 1 }}>
@@ -219,24 +226,20 @@ export default function AddLog() {
         </>
       )}
 
-      <Pressable accessibilityRole="switch" accessibilityState={{ checked: urgent }} onPress={() => setUrgent((u) => !u)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 }}>
-        <Icon name={urgent ? 'check-square' : 'square'} tint={urgent ? color.primary : color.lineStrong} size={22} />
-        <View style={{ flex: 1 }}>
-          <T variant="strong">Needs the parents’ attention</T>
-          <T variant="small">Highlights it in their log</T>
-        </View>
-      </Pressable>
       <ErrorText>{err}</ErrorText>
     </Screen>
   );
 }
 
 const st = StyleSheet.create({
-  q: { fontFamily: font.bodyBold, fontSize: 14, color: color.ink },
+  q: { fontFamily: font.bodySemi, fontSize: 14, color: color.ink },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   kindTile: { width: '31%', flexGrow: 1, height: 92, borderRadius: 20, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center', gap: 8 },
   kindText: { fontFamily: font.bodyBold, fontSize: 14, color: color.primaryStrong },
-  addPhoto: { height: 52, borderRadius: 999, borderWidth: 1.5, borderStyle: 'dashed', borderColor: color.lineStrong, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  addPhotoText: { fontFamily: font.bodyBold, fontSize: 14, color: color.primary },
+  addPhoto: { height: 64, borderRadius: 999, borderWidth: 2, borderStyle: 'dashed', borderColor: '#C9D3DD', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  addPhotoText: { fontFamily: font.displayBold, fontSize: 15, color: color.primary },
+  timeBox: { flex: 1, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 12, borderWidth: 1, borderColor: color.lineStrong },
+  timeLabel: { fontFamily: font.bodyBold, fontSize: 12, color: color.ink2 },
+  timeValue: { fontFamily: font.display, fontSize: 20, color: color.ink, padding: 0 },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
 });

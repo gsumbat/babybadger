@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { cardStyle, SafetyBox, TaskRows } from '@/components/bits';
+import { SafetyBox, TaskRows } from '@/components/bits';
 import { LogTimeline } from '@/components/LogTimeline';
-import { Banner, Button, Card, Chip, ErrorText, Field, Icon, type IconName, Loading, Screen, Stat, T } from '@/components/ui';
+import { Banner, Button, Card, ChoicePill, ErrorText, Field, Icon, type IconName, Loading, Screen, T } from '@/components/ui';
 import { api, useQuery, useShiftLive } from '@/lib/data';
 import { firstName, timeOf } from '@/lib/format';
 import { type SharingMode, startSharing, stopSharing } from '@/lib/location-sharing';
@@ -55,6 +55,7 @@ export default function SitterShift() {
   const family = sitterLinks.find((l) => l.family_id === shift.family_id)?.family.name ?? 'Family';
   const secs = shift.clock_in_at ? Math.max(0, Math.floor((now - +new Date(shift.clock_in_at)) / 1000)) : 0;
   const done = tasks.filter((t) => t.done_at).length;
+  const parent = firstName(parents?.[0]?.full_name) || 'the family';
 
   async function toggle(taskId: string, isDone: boolean) {
     const { error: e } = await supabase.rpc('set_task_done', { p_task: taskId, p_done: isDone });
@@ -110,33 +111,47 @@ export default function SitterShift() {
             </T>
           </>
         }>
-        <View style={[cardStyle, { padding: 16 }]}>
-          <T variant="small">Time worked</T>
-          <Text style={st.worked}>
-            {Math.floor(mins / 60)} h {String(mins % 60).padStart(2, '0')} m
-          </Text>
-          <T variant="small">
-            {timeOf(shift.clock_in_at!)} – {timeOf(new Date(now))}
-          </T>
+        <View style={st.workedCard}>
+          <View style={{ flexShrink: 1 }}>
+            <Text style={st.workedLabel}>Time worked</Text>
+            <Text style={st.worked}>
+              {Math.floor(mins / 60)} h {String(mins % 60).padStart(2, '0')} m
+            </Text>
+            <Text style={st.workedRange}>
+              {timeOf(shift.clock_in_at!).replace(/\s?[AP]M$/i, '')} – {timeOf(new Date(now))}
+            </Text>
+          </View>
         </View>
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          <Stat value={`${done}/${tasks.length}`} label="Tasks done" tint={color.okTint} />
-          <Stat value={String(logs.filter((l) => l.kind === 'food').length)} label="Meals" tint={color.accentTint} />
-          <Stat value={String(logs.length)} label="Logs" tint={color.primaryTint} />
+          <View style={[st.statTile, { backgroundColor: color.okTint }]}>
+            <Text style={[st.statNum, { color: color.okInk }]}>
+              {done} / {tasks.length}
+            </Text>
+            <Text style={[st.statLbl, { color: color.okInk }]}>Tasks done</Text>
+          </View>
+          <View style={[st.statTile, { backgroundColor: color.accentTint }]}>
+            <Text style={st.statNum}>{logs.filter((l) => l.kind === 'food').length}</Text>
+            <Text style={st.statLbl}>Meals</Text>
+          </View>
+          <View style={[st.statTile, { backgroundColor: color.primaryTint }]}>
+            <Text style={[st.statNum, { color: color.primaryStrong }]}>{logs.length}</Text>
+            <Text style={[st.statLbl, { color: color.primaryStrong }]}>Logs</Text>
+          </View>
         </View>
-        <Text style={st.fieldLabel}>How did it go?</Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {MOODS.map((m) => (
-            <Chip key={m} label={m} on={mood === m} onPress={() => setMood(mood === m ? undefined : m)} />
-          ))}
+        <View style={{ gap: 8 }}>
+          <Text style={st.fieldLabel}>How did it go?</Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {MOODS.map((m) => (
+              <ChoicePill key={m} label={m} on={mood === m} onPress={() => setMood(mood === m ? undefined : m)} />
+            ))}
+          </View>
         </View>
-        <Field label="Note for the parents" value={note} onChangeText={setNote} multiline placeholder="Anything parents should know" />
+        <Field label={`Note for ${parent}`} value={note} onChangeText={setNote} multiline placeholder="Anything parents should know" style={{ minHeight: 100 }} />
       </Screen>
     );
   }
 
   // Wireframe S4, translated from its HTML (app/src/wireframes/S4.tsx).
-  const parent = firstName(parents?.[0]?.full_name) || 'the family';
   return (
     <Screen
       bleedTop
@@ -233,6 +248,13 @@ const st = StyleSheet.create({
   clockOut: { height: 52, borderRadius: 999, borderWidth: 1.5, borderColor: color.primary, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   clockOutText: { fontFamily: font.displayBold, fontSize: 17, color: color.primary },
   cardTitle: { fontFamily: font.bodyBold, fontSize: 16, color: color.ink },
-  worked: { fontFamily: font.display, fontSize: 32, color: color.ink },
-  fieldLabel: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2 },
+  // S9 values
+  workedCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
+  workedLabel: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
+  worked: { fontFamily: font.display, fontSize: 32, color: color.ink, marginVertical: -6.63 },
+  workedRange: { fontFamily: font.body, fontSize: 13, color: '#5F6D74' },
+  statTile: { flex: 1, gap: 2, padding: 12, borderRadius: 16 },
+  statNum: { fontFamily: font.display, fontSize: 20, color: color.ink },
+  statLbl: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
+  fieldLabel: { fontFamily: font.bodySemi, fontSize: 14, color: color.ink },
 });

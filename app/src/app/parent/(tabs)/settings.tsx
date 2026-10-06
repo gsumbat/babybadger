@@ -20,7 +20,7 @@ export default function Settings() {
   const sitters = (data?.sitters ?? []).map((s) => firstName(s.profile?.full_name)).join(', ');
 
   return (
-    <Screen title="Settings">
+    <Screen title="Settings" gap={8}>
       <ErrorText>{error}</ErrorText>
       <Label>Family</Label>
       <Card style={{ paddingVertical: 0 }}>

@@ -73,6 +73,15 @@ export function LogTimeline({ logs, kids, compact }: { logs: LogEntry[]; kids: K
   );
 }
 
+/** A shift photo from private storage (signed link). */
+export function PhotoThumb({ path, height = 64, style }: { path: string; height?: number; style?: object }) {
+  const [uri, setUri] = useState<string | null>(null);
+  useEffect(() => {
+    photoUrl(path).then(setUri);
+  }, [path]);
+  return <View style={[{ height, borderRadius: 10, overflow: 'hidden', backgroundColor: color.accentTint }, style]}>{uri ? <Image source={{ uri }} style={{ flex: 1 }} contentFit="cover" /> : null}</View>;
+}
+
 function Photo({ path }: { path: string }) {
   const [uri, setUri] = useState<string | null>(null);
   useEffect(() => {

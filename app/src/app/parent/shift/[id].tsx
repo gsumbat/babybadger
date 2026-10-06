@@ -4,13 +4,13 @@ import { Alert, StyleSheet, Text, View } from 'react-native';
 
 import { KidDot, kidSub, SafetyBox, TaskRows } from '@/components/bits';
 import { LiveMap } from '@/components/LiveMap';
-import { LogTimeline } from '@/components/LogTimeline';
+import { LogTimeline, PhotoThumb } from '@/components/LogTimeline';
 import { Avatar, Button, Card, ErrorText, Loading, Pill, Screen, T } from '@/components/ui';
 import { useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
-import { routeLengthM, workedMinutes } from '@/lib/shift-logic';
+import { describeLog, workedMinutes } from '@/lib/shift-logic';
 import { errorText, supabase } from '@/lib/supabase';
-import { color, font } from '@/theme';
+import { cardShadow, color, font } from '@/theme';
 
 // Live view (P4 detail) while on shift, report (P5) after clock-out, details before.
 export default function ParentShift() {
@@ -48,51 +48,73 @@ export default function ParentShift() {
     </Card>
   );
 
-  if (shift.status === 'completed')
+  // Wireframe P5, translated from its HTML (app/src/wireframes/P5.tsx). Left out until built: total pay,
+  // Approve hours, Replay route, house-rules check, the full log page.
+  if (shift.status === 'completed') {
+    const photos = logs.filter((l) => l.photo_path);
+    const hm = (iso: string) => timeOf(iso).replace(/\s?[AP]M$/i, '');
+    const who = (ids: string[]) => (ids.length === 0 || (kids.length > 1 && ids.length === kids.length) ? (kids.length > 1 ? 'both' : '') : ids.map((i) => kids.find((k) => k.id === i)?.name).filter(Boolean).join(', '));
     return (
-      <Screen title="Shift report" subtitle={`${name} · ${dayOf(shift.starts_at)}`} back>
+      <Screen title="Shift report" subtitle={`${name} · ${new Date(shift.starts_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}`} back>
         <View style={st.blue}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-            <View>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+            <View style={{ flexShrink: 1 }}>
               <Text style={st.blueSmall}>Time worked</Text>
               <Text style={st.blueBig}>
                 {Math.floor(mins / 60)} h {String(mins % 60).padStart(2, '0')} m
               </Text>
             </View>
             <Text style={st.blueSmall}>
-              {timeOf(shift.clock_in_at!)} – {timeOf(shift.clock_out_at!)}
+              {timeOf(shift.clock_in_at!).replace(/\s?[AP]M$/i, '')} – {timeOf(shift.clock_out_at!)}
             </Text>
           </View>
         </View>
         {points.length > 0 && (
-          <View>
-            <LiveMap points={points} height={170} />
-            <T variant="small" style={{ marginTop: 6 }}>
-              Route {(routeLengthM(points) / 1609).toFixed(1)} mi · shared only while clocked in
-            </T>
+          <View style={st.mapBox}>
+            <LiveMap points={points} height={130} flush />
           </View>
         )}
-        <SafetyBox kids={kids} />
-        {taskCard}
-        <Card>
-          <View style={st.cardHead}>
-            <Text style={st.cardTitle}>Logs</Text>
-            <T variant="small">{logs.length} entries</T>
+        <View style={st.card}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={st.cardTitle}>Tasks</Text>
+            <View style={[st.smallPill, done < tasks.length && { backgroundColor: color.warnTint }]}>
+              <Text style={[st.smallPillText, done < tasks.length && { color: color.warnInk }]}>
+                {done} of {tasks.length} done
+              </Text>
+            </View>
           </View>
-          <LogTimeline logs={logs} kids={kids} compact />
-        </Card>
-        <Card>
+          <Text style={st.summary}>{tasks.length ? tasks.map((t) => (t.done_at ? t.title : `${t.title} (not done)`)).join(' · ') : 'No tasks were set for this shift.'}</Text>
+        </View>
+        <View style={[st.card, { gap: 8 }]}>
+          <Text style={st.cardTitle}>Logs</Text>
+          {logs.length === 0 ? <Text style={st.summary}>Nothing logged.</Text> : null}
+          {[...logs].reverse().map((l) => {
+            const d = describeLog(l);
+            return (
+              <View key={l.id} style={{ flexDirection: 'row', gap: 10 }}>
+                <Text style={st.logTime}>{hm(l.happened_at)}</Text>
+                <Text style={[st.logText, l.urgent && { color: color.badInk }]}>{[d.title, who(l.kid_ids), d.detail].filter(Boolean).join(' · ')}</Text>
+              </View>
+            );
+          })}
+        </View>
+        <View style={st.card}>
           <Text style={st.cardTitle}>Notes</Text>
-          <T variant={shift.note ? 'body' : 'muted'}>{shift.note || `${name} didn’t leave a note.`}</T>
-        </Card>
-        {logs.some((l) => l.photo_path) && (
-          <Card>
+          <Text style={st.summary}>{shift.note || `${name} didn’t leave a note.`}</Text>
+        </View>
+        {photos.length > 0 && (
+          <View style={st.card}>
             <Text style={st.cardTitle}>Photos</Text>
-            <LogTimeline logs={logs.filter((l) => l.photo_path)} kids={kids} />
-          </Card>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+              {photos.map((l) => (
+                <PhotoThumb key={l.id} path={l.photo_path!} style={{ width: '31%', flexGrow: 1 }} />
+              ))}
+            </View>
+          </View>
         )}
       </Screen>
     );
+  }
 
   if (shift.status === 'active')
     return (
@@ -145,10 +167,18 @@ export default function ParentShift() {
 }
 
 const st = StyleSheet.create({
-  blue: { backgroundColor: color.primary, borderRadius: 24, padding: 16, gap: 12 },
-  blueSmall: { fontFamily: font.body, fontSize: 13, color: '#FFFFFF', opacity: 0.9 },
-  blueBig: { fontFamily: font.display, fontSize: 32, color: '#FFFFFF' },
+  // P5 values
+  blue: { backgroundColor: color.primary, borderRadius: 20, padding: 16, gap: 12 },
+  blueSmall: { fontFamily: font.body, fontSize: 13, color: '#FFFFFF', opacity: 0.8 },
+  blueBig: { fontFamily: font.display, fontSize: 32, color: '#FFFFFF', marginVertical: -6.63 },
+  mapBox: { borderRadius: 20, borderWidth: 1, borderColor: color.line, overflow: 'hidden' },
+  card: { gap: 10, paddingVertical: 14, paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
+  smallPill: { height: 24, paddingHorizontal: 8, borderRadius: 999, backgroundColor: color.okTint, justifyContent: 'center' },
+  smallPillText: { fontFamily: font.bodyBold, fontSize: 12, color: color.okInk },
+  summary: { fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink2 },
+  logTime: { width: 40, fontFamily: font.body, fontSize: 14, color: color.quiet },
+  logText: { flexShrink: 1, fontFamily: font.body, fontSize: 14, color: color.ink },
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardTitle: { fontFamily: font.bodyBold, fontSize: 16, color: color.ink },
+  cardTitle: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink },
   kidRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60 },
 });

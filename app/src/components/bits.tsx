@@ -95,8 +95,8 @@ export function SetRow({ label, value, onPress, last }: { label: string; value?:
       <Text style={sr.label}>{label}</Text>
       <Text style={sr.value} numberOfLines={1}>
         {value}
+        {onPress ? ' ›' : ''}
       </Text>
-      {onPress ? <Icon name="chevron-right" size={16} tint={color.ink2} /> : null}
     </View>
   );
   return onPress ? (
@@ -109,10 +109,10 @@ export function SetRow({ label, value, onPress, last }: { label: string; value?:
 }
 
 const sr = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', minHeight: 46, gap: 8 },
+  row: { flexDirection: 'row', alignItems: 'center', minHeight: 52, gap: 8 },
   line: { borderBottomWidth: 1, borderBottomColor: color.divider },
   label: { fontFamily: font.body, fontSize: 15, color: color.ink },
-  value: { flex: 1, textAlign: 'right', fontFamily: font.body, fontSize: 14, color: color.ink2 },
+  value: { flex: 1, textAlign: 'right', fontFamily: font.body, fontSize: 15, color: color.ink2 },
 });
 
 export const cardStyle = { backgroundColor: color.surface, borderRadius: radius.card, ...cardShadow } as const;

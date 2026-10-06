@@ -116,7 +116,7 @@ export function Screen({
             {right}
           </View>
         ) : title ? (
-          <View style={[s.header, { paddingTop: 16 }]}>
+          <View style={[s.header, { paddingTop: 20, paddingBottom: 12 }]}>
             {titleBlock('tab')}
             {right}
           </View>
@@ -350,13 +350,13 @@ export function ActionGrid({ items }: { items: Action[] }) {
 }
 
 /** Pill-shaped segmented control (Day / Week / Month, Snack / Breakfast ...). */
-export function Segmented<V extends string>({ options, value, onChange }: { options: { value: V; label: string }[]; value: V; onChange: (v: V) => void }) {
+export function Segmented<V extends string>({ options, value, onChange, square }: { options: { value: V; label: string }[]; value: V; onChange: (v: V) => void; square?: boolean }) {
   return (
-    <View style={s.seg}>
+    <View style={[s.seg, square && { borderRadius: 12 }]}>
       {options.map((o) => {
         const on = o.value === value;
         return (
-          <Pressable key={o.value} accessibilityRole="button" accessibilityState={{ selected: on }} onPress={() => onChange(o.value)} style={[s.segItem, on && s.segOn]}>
+          <Pressable key={o.value} accessibilityRole="button" accessibilityState={{ selected: on }} onPress={() => onChange(o.value)} style={[s.segItem, square && { height: 38, borderRadius: 9 }, on && s.segOn]}>
             <Text style={[s.segText, on && s.segTextOn]} numberOfLines={1}>
               {o.label}
             </Text>
@@ -364,6 +364,15 @@ export function Segmented<V extends string>({ options, value, onChange }: { opti
         );
       })}
     </View>
+  );
+}
+
+/** Single-choice pill from the wireframes (S5 Who, S9 How did it go): 40 high, no check mark. */
+export function ChoicePill({ label, on, onPress, tint = color.primaryTint }: { label: string; on?: boolean; onPress?: () => void; tint?: string }) {
+  return (
+    <Pressable accessibilityRole="button" accessibilityState={{ selected: !!on }} onPress={onPress} style={[s.choice, on && { backgroundColor: tint, borderWidth: 2, borderColor: color.primary }]}>
+      <Text style={[s.choiceText, on && { fontFamily: font.bodyBold }]}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -420,11 +429,11 @@ export function Empty({ icon, title, children }: { icon: IconName; title: string
 
 const s = StyleSheet.create({
   screen: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: space.xl, paddingTop: 12, paddingBottom: 8 },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: space.xl, paddingTop: 16, paddingBottom: 8 },
   back: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   // No lineHeight on Baloo titles: on iOS a lineHeight smaller than the font's natural height pushes the glyphs off-center.
   hTitle: { fontFamily: font.display, fontSize: 26, color: color.ink },
-  hTitleBack: { fontSize: 22 },
+  hTitleBack: { fontSize: 22, marginVertical: -4.62 },
   headerStack: { paddingHorizontal: space.xl, paddingTop: 8, paddingBottom: 8, gap: 14 },
   backRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44 },
   stepText: { flex: 1, fontFamily: font.bodySemi, fontSize: 14, color: color.ink2 },
@@ -447,8 +456,8 @@ const s = StyleSheet.create({
   pill: { height: 26, paddingHorizontal: 10, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
   dot: { width: 7, height: 7, borderRadius: 4 },
   pillText: { fontFamily: font.bodyBold, fontSize: 12 },
-  fieldLabel: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2 },
-  input: { minHeight: 50, borderWidth: 1, borderColor: color.lineStrong, borderRadius: radius.field, backgroundColor: '#FFFFFF', paddingHorizontal: 14, fontFamily: font.body, fontSize: 16, color: color.ink },
+  fieldLabel: { fontFamily: font.bodySemi, fontSize: 14, color: color.ink },
+  input: { minHeight: 50, borderWidth: 1, borderColor: color.lineStrong, borderRadius: 8, backgroundColor: '#FFFFFF', paddingHorizontal: 14, fontFamily: font.body, fontSize: 16, color: color.ink },
   chip: { minHeight: 36, paddingHorizontal: 12, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', gap: 6 },
   chipOn: { backgroundColor: color.primaryTint, borderWidth: 1.5, borderColor: color.primary },
   chipOff: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line },
@@ -470,7 +479,9 @@ const s = StyleSheet.create({
   segOn: { backgroundColor: '#FFFFFF' },
   segText: { fontFamily: font.bodyMedium, fontSize: 14, color: color.ink2 },
   segTextOn: { fontFamily: font.bodyBold, color: color.ink },
-  box: { flex: 1, height: 44, borderRadius: 12, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  choice: { height: 40, paddingHorizontal: 14, borderRadius: radius.pill, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line, justifyContent: 'center' },
+  choiceText: { fontFamily: font.bodySemi, fontSize: 14, color: color.ink },
+  box: { flex: 1, height: 44, borderRadius: 10, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   boxOn: { borderWidth: 2, borderColor: color.primary, backgroundColor: color.primaryTint },
   stat: { flex: 1, borderRadius: 18, padding: 12, gap: 2 },
   statValue: { fontFamily: font.display, fontSize: 22, color: color.ink },
