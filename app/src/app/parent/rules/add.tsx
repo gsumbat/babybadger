@@ -46,10 +46,10 @@ export default function AddRules() {
       title="Add rules"
       subtitle="Most chosen by parents"
       back
-      gap={10}
+      gap={24}
       footer={<Button label={n === 0 ? 'Add rules' : n === 1 ? 'Add 1 rule' : `Add ${n} rules`} onPress={add} busy={busy} disabled={!n} />}>
       {CHIP_SECTIONS.map((s) => (
-        <View key={s.category} style={{ gap: 6 }}>
+        <View key={s.category} style={{ gap: 8 }}>
           <Text style={st.label}>{s.label}</Text>
           <View style={st.chips}>
             {CATALOGUE.filter((c) => c.category === s.category).map((c) => {
@@ -57,7 +57,7 @@ export default function AddRules() {
               const toggle = have.has(c.key) ? undefined : () => setPicked((p) => (p.includes(c.key) ? p.filter((k) => k !== c.key) : [...p, c.key]));
               return (
                 <Pressable key={c.key} accessibilityRole="checkbox" accessibilityState={{ checked: on, disabled: have.has(c.key) }} onPress={toggle} style={[st.chip, on ? st.chipOn : st.chipOff]}>
-                  <SvgXml xml={on ? CHECK : PLUS} width={14} height={14} style={{ flexShrink: 0 }} />
+                  <SvgXml xml={on ? CHECK : PLUS} width={16} height={16} style={{ flexShrink: 0 }} />
                   <Text style={[st.chipText, { color: on ? color.primaryStrong : color.ink }]}>{c.chip}</Text>
                 </Pressable>
               );
@@ -76,9 +76,9 @@ export default function AddRules() {
 const st = StyleSheet.create({
   label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: { flexDirection: 'row', alignSelf: 'flex-start', alignItems: 'center', gap: 5, minHeight: 30, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999, flexShrink: 1 },
+  chip: { flexDirection: 'row', alignSelf: 'flex-start', alignItems: 'center', gap: 6, height: 40, paddingHorizontal: 14, borderRadius: 999, flexShrink: 1 },
   chipOn: { backgroundColor: color.primaryTint, borderWidth: 1.5, borderColor: color.primary },
   chipOff: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line },
-  chipText: { fontFamily: font.bodySemi, fontSize: 12.5 },
+  chipText: { fontFamily: font.bodySemi, fontSize: 14 },
   link: { fontFamily: font.bodyBold, fontSize: 14, color: color.primary, textDecorationLine: 'underline' },
 });
