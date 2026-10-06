@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
+import { IncidentCard } from '@/components/IncidentCard';
 import { LOG_ICON } from '@/components/LogTimeline';
 import { Text } from '@/components/Text';
 import { ErrorText, Icon, Loading, Screen } from '@/components/ui';
@@ -15,7 +16,6 @@ import { cardShadow, color, font } from '@/theme';
 // Shows today's live (or latest) shift: incidents as the top red card, everything else under EARLIER TODAY.
 // Left out until built: off-plan location card, trip and arrival rows, "Call Maya" (no phone number stored),
 // "See on map" and "This is expected, dismiss" (off-plan only).
-const TRIANGLE = '<svg viewBox="0 0 24 24" fill="none" stroke="#C2412D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17h0"/></svg>';
 const clockSvg = (stroke: string) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`;
 const FORK = '<svg viewBox="0 0 24 24" fill="none" stroke="#1B2328" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3M8 10v11M17 21V3c-2.5 1-3.5 3.5-3.5 7.5h3.5"/></svg>';
@@ -53,21 +53,7 @@ export default function Alerts() {
   return (
     <Screen title="Alerts" back onBack={back} gap={12}>
       {incidents.map((c) => (
-        <View key={c.id} style={st.card}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <SvgXml xml={TRIANGLE} width={22} height={22} style={{ flexShrink: 0 }} />
-            <Text style={st.cardTitle}>{c.title}</Text>
-            <Text style={st.cardTime}>{c.time}</Text>
-          </View>
-          <Text style={st.cardBody}>{c.body}</Text>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/shift/${c.shiftId}`)} style={st.cardBtn}>
-              <Text style={st.cardBtnText}>See report</Text>
-            </Pressable>
-            {/* "Call Maya" needs her phone number (not stored yet): its slot stays empty so the button keeps its width. */}
-            <View style={{ flexGrow: 1, flexBasis: 0 }} />
-          </View>
-        </View>
+        <IncidentCard key={c.id} card={c} action="See report" onAction={() => router.push(`/parent/shift/${c.shiftId}`)} />
       ))}
       <Text style={[st.section, incidents.length > 0 && { marginTop: 6 }]}>EARLIER TODAY</Text>
       {rows.length ? (
@@ -94,12 +80,6 @@ export default function Alerts() {
 
 // values below come from wireframe P9
 const st = StyleSheet.create({
-  card: { backgroundColor: color.badTint, borderRadius: 16, padding: 16, gap: 10 },
-  cardTitle: { fontFamily: font.bodyBold, fontSize: 16, color: color.badInk, flexShrink: 1 },
-  cardTime: { fontFamily: font.body, fontSize: 13, color: '#6E2215', marginLeft: 'auto' },
-  cardBody: { fontFamily: font.body, fontSize: 15, lineHeight: 22, color: '#6E2215' },
-  cardBtn: { height: 44, flexGrow: 1, flexBasis: 0, borderRadius: 999, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
-  cardBtnText: { fontFamily: font.displayBold, fontSize: 15, color: color.ink },
   section: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6 },
   list: { backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 14, paddingHorizontal: 16 },

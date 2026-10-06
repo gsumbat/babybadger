@@ -18,6 +18,8 @@ import { kv } from '@/lib/storage';
 import type { Kid, Shift } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
+import { IncidentCard } from '@/components/IncidentCard';
+import { incidentCard } from '@/lib/alerts-logic';
 
 // Wireframes P4 (live), P4a (setup), P4e (setup skipped), P4b (idle), P4c (starting soon), P4d (ended), translated
 // from their HTML (app/src/wireframes/P4*.tsx). Left out until built: Message / Call / Ask for photo, kids' devices and
@@ -277,8 +279,13 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
   const last = [...done].sort((a, b) => +new Date(b.done_at!) - +new Date(a.done_at!))[0];
   const mins = workedMinutes(bundle.shift);
   const hm = (iso: string) => timeOf(iso).replace(/\s?[AP]M$/i, '');
+  // P4i: an injury on this shift shows on top, newest first, and opens Alerts (P9).
+  const injuries = bundle.logs.filter((l) => l.kind === 'incident').sort((a, b) => +new Date(b.happened_at) - +new Date(a.happened_at));
   return (
     <>
+      {injuries.map((l) => (
+        <IncidentCard key={l.id} card={incidentCard(l, bundle.kids)} action="See alerts" onAction={() => router.push('/parent/alerts')} />
+      ))}
       <Pressable onPress={() => router.push(`/parent/shift/${shift.id}`)} style={st.liveCard}>
         <View style={st.liveTop}>
           <Avatar name={sitter} size={44} letterSize={16} face={font.bodyBold} />
@@ -305,15 +312,20 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
       </Text>
       <AskToStaySheet open={askOpen} onClose={() => setAskOpen(false)} shift={bundle.shift} sitter={sitter} />
       <Pressable onPress={() => router.push(`/parent/shift/${shift.id}`)} style={st.planCard}>
-        <View style={st.labelRow}>
-          <Text style={st.bold15}>Today’s plan</Text>
-          <Text style={st.sub14}>
-            {done.length} of {bundle.tasks.length} done
-          </Text>
-        </View>
-        <View style={st.track}>
-          <View style={[st.trackFill, { width: `${bundle.tasks.length ? (done.length / bundle.tasks.length) * 100 : 0}%` }]} />
-        </View>
+        {/* P4i: with no tasks on the shift the plan header and bar are left out; the log row stays. */}
+        {bundle.tasks.length ? (
+          <>
+            <View style={st.labelRow}>
+              <Text style={st.bold15}>Today’s plan</Text>
+              <Text style={st.sub14}>
+                {done.length} of {bundle.tasks.length} done
+              </Text>
+            </View>
+            <View style={st.track}>
+              <View style={[st.trackFill, { width: `${(done.length / bundle.tasks.length) * 100}%` }]} />
+            </View>
+          </>
+        ) : null}
         {next ? (
           <View style={st.planRow}>
             <Text style={[st.sub14, { width: 40 }]}>Next</Text>

@@ -248,6 +248,8 @@ function Tool({ icon, xml, label, onPress }: { icon?: IconName; xml?: string; la
 function TodayCard({ shift, family, then, thenFamily, now, busy, onClockIn, onCancelled }: { shift: Shift; family: string; then?: Shift; thenFamily: string; now: number; busy: boolean; onClockIn: () => void; onCancelled: () => void }) {
   const { bundle } = useShiftLive(shift.id);
   const [lateOpen, setLateOpen] = useState(false);
+  const [sentLate, setSentLate] = useState<number>();
+  const lateMin = sentLate ?? (shift as Shift & { late_minutes?: number | null }).late_minutes ?? undefined;
   const live = shift.status === 'active';
   const ci = clockInState(shift, new Date(now));
   const tasks = bundle?.tasks ?? [];
@@ -275,9 +277,10 @@ function TodayCard({ shift, family, then, thenFamily, now, busy, onClockIn, onCa
       {/* S3: status on the left, "Running late?" (S21) on the right until she clocks in. */}
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
-          <View style={st.greenDot} />
-          <Text style={st.okText}>
-            {live ? `On shift · ${formatClock(Math.floor(secs / 60), secs % 60)} · sharing location` : [tasks.length ? `${tasks.length} tasks` : bundle?.kids.map((k) => k.name).join(' and '), firstDue ? `first ${timeOf(firstDue).replace(MERIDIEM, '')}` : ''].filter(Boolean).join(', ')}
+          <View style={[st.greenDot, lateMin && !live ? { backgroundColor: color.warn } : null]} />
+          <Text style={[st.okText, lateMin && !live ? { color: color.warnInk } : null]}>
+            {/* S3e: after "Tell the family" the line confirms it until she clocks in. */}
+            {!live && lateMin ? `Told the family · ${lateMin} min late` : live ? `On shift · ${formatClock(Math.floor(secs / 60), secs % 60)} · sharing location` : [tasks.length ? `${tasks.length} tasks` : bundle?.kids.map((k) => k.name).join(' and '), firstDue ? `first ${timeOf(firstDue).replace(MERIDIEM, '')}` : ''].filter(Boolean).join(', ')}
           </Text>
         </View>
         {!live && ci.kind !== 'ended' && (
@@ -298,7 +301,7 @@ function TodayCard({ shift, family, then, thenFamily, now, busy, onClockIn, onCa
           <Icon name="message-square" size={22} />
         </Pressable>
       </View>
-      {!live && <RunningLateSheet open={lateOpen} onClose={() => setLateOpen(false)} onCancelled={onCancelled} shift={shift} family={family} tasks={tasks} />}
+      {!live && <RunningLateSheet open={lateOpen} onClose={() => setLateOpen(false)} onCancelled={onCancelled} onSent={setSentLate} shift={shift} family={family} tasks={tasks} />}
       {then && (
         <View style={st.then}>
           <Text style={st.thenText}>

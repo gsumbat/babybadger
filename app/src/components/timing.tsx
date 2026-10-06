@@ -76,7 +76,7 @@ function PrimaryButton({ label, onPress, busy, disabled }: { label: string; onPr
 }
 
 /** S21 Running late. The distance card is left out (needs the family's address and places). */
-export function RunningLateSheet({ open, onClose, onCancelled, shift, family, tasks }: { open: boolean; onClose: () => void; onCancelled: () => void; shift: Shift; family: string; tasks: Task[] }) {
+export function RunningLateSheet({ open, onClose, onCancelled, onSent, shift, family, tasks }: { open: boolean; onClose: () => void; onCancelled: () => void; onSent?: (minutes: number) => void; shift: Shift; family: string; tasks: Task[] }) {
   const [late, setLate] = useState<number>();
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -89,6 +89,7 @@ export function RunningLateSheet({ open, onClose, onCancelled, shift, family, ta
     setBusy(true);
     try {
       await timingApi.reportLate(shift.id, late, note, risk && task ? riskLine(task) : '');
+      onSent?.(late);
       onClose();
     } catch (e) {
       Alert.alert('Couldn’t send', errorText(e));
