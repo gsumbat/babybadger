@@ -29,6 +29,18 @@ If a screen needs something no wireframe covers, it goes into the canvas first, 
 | `sitter/(tabs)/me` | S39 Me | Profile, credentials, availability, pay, invoices |
 | `sitter/(tabs)/messages` | S37 Messages | Messaging (placeholder) |
 
+## HTML is the source
+
+`tools/wf2rn/convert.py` translates a wireframe's HTML into a React Native layout (`app/src/wireframes/<ID>.tsx`):
+same structure, sizes, spacing, colors, fonts, copy and the original SVG icons. `tools/wf2rn/build_all.sh` regenerates
+them all. In development, `/wireframe/<ID>` shows a generated layout in the app.
+
+A real screen starts as a copy of its generated layout; data and actions are then wired in. The generated files are
+never edited by hand.
+
+`tools/wf2rn/diff.py` measures each screenshot against its wireframe image. Generated layouts land at 0.5–8% of
+pixels different (mostly text anti-aliasing); the real screens are held to the same check.
+
 ## How screens are checked
 
 1. Sample data matches the wireframes (the Lee family, Jen, Maya, Ava, Leo).

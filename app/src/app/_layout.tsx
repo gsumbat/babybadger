@@ -27,6 +27,10 @@ function Routes() {
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.canvas } }}>
       <Stack.Screen name="index" />
+      {/* Generated wireframe layouts, for side-by-side checks during development only. */}
+      <Stack.Protected guard={__DEV__}>
+        <Stack.Screen name="wireframe/[id]" />
+      </Stack.Protected>
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="sign-in" />
       </Stack.Protected>
