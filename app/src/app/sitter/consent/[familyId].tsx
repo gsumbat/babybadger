@@ -1,12 +1,14 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Banner, Button, Card, ErrorText, Field, Icon, Label, Screen, T } from '@/components/ui';
+import { SetRow } from '@/components/bits';
+
+import { Button, Card, ErrorText, Field, Icon, Label, Screen, T } from '@/components/ui';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { NOTICE_VERSION, TERMS_VERSION } from '@/lib/types';
-import { color } from '@/theme';
+import { color, font } from '@/theme';
 
 // [LEGAL REVIEW] Placeholder text. Final notice wording depends on state law and must come from counsel.
 const NOTICE = (family: string) => [
@@ -23,6 +25,7 @@ export default function Consent() {
   const { sitterLinks, profile, refresh } = useSession();
   const family = sitterLinks.find((l) => l.family_id === familyId)?.family.name ?? 'This family';
   const [read, setRead] = useState(false);
+  const [reading, setReading] = useState(false);
   const [agree, setAgree] = useState(false);
   const [name, setName] = useState(profile?.full_name ?? '');
   const [busy, setBusy] = useState(false);
@@ -38,13 +41,40 @@ export default function Consent() {
     router.replace('/sitter');
   }
 
+  // Wireframe S2a: the notice itself, with a short summary on top.
+  if (reading)
+    return (
+      <Screen title="Monitoring notice" subtitle={`${family} · ${NOTICE_VERSION}`} back onBack={() => setReading(false)} footer={<Button label="I’ve read it" onPress={() => { setRead(true); setReading(false); }} />}>
+        <View style={st.short}>
+          <Text style={st.shortLabel}>IN SHORT</Text>
+          <T>{family} sees your location only between clock-in and clock-out. Nothing is shared between shifts. You can see everything they see.</T>
+        </View>
+        {NOTICE(family).map(([h, b], i) => (
+          <View key={h} style={{ gap: 4 }}>
+            <Text style={st.h}>
+              {i + 1}. {h}
+            </Text>
+            <T variant="muted">{b}</T>
+          </View>
+        ))}
+        <T variant="small">[LEGAL REVIEW] Final wording depends on state law, e.g. employee monitoring notice rules.</T>
+      </Screen>
+    );
+
+  // Wireframe S2.
   return (
     <Screen
-      title="Before your first shift"
-      subtitle={family}
+      caption="Before your first shift"
+      title="Location is shared only while you’re working"
       back
-      footer={<Button label="Sign and continue" onPress={sign} busy={busy} disabled={!read || !agree || name.trim().length < 2} />}>
-      <T variant="title">Location is shared only while you’re working</T>
+      footer={
+        <>
+          <Button label="Sign and allow location" onPress={sign} busy={busy} disabled={!read || !agree || name.trim().length < 2} />
+          <T variant="small" style={{ textAlign: 'center' }}>
+            A signed copy goes to you and the family. Next, your phone asks for location.
+          </T>
+        </>
+      }>
       <Card>
         <View style={{ flexDirection: 'row', height: 14, borderRadius: 7, overflow: 'hidden' }}>
           <View style={{ flex: 1, backgroundColor: color.muted }} />
@@ -53,34 +83,48 @@ export default function Consent() {
         </View>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <T variant="small">Off</T>
-          <T variant="strong" style={{ color: color.primary, fontSize: 13 }}>Clock in → Clock out</T>
+          <T variant="strong" style={{ color: color.primary, fontSize: 13 }}>
+            Clock in → Clock out
+          </T>
           <T variant="small">Off</T>
         </View>
       </Card>
-
-      <Label>Monitoring notice</Label>
-      {read ? (
-        <Card>
-          {NOTICE(family).map(([h, b]) => (
-            <View key={h} style={{ gap: 2, marginBottom: 6 }}>
-              <T variant="strong">{h}</T>
-              <T variant="muted">{b}</T>
-            </View>
-          ))}
-          <T variant="small">Version {NOTICE_VERSION}. [LEGAL REVIEW] placeholder wording.</T>
-        </Card>
-      ) : (
-        <Button label="Read the full notice" icon="file-text" kind="tonal" onPress={() => setRead(true)} />
-      )}
-
-      <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: agree, disabled: !read }} onPress={() => read && setAgree((a) => !a)} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', opacity: read ? 1 : 0.5 }}>
-        <Icon name={agree ? 'check-square' : 'square'} tint={agree ? color.primary : color.lineStrong} size={22} />
+      <Card style={{ paddingVertical: 0 }}>
+        <SetRow label="Employer" value={family} />
+        <SetRow label="Collected" value="Location, times, entries" />
+        <SetRow label="Seen by" value="Parents in this family" />
+        <SetRow label="Kept for" value="[RETENTION PERIOD]" last />
+      </Card>
+      <Label right={<T variant="small">Required</T>}>Read before you sign</Label>
+      <Card style={{ paddingVertical: 4 }}>
+        <Pressable accessibilityRole="button" onPress={() => setReading(true)} style={st.docRow}>
+          <View style={st.docIcon}>
+            <Icon name={read ? 'check' : 'file-text'} size={18} tint={read ? color.ok : color.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <T variant="strong">Monitoring notice</T>
+            <T variant="small">{read ? 'Read' : `From ${family} · 2 min read`}</T>
+          </View>
+          <Icon name="chevron-right" size={18} tint={color.ink2} />
+        </Pressable>
+      </Card>
+      <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: agree, disabled: !read }} onPress={() => read && setAgree((x) => !x)} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', opacity: read ? 1 : 0.5 }}>
+        <View style={[st.check, agree && st.checkOn]}>{agree ? <Icon name="check" size={16} tint="#FFFFFF" /> : null}</View>
         <T style={{ flex: 1 }}>I’ve read and agree to the monitoring notice, the Terms and the Privacy policy.</T>
       </Pressable>
       {!read && <T variant="small">Open the notice first; then you can agree.</T>}
-      <Field label="Type your full name to sign" value={name} onChangeText={setName} autoComplete="name" />
-      <Banner icon="shield">A signed copy goes to you and the family. When you clock in, your phone asks for location: choose “Always” so the map works while your phone is locked.</Banner>
+      <Field label="Type your full name to sign" value={name} onChangeText={setName} autoComplete="name" placeholder="Full name" />
       <ErrorText>{err}</ErrorText>
     </Screen>
   );
 }
+
+const st = StyleSheet.create({
+  short: { backgroundColor: color.primaryTint, borderRadius: 18, padding: 14, gap: 6 },
+  shortLabel: { fontFamily: font.bodyBold, fontSize: 12, letterSpacing: 0.6, color: color.primaryStrong },
+  h: { fontFamily: font.bodyBold, fontSize: 16, color: color.ink },
+  docRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60 },
+  docIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
+  check: { width: 24, height: 24, borderRadius: 7, borderWidth: 2, borderColor: color.lineStrong, alignItems: 'center', justifyContent: 'center' },
+  checkOn: { backgroundColor: color.primary, borderColor: color.primary },
+});

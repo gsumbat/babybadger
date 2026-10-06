@@ -19,10 +19,30 @@ const ICON: Record<LogKind, { icon: IconName; bg: string; fg: string }> = {
   photo: { icon: 'camera', bg: color.accentTint, fg: '#8A5A7A' },
 };
 
-export function LogTimeline({ logs, kids }: { logs: LogEntry[]; kids: Kid[] }) {
+export function LogTimeline({ logs, kids, compact }: { logs: LogEntry[]; kids: Kid[]; compact?: boolean }) {
   if (!logs.length) return <T variant="muted">Nothing logged yet.</T>;
   const kidNames = (ids: string[]) =>
     ids.length === 0 || (kids.length > 1 && ids.length === kids.length) ? (kids.length > 1 ? 'Both' : '') : ids.map((id) => kids.find((k) => k.id === id)?.name).filter(Boolean).join(', ');
+  if (compact)
+    // Report style (wireframe P5): time on the left, one line per entry.
+    return (
+      <View style={{ gap: 6 }}>
+        {[...logs].reverse().map((l) => {
+          const d = describeLog(l);
+          const who = kidNames(l.kid_ids);
+          return (
+            <View key={l.id} style={{ flexDirection: 'row', gap: 12 }}>
+              <T variant="muted" style={{ width: 64 }}>
+                {timeOf(l.happened_at).replace(/\s?[AP]M$/i, '')}
+              </T>
+              <T style={{ flex: 1, color: l.urgent ? color.badInk : color.ink }}>
+                {[d.title, who, d.detail].filter(Boolean).join(' · ')}
+              </T>
+            </View>
+          );
+        })}
+      </View>
+    );
   return (
     <View style={{ gap: 12 }}>
       {logs.map((l) => {

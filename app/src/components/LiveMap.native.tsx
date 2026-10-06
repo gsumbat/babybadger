@@ -5,7 +5,7 @@ import MapView, { Marker, Polyline } from 'react-native-maps';
 import type { LocationPoint } from '@/lib/types';
 import { color } from '@/theme';
 
-export function LiveMap({ points, height = 220 }: { points: LocationPoint[]; height?: number }) {
+export function LiveMap({ points, height = 220, flush }: { points: LocationPoint[]; height?: number; flush?: boolean }) {
   const ref = useRef<MapView>(null);
   const last = points[points.length - 1];
 
@@ -15,7 +15,7 @@ export function LiveMap({ points, height = 220 }: { points: LocationPoint[]; hei
   }, [last]);
 
   return (
-    <View style={{ height, borderRadius: 20, overflow: 'hidden', backgroundColor: '#E7EDEB' }}>
+    <View style={{ height, borderRadius: flush ? 0 : 20, overflow: 'hidden', backgroundColor: '#E7EDEB' }}>
       <MapView
         ref={ref}
         style={{ flex: 1 }}

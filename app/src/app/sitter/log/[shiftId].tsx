@@ -2,15 +2,26 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
-import { Button, Chip, ErrorText, Field, Icon, Label, Screen, T } from '@/components/ui';
+import { BoxChoice, Button, Chip, ErrorText, Field, Icon, type IconName, Label, Screen, Segmented, SheetHeader, T } from '@/components/ui';
 import { useShiftLive } from '@/lib/data';
 import { timeOf } from '@/lib/format';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import type { LogKind } from '@/lib/types';
-import { color } from '@/theme';
+import { color, font } from '@/theme';
+
+const cap = (x: string) => x[0].toUpperCase() + x.slice(1);
+const opts = (xs: string[]) => xs.map((x) => ({ value: x, label: cap(x) }));
+const KINDS: { kind: LogKind; label: string; icon: IconName }[] = [
+  { kind: 'food', label: 'Food', icon: 'coffee' },
+  { kind: 'nap', label: 'Nap', icon: 'moon' },
+  { kind: 'activity', label: 'Activity', icon: 'play-circle' },
+  { kind: 'photo', label: 'Photo', icon: 'camera' },
+  { kind: 'diaper', label: 'Diaper', icon: 'droplet' },
+  { kind: 'note', label: 'Note', icon: 'file-text' },
+];
 
 const TITLES: Record<LogKind, string> = { food: 'Log food', nap: 'Log a nap', activity: 'Log an activity', diaper: 'Diaper or potty', note: 'Add a note', photo: 'Photo update' };
 
@@ -19,15 +30,16 @@ function Choice({ label, options, value, onChange }: { label: string; options: s
     <View style={{ gap: 8 }}>
       <Label>{label}</Label>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {options.map((o) => <Chip key={o} label={o} on={value === o} onPress={() => onChange(o)} />)}
+        {options.map((o) => <Chip key={o} label={cap(o)} on={value === o} onPress={() => onChange(o)} />)}
       </View>
     </View>
   );
 }
 
 export default function AddLog() {
-  const { shiftId, kind: k } = useLocalSearchParams<{ shiftId: string; kind: LogKind }>();
-  const kind = (k ?? 'note') as LogKind;
+  const { shiftId, kind: k } = useLocalSearchParams<{ shiftId: string; kind: LogKind | 'more' }>();
+  const [picked, setPicked] = useState<LogKind | null>(null);
+  const kind = (picked ?? (k === 'more' ? null : k) ?? null) as LogKind | null;
   const { session } = useSession();
   const { bundle } = useShiftLive(shiftId);
   const kids = bundle?.kids ?? [];
@@ -38,6 +50,7 @@ export default function AddLog() {
     started_at: timeOf(new Date()),
   });
   const [urgent, setUrgent] = useState(false);
+  const [asleep, setAsleep] = useState(false);
   const [photo, setPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -45,6 +58,7 @@ export default function AddLog() {
 
   const allKids = kids.map((x) => x.id);
   const chosen = who.length ? who : allKids;
+  const whoValue = who.length === 1 ? who[0] : 'all';
 
   async function pick(camera: boolean) {
     const perm = camera ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -74,7 +88,7 @@ export default function AddLog() {
         diaper: ['diaper', 'potty', 'note'],
         note: ['category', 'text'],
         photo: ['caption'],
-      }[kind];
+      }[kind!];
       for (const key of keep) if (f[key]) data[key] = f[key];
       const { error } = await supabase.from('logs').insert({ shift_id: shiftId, author_id: session!.user.id, kind, kid_ids: chosen, data, photo_path, urgent });
       if (error) throw error;
@@ -94,24 +108,51 @@ export default function AddLog() {
     (kind === 'note' && !!f.text?.trim()) ||
     (kind === 'photo' && !!photo);
 
+  // Wireframe S44: "Add a log" chooser.
+  if (!kind)
+    return (
+      <Screen bleedTop header={<SheetHeader title="Add a log" />}>
+        <T variant="muted">Pick what happened. Parents get it right away.</T>
+        <View style={st.grid}>
+          {KINDS.map((x) => (
+            <Pressable key={x.kind} accessibilityRole="button" onPress={() => setPicked(x.kind)} style={({ pressed }) => [st.kindTile, pressed && { opacity: 0.85 }]}>
+              <Icon name={x.icon} size={26} tint={color.primaryStrong} />
+              <Text style={st.kindText}>{x.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </Screen>
+    );
+
+  // Wireframes S5 (food), S45 (nap), S46-S49.
   return (
-    <Screen title={TITLES[kind]} back footer={<Button label={kind === 'photo' ? 'Send to the parents' : 'Save and notify parents'} onPress={save} busy={busy} disabled={!valid} />}>
+    <Screen bleedTop header={<SheetHeader title={TITLES[kind]} />} footer={<Button label={kind === 'photo' ? 'Send to the parents' : 'Save and notify parents'} onPress={save} busy={busy} disabled={!valid} />}>
       {kids.length > 1 && (
         <View style={{ gap: 8 }}>
-          <Label>Who</Label>
+          <Text style={st.q}>Who</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {kids.map((kid) => (
-              <Chip key={kid.id} label={kid.name} on={chosen.includes(kid.id)} onPress={() => setWho((ids) => { const base = ids.length ? ids : allKids; return base.includes(kid.id) ? base.filter((x) => x !== kid.id) : [...base, kid.id]; })} />
+              <Chip key={kid.id} label={kid.name} on={whoValue === kid.id} onPress={() => setWho([kid.id])} />
             ))}
+            <Chip label={kids.length === 2 ? 'Both' : 'All'} on={whoValue === 'all'} onPress={() => setWho([])} />
           </View>
         </View>
       )}
 
       {kind === 'food' && (
         <>
-          <Choice label="Meal" options={['snack', 'breakfast', 'lunch', 'dinner']} value={f.meal} onChange={set('meal')} />
+          <Segmented options={opts(['snack', 'breakfast', 'lunch', 'dinner'])} value={f.meal} onChange={set('meal')} />
           <Field label="What did they eat?" value={f.what ?? ''} onChangeText={set('what')} placeholder="Apple slices, crackers" />
-          <Choice label="How much?" options={['none', 'some', 'most', 'all']} value={f.amount} onChange={set('amount')} />
+          <Text style={st.q}>How much?</Text>
+          <BoxChoice options={opts(['none', 'some', 'most', 'all'])} value={f.amount} onChange={set('amount')} />
+          {photo ? (
+            <Image source={{ uri: photo.uri }} style={{ height: 160, borderRadius: 18 }} contentFit="cover" />
+          ) : (
+            <Pressable accessibilityRole="button" onPress={() => pick(true)} style={st.addPhoto}>
+              <Icon name="camera" size={18} />
+              <Text style={st.addPhotoText}>Add a photo</Text>
+            </Pressable>
+          )}
         </>
       )}
 
@@ -119,9 +160,17 @@ export default function AddLog() {
         <>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <View style={{ flex: 1 }}><Field label="Fell asleep" value={f.started_at ?? ''} onChangeText={set('started_at')} /></View>
-            <View style={{ flex: 1 }}><Field label="Woke up" value={f.ended_at ?? ''} onChangeText={set('ended_at')} placeholder="Still sleeping" /></View>
+            {!asleep && <View style={{ flex: 1 }}><Field label="Woke up" value={f.ended_at ?? ''} onChangeText={set('ended_at')} placeholder={timeOf(new Date())} /></View>}
           </View>
-          <Choice label="How did it go?" options={['easily', 'took a while', 'woke up upset']} value={f.how} onChange={set('how')} />
+          <View style={st.switchRow}>
+            <View style={{ flex: 1 }}>
+              <T variant="strong">Still sleeping</T>
+              <T variant="small">Log the start now, the end later</T>
+            </View>
+            <Switch value={asleep} onValueChange={(v) => { setAsleep(v); if (v) set('ended_at')(''); }} trackColor={{ true: color.primary, false: color.lineStrong }} />
+          </View>
+          <Text style={st.q}>How did it go?</Text>
+          <BoxChoice options={opts(['easily', 'took a while', 'woke up upset'])} value={f.how} onChange={set('how')} />
           <Field label="Note (optional)" value={f.note ?? ''} onChangeText={set('note')} />
         </>
       )}
@@ -181,3 +230,13 @@ export default function AddLog() {
     </Screen>
   );
 }
+
+const st = StyleSheet.create({
+  q: { fontFamily: font.bodyBold, fontSize: 14, color: color.ink },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  kindTile: { width: '31%', flexGrow: 1, height: 92, borderRadius: 20, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center', gap: 8 },
+  kindText: { fontFamily: font.bodyBold, fontSize: 14, color: color.primaryStrong },
+  addPhoto: { height: 52, borderRadius: 999, borderWidth: 1.5, borderStyle: 'dashed', borderColor: color.lineStrong, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  addPhotoText: { fontFamily: font.bodyBold, fontSize: 14, color: color.primary },
+  switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+});

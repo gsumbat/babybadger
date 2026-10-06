@@ -5,9 +5,10 @@ export default function ParentTabs() {
     <AppTabs
       tabs={[
         { name: 'index', title: 'Home', icon: 'home' },
-        { name: 'shifts', title: 'Shifts', icon: 'calendar' },
+        { name: 'calendar', title: 'Calendar', icon: 'calendar' },
         { name: 'sitters', title: 'Sitters', icon: 'users' },
-        { name: 'family', title: 'Family', icon: 'settings' },
+        { name: 'messages', title: 'Messages', icon: 'message-square' },
+        { name: 'settings', title: 'Settings', icon: 'settings' },
       ]}
     />
   );

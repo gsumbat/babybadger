@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
+import { Hero } from '@/components/Hero';
 import { Banner, Button, ErrorText, Field, Screen, T } from '@/components/ui';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
@@ -36,6 +37,8 @@ export default function SignIn() {
 
   return (
     <Screen
+      bleedTop
+      header={<Hero height={sent ? 250 : 330} />}
       footer={
         sent ? (
           <>
@@ -49,11 +52,9 @@ export default function SignIn() {
           </>
         )
       }>
-      <View style={{ height: 40 }} />
-      <Text style={{ fontFamily: font.display, fontSize: 40, color: color.primary }}>BabyBadger</Text>
-      <T variant="title">Know they’re safe, without hovering.</T>
-      <T variant="muted">Parents see where the sitter and kids are during a shift. Sitters share location only while clocked in.</T>
-      <View style={{ height: 16 }} />
+      <View style={{ height: 12 }} />
+      <Text style={{ fontFamily: font.display, fontSize: 28, color: color.ink }}>{sent ? 'Check your email' : 'Know how the day is going, even when you’re away'}</Text>
+      {!sent && <Text style={{ fontFamily: font.body, fontSize: 16, lineHeight: 23, color: color.ink2 }}>Sign in with your email. We’ll send you a code, no password needed.</Text>}
       {!configured && <Banner kind="warn" icon="alert-triangle">Supabase isn’t set up yet. Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY to app/.env (see README).</Banner>}
       {sent ? (
         <>

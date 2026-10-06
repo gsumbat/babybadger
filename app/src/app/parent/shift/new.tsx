@@ -1,13 +1,14 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Banner, Button, Chip, ErrorText, Field, Label, Screen, T } from '@/components/ui';
+import { Avatar, Banner, Button, Chip, ErrorText, Field, Label, Screen, T } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { parseTimeOnDay } from '@/lib/shift-logic';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
+import { color, font } from '@/theme';
 
 function nextDays(n: number) {
   return Array.from({ length: n }, (_, i) => {
@@ -78,12 +79,23 @@ export default function NewShift() {
     <Screen title="Book a shift" back footer={<Button label="Book shift" onPress={book} busy={busy} disabled={!valid} />}>
       <Label>Sitter</Label>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {data?.sitters.map((s) => <Chip key={s.sitter_id} label={firstName(s.profile?.full_name)} on={chosenSitter === s.sitter_id} onPress={() => setSitterId(s.sitter_id)} />)}
+        {data?.sitters.map((s) => {
+          const on = chosenSitter === s.sitter_id;
+          return (
+            <Pressable key={s.sitter_id} accessibilityRole="radio" accessibilityState={{ selected: on }} onPress={() => setSitterId(s.sitter_id)} style={[st.person, on && st.personOn]}>
+              <Avatar name={s.profile?.full_name || '?'} size={30} />
+              <Text style={st.personText}>{firstName(s.profile?.full_name)}</Text>
+            </Pressable>
+          );
+        })}
       </View>
       <Label>Day</Label>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-        {days.map((d, i) => (
-          <Chip key={i} label={i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString([], { weekday: 'short', day: 'numeric' })} on={day === i} onPress={() => setDay(i)} />
+      <View style={{ flexDirection: 'row', gap: 4 }}>
+        {days.slice(0, 7).map((d, i) => (
+          <Pressable key={i} accessibilityRole="radio" accessibilityState={{ selected: day === i }} onPress={() => setDay(i)} style={[st.day, day === i && st.dayOn]}>
+            <Text style={[st.dow, day === i && { color: '#FFFFFF' }]}>{d.toLocaleDateString('en-US', { weekday: 'short' })}</Text>
+            <Text style={[st.num, day === i && { color: '#FFFFFF' }]}>{d.getDate()}</Text>
+          </Pressable>
         ))}
       </View>
       <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -110,3 +122,13 @@ export default function NewShift() {
     </Screen>
   );
 }
+
+const st = StyleSheet.create({
+  person: { height: 44, paddingLeft: 6, paddingRight: 14, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line },
+  personOn: { borderWidth: 2, borderColor: color.primary, backgroundColor: color.primaryTint },
+  personText: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
+  day: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 14, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line, gap: 2 },
+  dayOn: { backgroundColor: color.primary, borderColor: color.primary },
+  dow: { fontFamily: font.body, fontSize: 12, color: color.ink2 },
+  num: { fontFamily: font.bodyBold, fontSize: 17, color: color.ink },
+});

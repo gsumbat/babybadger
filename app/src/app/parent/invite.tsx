@@ -1,19 +1,21 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Share, Text, View } from 'react-native';
+import { Share, StyleSheet, Text, View } from 'react-native';
 
-import { Banner, Button, ErrorText, Field, Screen, T } from '@/components/ui';
+import { Button, ErrorText, Field, Icon, Screen, T } from '@/components/ui';
 import { inviteMessage } from '@/lib/format';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
-import { color, font } from '@/theme';
+import { cardShadow, color, font } from '@/theme';
 
+// Wireframes P3 (invite your sitter) and P24 (review and send).
 export default function Invite() {
   const { family } = useSession();
   const [name, setName] = useState('');
   const [code, setCode] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
+  const first = name.trim().split(/\s+/)[0] || 'Your sitter';
 
   async function create() {
     setBusy(true);
@@ -27,27 +29,58 @@ export default function Invite() {
   if (code)
     return (
       <Screen
-        title="Invite ready"
+        title="Review and send"
         back
         footer={
           <>
-            <Button label="Send by text or email" icon="share" onPress={() => Share.share({ message: inviteMessage(family!.name, code) })} />
+            <Button label="Send by text" icon="message-circle" onPress={() => Share.share({ message: inviteMessage(family!.name, code) })} />
             <Button label="Done" kind="ghost" onPress={() => router.back()} />
           </>
         }>
-        <T>Give {name.trim() || 'your sitter'} this code:</T>
-        <View style={{ backgroundColor: '#FFFFFF', borderRadius: 24, paddingVertical: 28, alignItems: 'center' }}>
-          <Text style={{ fontFamily: font.display, fontSize: 48, letterSpacing: 10, color: color.primaryStrong }}>{code}</Text>
+        <T variant="muted">{first} will see this:</T>
+        <View style={st.preview}>
+          <Text style={st.previewTitle}>{family!.name} invited you to sit for them</Text>
+          <T variant="small">Open BabyBadger, choose “I’m a sitter” and enter this code:</T>
+          <Text style={st.code}>{code}</Text>
+          <T variant="small">You’ll share location only while clocked in, and you’ll read and sign their monitoring notice first.</T>
         </View>
-        <T variant="muted">Single use, expires in 7 days. When she joins she reviews your family, then signs the location notice. You’ll see her as Active once she has.</T>
+        <View style={st.facts}>
+          <View style={[st.fact, st.line]}>
+            <T>To</T>
+            <T variant="strong">{name.trim()}</T>
+          </View>
+          <View style={st.fact}>
+            <T>Code works</T>
+            <T variant="strong">7 days, once</T>
+          </View>
+        </View>
       </Screen>
     );
 
   return (
-    <Screen title="Invite a sitter" back footer={<Button label="Create invite" onPress={create} busy={busy} disabled={name.trim().length < 2} />}>
-      <Field label="Sitter’s name" value={name} onChangeText={setName} placeholder="Maya" autoComplete="name" />
-      <Banner icon="shield">She sees your family and kids only after accepting. Her location is shared only while she’s clocked in.</Banner>
+    <Screen title="Invite your sitter" subtitle="Someone you already know and trust" back footer={<Button label="Continue" onPress={create} busy={busy} disabled={name.trim().length < 2} />}>
+      <Field label="Name" value={name} onChangeText={setName} placeholder="Maya" autoComplete="name" autoCapitalize="words" autoFocus />
+      <View style={st.info}>
+        <Icon name="shield" size={20} tint={color.primary} />
+        <View style={{ flex: 1, gap: 2 }}>
+          <Text style={st.infoTitle}>{first} will be asked to agree to</Text>
+          <T variant="small" style={{ fontSize: 13, lineHeight: 18 }}>
+            Sharing location only while clocked in, and a monitoring notice you both keep a copy of.
+          </T>
+        </View>
+      </View>
       <ErrorText>{err}</ErrorText>
     </Screen>
   );
 }
+
+const st = StyleSheet.create({
+  preview: { backgroundColor: '#FFFFFF', borderRadius: 24, padding: 18, gap: 8, ...cardShadow },
+  previewTitle: { fontFamily: font.display, fontSize: 20, color: color.ink },
+  code: { fontFamily: font.display, fontSize: 42, letterSpacing: 8, color: color.primaryStrong, textAlign: 'center', marginVertical: 6 },
+  facts: { backgroundColor: '#FFFFFF', borderRadius: 24, paddingHorizontal: 16, ...cardShadow },
+  fact: { flexDirection: 'row', justifyContent: 'space-between', minHeight: 52, alignItems: 'center' },
+  line: { borderBottomWidth: 1, borderBottomColor: color.divider },
+  info: { flexDirection: 'row', gap: 10, backgroundColor: color.primaryTint, borderRadius: 18, padding: 14 },
+  infoTitle: { fontFamily: font.bodyBold, fontSize: 14, color: color.primaryStrong },
+});

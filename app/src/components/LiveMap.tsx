@@ -5,7 +5,7 @@ import { routeLengthM } from '@/lib/shift-logic';
 import type { LocationPoint } from '@/lib/types';
 import { color, font } from '@/theme';
 
-export function LiveMap({ points, height = 220 }: { points: LocationPoint[]; height?: number }) {
+export function LiveMap({ points, height = 220, flush }: { points: LocationPoint[]; height?: number; flush?: boolean }) {
   const last = points[points.length - 1];
   // Sketch the route inside the box so the shape is visible without a map.
   const lats = points.map((p) => p.lat);
@@ -14,7 +14,7 @@ export function LiveMap({ points, height = 220 }: { points: LocationPoint[]; hei
   const spanLat = maxLat - minLat || 1;
   const spanLng = maxLng - minLng || 1;
   return (
-    <View style={[s.box, { height }]} accessibilityLabel={last ? `Last location ${last.lat.toFixed(4)}, ${last.lng.toFixed(4)}` : 'No location yet'}>
+    <View style={[s.box, { height }, flush && { borderRadius: 0 }]} accessibilityLabel={last ? `Last location ${last.lat.toFixed(4)}, ${last.lng.toFixed(4)}` : 'No location yet'}>
       {points.map((p, i) => (
         <View
           key={p.id}
