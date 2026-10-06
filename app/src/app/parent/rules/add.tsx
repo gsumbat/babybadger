@@ -65,8 +65,8 @@ export default function AddRules() {
           </View>
         </View>
       ))}
-      <Pressable accessibilityRole="button" onPress={() => router.push('/parent/rules/rule')} hitSlop={8} style={{ alignSelf: 'flex-start' }}>
-        <Text style={st.link}>+ Write your own rule</Text>
+      <Pressable accessibilityRole="button" onPress={() => router.push('/parent/rules/rule')} style={st.own}>
+        <Text style={st.ownText}>+ Write your own rule</Text>
       </Pressable>
       <ErrorText>{err}</ErrorText>
     </Screen>
@@ -80,5 +80,7 @@ const st = StyleSheet.create({
   chipOn: { backgroundColor: color.primaryTint, borderWidth: 1.5, borderColor: color.primary },
   chipOff: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line },
   chipText: { fontFamily: font.bodySemi, fontSize: 14 },
-  link: { fontFamily: font.bodyBold, fontSize: 14, color: color.primary, textDecorationLine: 'underline' },
+  // Same dashed button as "+ Add rules" on P74.
+  own: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 46, borderRadius: 999, borderWidth: 2, borderColor: '#C9D3DD', borderStyle: 'dashed' },
+  ownText: { fontFamily: font.displayBold, fontSize: 16, color: color.primary },
 });

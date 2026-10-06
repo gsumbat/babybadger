@@ -155,7 +155,9 @@ export default function WF_P75() {
             </View>
           </View>
         </View>
-        <View style={{}}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#47698A", textDecorationLine: "underline" }}>+ Write your own rule</Text></View>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", height: 46, flexShrink: 0, borderRadius: 999, borderWidth: 2.0, borderColor: "#C9D3DD", borderStyle: "dashed" }}>{/* -> P76-RuleDetail.dc.html */}
+          <Text style={{ fontFamily: font.displayBold, fontSize: 16, color: "#47698A" }}>+ Write your own rule</Text>
+        </View>
       </View>
       <View style={{ flexDirection: "row", paddingTop: 4, paddingRight: 20, paddingBottom: 26, paddingLeft: 20 }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 54, flexGrow: 1, flexBasis: 0, backgroundColor: "#47698A", borderRadius: 999, flexShrink: 1 }}>{/* -> P74-HouseRules.dc.html */}
