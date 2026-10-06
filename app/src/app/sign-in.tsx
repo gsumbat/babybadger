@@ -15,6 +15,8 @@ export default function SignIn() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
+  const validEmail = /\S+@\S+\.\S+/.test(email);
+
   async function sendCode() {
     setBusy(true);
     setErr('');
@@ -41,7 +43,10 @@ export default function SignIn() {
             <Button label="Use a different email" kind="ghost" onPress={() => setSent(false)} />
           </>
         ) : (
-          <Button label="Send me a code" onPress={sendCode} busy={busy} disabled={!/\S+@\S+\.\S+/.test(email) || !configured} />
+          <>
+            <Button label="Send me a code" onPress={sendCode} busy={busy} disabled={!validEmail || !configured} />
+            <Button label="I already have a code" kind="ghost" disabled={!validEmail} onPress={() => setSent(true)} />
+          </>
         )
       }>
       <View style={{ height: 40 }} />
@@ -52,7 +57,7 @@ export default function SignIn() {
       {!configured && <Banner kind="warn" icon="alert-triangle">Supabase isn’t set up yet. Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY to app/.env (see README).</Banner>}
       {sent ? (
         <>
-          <T>We sent a sign-in code to {email}.</T>
+          <T>Enter the latest code we emailed to {email}.</T>
           <Field label="Code" value={code} onChangeText={(t) => setCode(t.replace(/\D/g, ""))} keyboardType="number-pad" autoComplete="one-time-code" maxLength={10} placeholder="Code from the email" />
         </>
       ) : (
