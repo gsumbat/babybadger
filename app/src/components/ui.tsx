@@ -296,18 +296,20 @@ export function ErrorText({ children }: { children?: string }) {
   return <Banner kind="bad" icon="alert-triangle">{children}</Banner>;
 }
 
-/** Home header from the wireframes: "Thursday afternoon" over the family / sitter name, initials on the right. */
-export function HomeHeader({ eyebrow, title, initials, onAvatar }: { eyebrow: string; title: string; initials: string; onAvatar?: () => void }) {
+/** Home header from the wireframes. Parent (P4): ink circle with initials. Sitter (S3): blue circle with the first letter. */
+export function HomeHeader({ eyebrow, title, sub, initials, onAvatar, variant = 'parent' }: { eyebrow: string; title: string; sub?: string; initials: string; onAvatar?: () => void; variant?: 'parent' | 'sitter' }) {
+  const sitter = variant === 'sitter';
   return (
-    <View style={s.homeHeader}>
+    <View style={[s.homeHeader, sitter && { paddingTop: 18, paddingBottom: 10 }]}>
       <View style={{ flex: 1, minWidth: 0 }}>
         <Text style={s.eyebrow}>{eyebrow}</Text>
-        <Text style={s.homeTitle} numberOfLines={1}>
+        <Text style={[s.homeTitle, sitter && { marginVertical: -5.22 }]} numberOfLines={1}>
           {title}
         </Text>
+        {sub ? <Text style={[s.eyebrow, { fontSize: 13 }]}>{sub}</Text> : null}
       </View>
-      <Pressable accessibilityRole="button" accessibilityLabel="Account" onPress={onAvatar} style={s.initials}>
-        <Text style={s.initialsText}>{initials}</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel="Account" onPress={onAvatar} style={[s.initials, sitter && { backgroundColor: color.primary }]}>
+        <Text style={sitter ? { fontFamily: font.display, fontSize: 19, color: '#FFFFFF' } : s.initialsText}>{sitter ? initials.slice(0, 1) : initials}</Text>
       </Pressable>
     </View>
   );
@@ -454,13 +456,13 @@ const s = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 6 },
   rowLine: { borderBottomWidth: 1, borderBottomColor: color.divider },
   rowIcon: { width: 36, height: 36, borderRadius: 12, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
-  homeHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: space.xl, paddingTop: 16, paddingBottom: 12 },
+  homeHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: space.xl, paddingTop: 20, paddingBottom: 12 },
   eyebrow: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
   homeTitle: { fontFamily: font.display, fontSize: 24, color: color.ink },
   initials: { width: 44, height: 44, borderRadius: 22, backgroundColor: color.ink, alignItems: 'center', justifyContent: 'center' },
-  initialsText: { fontFamily: font.bodyBold, fontSize: 15, color: '#FFFFFF' },
+  initialsText: { fontFamily: font.bodyBold, fontSize: 16, color: '#FFFFFF' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  tile: { height: 76, borderRadius: 18, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 4 },
+  tile: { height: 70, borderRadius: 18, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 4 },
   tileText: { fontFamily: font.bodyBold, fontSize: 12, lineHeight: 14, color: color.primaryStrong, textAlign: 'center' },
   tileDot: { position: 'absolute', right: -4, top: -2, width: 9, height: 9, borderRadius: 5, backgroundColor: '#D9822B' },
   seg: { flexDirection: 'row', gap: 4, backgroundColor: color.muted, borderRadius: radius.pill, padding: 4 },

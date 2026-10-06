@@ -13,7 +13,7 @@ type TabDef = { name: string; title: string; icon: IconName; badge?: number };
 function TabBar({ state, descriptors, navigation, defs }: BottomTabBarProps & { defs: TabDef[] }) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[st.bar, { paddingBottom: Math.max(insets.bottom, 10) }]} accessibilityRole="tablist">
+    <View style={[st.bar, { paddingBottom: Math.max(insets.bottom, 22) }]} accessibilityRole="tablist">
       {state.routes.map((route, i) => {
         const def = defs.find((d) => d.name === route.name);
         if (!def) return null;
@@ -25,7 +25,7 @@ function TabBar({ state, descriptors, navigation, defs }: BottomTabBarProps & { 
         return (
           <Pressable key={route.key} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={descriptors[route.key].options.title ?? def.title} onPress={press} style={st.item}>
             <View style={[st.iconPill, on && st.iconPillOn]}>
-              <Icon name={def.icon} size={23} tint={on ? color.primary : '#5F6D74'} />
+              <Icon name={def.icon} size={24} tint={on ? color.primary : '#5F6D74'} />
               {def.badge ? (
                 <View style={st.badge}>
                   <Text style={st.badgeText}>{def.badge}</Text>

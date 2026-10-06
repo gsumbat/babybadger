@@ -35,10 +35,16 @@ export function SafetyBox({ kids }: { kids: Kid[] }) {
   );
 }
 
-export function KidDot({ kid, size = 40 }: { kid: Pick<Kid, 'name' | 'color'>; size?: number }) {
+// Small kid circles in the wireframes (P4b, P5, S10) use the deeper shade of the kid's color with a white letter.
+const DEEP: Record<string, string> = { '#E8B9BE': '#B86A82', '#C3B5E0': '#8676B3', '#9DB8E8': '#4F7CC4', '#F2C08A': '#C27C2C', '#9ED3B4': '#3E9466' };
+export function kidShade(c?: string) {
+  return (c && DEEP[c.toUpperCase()]) || c || '#B86A82';
+}
+
+export function KidDot({ kid, size = 36 }: { kid: Pick<Kid, 'name' | 'color'>; size?: number }) {
   return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: kid.color || color.accent, alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ fontFamily: font.display, fontSize: size / 2.2, color: color.ink }}>{kid.name[0]?.toUpperCase()}</Text>
+    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: kidShade(kid.color), alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ fontFamily: font.displayBold, fontSize: Math.round(size / 2.25), color: '#FFFFFF' }}>{kid.name[0]?.toUpperCase()}</Text>
     </View>
   );
 }
