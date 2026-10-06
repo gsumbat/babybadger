@@ -7,6 +7,7 @@ import { Banner, Button, Card, ErrorText, Field, Icon, type IconName, Label, Loa
 import { useShiftLive } from '@/lib/data';
 import { timeOf } from '@/lib/format';
 import { type SharingMode, startSharing, stopSharing } from '@/lib/location-sharing';
+import { safetyLine } from '@/lib/kid-profile';
 import { useSession } from '@/lib/session';
 import { formatClock } from '@/lib/shift-logic';
 import { errorText, supabase } from '@/lib/supabase';
@@ -118,9 +119,9 @@ export default function SitterShift() {
         ))}
       </View>
 
-      {kids.some((k) => k.avoid_foods) && (
+      {kids.some((k) => safetyLine(k)) && (
         <Banner kind="bad" icon="alert-octagon">
-          {kids.filter((k) => k.avoid_foods).map((k) => `${k.name} · avoid ${k.avoid_foods}`).join('\n')}
+          {kids.map(safetyLine).filter(Boolean).join('\n')}
         </Banner>
       )}
 

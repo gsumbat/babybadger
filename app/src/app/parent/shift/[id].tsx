@@ -7,6 +7,7 @@ import { LogTimeline } from '@/components/LogTimeline';
 import { Avatar, Banner, Button, Card, ErrorText, Icon, Label, Loading, Pill, Screen, T } from '@/components/ui';
 import { useShiftLive } from '@/lib/data';
 import { firstName, rangeOf, timeOf } from '@/lib/format';
+import { safetyLine } from '@/lib/kid-profile';
 import { formatDuration, routeLengthM, workedMinutes } from '@/lib/shift-logic';
 import { errorText, supabase } from '@/lib/supabase';
 import { color } from '@/theme';
@@ -24,7 +25,7 @@ export default function ParentShift() {
   const { shift, tasks, logs, points, kids, sitter } = bundle;
   const name = firstName(sitter?.full_name);
   const done = tasks.filter((t) => t.done_at).length;
-  const avoid = kids.filter((k) => k.avoid_foods);
+  const avoid = kids.map(safetyLine).filter(Boolean);
 
   async function cancel() {
     const go = async () => {
@@ -64,7 +65,7 @@ export default function ParentShift() {
 
       {avoid.length > 0 && (
         <Banner kind="bad" icon="alert-octagon">
-          {avoid.map((k) => `${k.name} · avoid ${k.avoid_foods}`).join('\n')}
+          {avoid.join('\n')}
         </Banner>
       )}
 

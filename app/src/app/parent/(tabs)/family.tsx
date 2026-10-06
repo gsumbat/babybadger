@@ -1,8 +1,11 @@
 import { router } from 'expo-router';
+import { Text, View } from 'react-native';
 
 import { Button, Card, ErrorText, Label, Row, Screen, T } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
+import { ageLabel } from '@/lib/kid-profile';
 import { useSession } from '@/lib/session';
+import { color, font } from '@/theme';
 
 export default function Family() {
   const { family, profile, session, signOut } = useSession();
@@ -14,7 +17,17 @@ export default function Family() {
       {kids?.length ? (
         <Card style={{ paddingVertical: 4 }}>
           {kids.map((k, i) => (
-            <Row key={k.id} icon="smile" title={k.name} sub={k.avoid_foods ? `Avoid: ${k.avoid_foods}` : k.notes || undefined} last={i === kids.length - 1} />
+            <Row
+              key={k.id}
+              left={
+                <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: k.color || color.accent, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text style={{ fontFamily: font.display, fontSize: 18, color: color.ink }}>{k.name[0]?.toUpperCase()}</Text>
+                </View>
+              }
+              title={k.name}
+              sub={[k.birthdate && ageLabel(k.birthdate), k.avoid_foods && `avoid ${k.avoid_foods}`, k.allergies && `allergic to ${k.allergies}`].filter(Boolean).join(' · ') || undefined}
+              last={i === kids.length - 1}
+            />
           ))}
         </Card>
       ) : (

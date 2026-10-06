@@ -11,6 +11,12 @@ export type Kid = {
   birthdate: string | null;
   avoid_foods: string;
   notes: string;
+  color?: string;
+  calls_you?: string;
+  allergies?: string;
+  health_notes?: string;
+  pediatrician?: string;
+  comfort_item?: string;
 };
 
 export type SitterLink = {

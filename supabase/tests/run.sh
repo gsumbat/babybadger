@@ -17,4 +17,5 @@ $P -c "create database t"
 $P -d t -f tests/stub_supabase.sql
 $P -d t -f migrations/20261005000001_core.sql
 $P -d t -f migrations/20261005000003_grants.sql
+$P -d t -f migrations/20261005000004_kid_profile.sql
 $P -d t -f tests/rls_scenarios.sql

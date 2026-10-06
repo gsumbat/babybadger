@@ -33,6 +33,8 @@ export function Screen({
   scroll = true,
   footer,
   bg = color.canvas,
+  step,
+  onBack,
 }: {
   children: ReactNode;
   title?: string;
@@ -42,24 +44,55 @@ export function Screen({
   scroll?: boolean;
   footer?: ReactNode;
   bg?: string;
+  /** Multi-step flow: "Add a child · 1 of 2", a progress bar and Cancel. */
+  step?: { label: string; n: number; total: number; onCancel?: () => void };
+  /** Override the back button (e.g. go to the previous step instead of leaving). */
+  onBack?: () => void;
 }) {
   const body = <View style={s.content}>{children}</View>;
+  const backBtn = (
+    <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack ?? (() => router.back())} style={s.back}>
+      <Icon name="chevron-left" size={22} tint={color.ink} />
+    </Pressable>
+  );
+  const titleBlock =
+    title || subtitle ? (
+      <View style={{ gap: 2 }}>
+        {title ? <Text style={s.hTitle}>{title}</Text> : null}
+        {subtitle ? <Text style={s.subtitle}>{subtitle}</Text> : null}
+      </View>
+    ) : null;
   return (
     <SafeAreaView style={[s.screen, { backgroundColor: bg }]} edges={['top', 'left', 'right']}>
-      {(title || back) && (
-        <View style={s.header}>
-          {back && (
-            <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={s.back}>
-              <Icon name="chevron-left" size={22} tint={color.ink} />
-            </Pressable>
-          )}
-          <View style={{ flex: 1 }}>
-            {title ? <Text style={s.hTitle}>{title}</Text> : null}
-            {subtitle ? <Text style={s.subtitle}>{subtitle}</Text> : null}
+      {back || step ? (
+        // Back row on its own line, title underneath: keeps the arrow and the title from fighting over one baseline.
+        <View style={s.headerStack}>
+          <View style={s.backRow}>
+            {backBtn}
+            <Text style={s.stepText} numberOfLines={1}>
+              {step ? `${step.label} · ${step.n} of ${step.total}` : ''}
+            </Text>
+            {step?.onCancel ? (
+              <Pressable accessibilityRole="button" onPress={step.onCancel} hitSlop={10}>
+                <Text style={s.cancel}>Cancel</Text>
+              </Pressable>
+            ) : (
+              right
+            )}
           </View>
+          {step ? (
+            <View style={s.progress}>
+              <View style={[s.progressFill, { width: `${(step.n / step.total) * 100}%` }]} />
+            </View>
+          ) : null}
+          {titleBlock}
+        </View>
+      ) : title ? (
+        <View style={s.header}>
+          <View style={{ flex: 1 }}>{titleBlock}</View>
           {right}
         </View>
-      )}
+      ) : null}
       {scroll ? (
         <ScrollView contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
           {body}
@@ -180,9 +213,10 @@ export function Avatar({ name, size = 44, bg = color.primary }: { name: string; 
   );
 }
 
-export function Row({ icon, title, sub, right, onPress, last }: { icon?: IconName; title: string; sub?: string; right?: ReactNode; onPress?: () => void; last?: boolean }) {
+export function Row({ icon, left, title, sub, right, onPress, last }: { icon?: IconName; left?: ReactNode; title: string; sub?: string; right?: ReactNode; onPress?: () => void; last?: boolean }) {
   const inner = (
     <View style={[s.row, !last && s.rowLine]}>
+      {left}
       {icon ? (
         <View style={s.rowIcon}>
           <Icon name={icon} size={18} />
@@ -225,7 +259,13 @@ const s = StyleSheet.create({
   screen: { flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: space.xl, paddingTop: 8, paddingBottom: 8 },
   back: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
-  hTitle: { fontFamily: font.display, fontSize: 24, lineHeight: 30, color: color.ink },
+  hTitle: { fontFamily: font.display, fontSize: 26, lineHeight: 32, color: color.ink },
+  headerStack: { paddingHorizontal: space.xl, paddingTop: 8, paddingBottom: 8, gap: 14 },
+  backRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44 },
+  stepText: { flex: 1, fontFamily: font.bodySemi, fontSize: 14, color: color.ink2 },
+  cancel: { fontFamily: font.bodySemi, fontSize: 14, color: color.primary, textDecorationLine: 'underline' },
+  progress: { height: 6, borderRadius: 3, backgroundColor: color.edge, overflow: 'hidden' },
+  progressFill: { height: 6, borderRadius: 3, backgroundColor: color.primary },
   subtitle: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
   content: { paddingHorizontal: space.xl, paddingTop: 4, gap: space.m },
   footer: { paddingHorizontal: space.xl, paddingTop: 8, paddingBottom: 24, gap: 8, backgroundColor: 'transparent' },
