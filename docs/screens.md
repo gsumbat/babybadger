@@ -15,9 +15,9 @@ If a screen needs something no wireframe covers, it goes into the canvas first, 
 | `parent/shift/[id]` completed | P5 Report | Approve hours, total pay, replay route, house-rules check |
 | `parent/(tabs)/calendar` | P6b CalWeek | Day / Month switch and views |
 | `parent/shift/new` | E2 ParentCalendar (book a shift) | Sitter availability check |
-| `parent/(tabs)/sitters` | P27 / P54 Sitters | Pool, find a sitter, resend/expired states |
-| `parent/invite` | P3 Invite → P24 Review and send | Phone number, sending by SMS from the app |
-| `parent/kid/new` | P18 AddChild, P19 ChildCare | P20 routine, P21 sitter access, photo, lives at home |
+| `parent/(tabs)/sitters` | P54 Sitters | When do you need someone, availability, find a new sitter, meet requests |
+| `parent/invite` | P3 Invite → P24 Review and send | Phone number, rate, requirements; the app shares a code instead of a personal link |
+| `parent/kid/new` | P18 AddChild, P19 ChildCare | P20 routine, P21 sitter access, Add a photo, Lives at home |
 | `parent/(tabs)/messages` | P10 Messages | Messaging (placeholder) |
 | `parent/(tabs)/settings` | P12 Settings | Alerts toggles, homes and places, house rules, subscription |
 | `sitter/(tabs)/index` | S3 Today / S3b HomeFree | Running late, credentials, invoices, pay stats, pool requests |
@@ -25,8 +25,8 @@ If a screen needs something no wireframe covers, it goes into the canvas first, 
 | `sitter/shift/[id]` | S4 ActiveShift, S9 EndShift | Trips, house rules due, fix times, report injury |
 | `sitter/log/[shiftId]` | S44 AddLog, S5 LogFood, S45 LogNap, S46–S49 | "Due" badges (needs house rules); the old "needs the parents' attention" toggle was removed (not in the wireframes) |
 | `sitter/(tabs)/calendar` | S6 Calendar | Availability, time off |
-| `sitter/(tabs)/families` + `sitter/family/[id]` | S10 Family | Routines, parent phone, home address |
-| `sitter/(tabs)/me` | S39 Me | Profile, credentials, availability, pay, invoices |
+| `sitter/(tabs)/families` + `sitter/family/[id]` | S10 Family | Routines, parents' phone numbers, home address |
+| `sitter/(tabs)/me` | S39 Me | My profile, What families see, credentials, background check, languages, availability, pay, invoices |
 | `sitter/(tabs)/messages` | S37 Messages | Messaging (placeholder) |
 
 ## HTML is the source
@@ -43,8 +43,8 @@ pixels different (mostly text anti-aliasing); the real screens are held to the s
 
 ## Ported from generated layouts
 
-Rebuilt from `app/src/wireframes/<ID>.tsx` with live data: P4, P4a, P4b, P4c, P4d, P5, P6b, P12, P3, S2, S3, S3b, S4, S5, S9, S44, S45.
-Close but not yet re-ported element by element: P1, P18, P19, P24, P54, S2a, S10, S39.
+All 25 built screens are rebuilt from `app/src/wireframes/<ID>.tsx` with live data:
+P1, P3, P4, P4a, P4b, P4c, P4d, P5, P6b, P12, P18, P19, P24, P54, S2, S2a, S3, S3b, S4, S5, S9, S10, S39, S44, S45.
 
 ## How screens are checked
 

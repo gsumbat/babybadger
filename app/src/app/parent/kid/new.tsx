@@ -77,11 +77,11 @@ export default function NewKid() {
         footer={<Button label="Continue" onPress={() => setStep(2)} disabled={!first || (dateTyped && !iso) || (birthday.length > 0 && !dateTyped)} />}>
         <View style={st.avatarRow}>
           <View style={[st.avatar, { backgroundColor: tint }]}>
-            <Text style={st.avatarText}>{(first[0] || '?').toUpperCase()}</Text>
+            <Text style={[st.avatarText, tint !== KID_COLORS[0] && { color: '#FFFFFF' }]}>{(first[0] || '?').toUpperCase()}</Text>
           </View>
           <View style={{ gap: 10, flex: 1 }}>
-            <T variant="small">Color for {kid} in the app</T>
-            <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Text style={st.colorHint}>Color for {kid}</Text>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
               {KID_COLORS.map((c) => (
                 <Pressable key={c} accessibilityRole="radio" accessibilityState={{ selected: c === tint }} accessibilityLabel={`Color ${c}`} onPress={() => setTint(c)} style={[st.swatchRing, c === tint && { borderColor: color.primaryStrong }]}>
                   <View style={[st.swatch, { backgroundColor: c }]} />
@@ -157,10 +157,12 @@ export default function NewKid() {
 
 const st = StyleSheet.create({
   avatarRow: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 4 },
-  avatar: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: 'rgba(27,35,40,0.18)' },
+  // P18 values
+  avatar: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: '#D5DCE4' },
+  colorHint: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink2 },
   avatarText: { fontFamily: font.display, fontSize: 32, color: color.ink },
-  swatchRing: { width: 40, height: 40, borderRadius: 20, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
-  swatch: { width: 30, height: 30, borderRadius: 15 },
+  swatchRing: { width: 38, height: 38, borderRadius: 19, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
+  swatch: { width: 32, height: 32, borderRadius: 16 },
   fieldLabel: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2 },
   ageBox: { minHeight: 50, borderRadius: radius.field, backgroundColor: color.muted, justifyContent: 'center', paddingHorizontal: 14 },
   ageText: { fontFamily: font.bodyBold, fontSize: 16, color: color.ink },

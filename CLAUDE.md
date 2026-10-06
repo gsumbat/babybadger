@@ -50,9 +50,8 @@ Run typecheck, lint and tests before every commit. Commit to `main` on github.co
 ## Status (Oct 6, 2026)
 
 - Core shift loop works: family, kids, invite code, consent, booking, clock in/out, live map, tasks, logs, report.
-- Screens ported from wireframes: P3, P4, P4a-P4d, P5, P6b, P12, S2, S3, S3b, S4, S5, S9, S44, S45.
-  Still to re-port element by element: P1, P18/P19, P24, P54, S2a, S10, S39.
-- Next: finish those ports; make an iOS development build (background location); then phase 1 of the build plan
+- All 25 built screens are ported from their wireframes (list in docs/screens.md).
+- Next: an iOS development build (background location); then phase 1 of the build plan
   (push notifications, house rules, messages, places, phone sign-in).
 
 ## Working with George

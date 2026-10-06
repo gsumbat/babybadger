@@ -81,7 +81,7 @@ export function Screen({
   const titleBlock = (size: 'back' | 'tab' | 'step') =>
     title || subtitle ? (
       <View style={{ flex: size === 'step' ? undefined : 1, minWidth: 0 }}>
-        {title ? <Text style={[s.hTitle, size === 'back' && s.hTitleBack, size === 'step' && s.hTitleStep]}>{title}</Text> : null}
+        {title ? <Text style={[s.hTitle, size === 'back' && s.hTitleBack, size === 'step' && (step ? s.hTitleStep : s.hTitleCaption)]}>{title}</Text> : null}
         {subtitle ? <Text style={s.subtitle}>{subtitle}</Text> : null}
       </View>
     ) : (
@@ -435,7 +435,8 @@ const s = StyleSheet.create({
   hTitle: { fontFamily: font.display, fontSize: 26, color: color.ink },
   hTitleBack: { fontSize: 22, marginVertical: -4.62 },
   // Stacked titles often wrap to two lines, so they keep the wireframe's line height.
-  hTitleStep: { fontSize: 24, lineHeight: 30 },
+  hTitleStep: { fontSize: 26, lineHeight: 32 }, // P18
+  hTitleCaption: { fontSize: 24, lineHeight: 29 }, // S2
   headerStack: { paddingHorizontal: space.xl, paddingTop: 8, paddingBottom: 8, gap: 14 },
   backRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44 },
   stepText: { flex: 1, fontFamily: font.bodySemi, fontSize: 14, color: color.ink2 },

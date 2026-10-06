@@ -50,7 +50,8 @@ export function suggestedFoods(ageMonths: number | null): string[] {
   return ['Peanuts', 'Tree nuts', 'Shellfish', 'Eggs', 'Dairy'];
 }
 
-export const KID_COLORS = ['#E8B9BE', '#9DB8E8', '#F2C08A', '#C3B5E0', '#9ED3B4'] as const;
+// Swatches from wireframe P18.
+export const KID_COLORS = ['#E8B9BE', '#2F6FD6', '#D9822B', '#8676B3', '#1F8A4D'] as const;
 
 /** "Peanuts, honey" plus allergies, as one line for the sitter's warning banner. */
 export function safetyLine(k: { name: string; avoid_foods?: string; allergies?: string }): string | null {

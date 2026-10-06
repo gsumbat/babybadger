@@ -7,9 +7,9 @@ import { color, font } from '@/theme';
 // Wireframe P1: blue panel with rounded bottom, the waving mascot and the wordmark.
 export function Hero({ height = 440 }: { height?: number }) {
   const insets = useSafeAreaInsets();
-  const img = Math.min(230, height - 150);
+  const img = Math.min(230, height - 180);
   return (
-    <View style={[st.hero, { height: height + insets.top, paddingTop: insets.top + 24 }]}>
+    <View style={[st.hero, { height: height + insets.top, paddingTop: insets.top + 56 }]}>
       <Image source={require('@/assets/images/badger-mascot.png')} style={{ width: img * 0.817, height: img }} contentFit="contain" accessibilityLabel="BabyBadger mascot waving" />
       <Text style={st.word}>BabyBadger</Text>
     </View>

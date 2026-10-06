@@ -43,9 +43,9 @@ export default function Onboarding() {
     // Wireframe P1.
     return (
       <View style={{ flex: 1, backgroundColor: color.canvas }}>
-        <Hero height={400} />
-        <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 28, gap: 10 }}>
-          <Text style={{ fontFamily: font.display, fontSize: 28, color: color.ink }}>Know how the day is going, even when you’re away</Text>
+        <Hero height={440} />
+        <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 28, gap: 10 }}>{/* wireframe P1 */}
+          <Text style={{ fontFamily: font.display, fontSize: 28, lineHeight: 34, color: color.ink }}>Know how the day is going, even when you’re away</Text>
           <Text style={{ fontFamily: font.body, fontSize: 16, lineHeight: 23, color: color.ink2 }}>Your sitter clocks in and you see the shift: where they are, tasks done, meals eaten.</Text>
         </View>
         <View style={{ paddingHorizontal: 24, paddingBottom: Math.max(insets.bottom, 16) + 8, gap: 10 }}>

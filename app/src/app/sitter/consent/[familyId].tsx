@@ -4,25 +4,30 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 
 import { Button, Card, ErrorText, Field, Icon, Label, Screen, T } from '@/components/ui';
+import { api, useQuery } from '@/lib/data';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { NOTICE_VERSION, TERMS_VERSION } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
 
 // [LEGAL REVIEW] Placeholder text. Final notice wording depends on state law and must come from counsel.
-const NOTICE = (family: string) => [
-  ['Who is monitoring', `${family} uses BabyBadger to see where the person caring for their children is during a shift. BabyBadger provides the app; the family decides to use it.`],
-  ['What is collected', 'Your phone’s location, clock-in and clock-out times, trips, and entries you add (food, naps, notes, photos).'],
-  ['When', 'Only between clock-in and clock-out. Nothing is collected between shifts. A shift left running closes itself 2 hours after its end time.'],
-  ['Who sees it', 'Parents in this family. Not other families, and not BabyBadger staff except for support you ask for.'],
+const NOTICE = (family: string, parents: string) => [
+  ['Who is monitoring', `${parents || 'The parents'} (“the family”) use BabyBadger to see the location of the person caring for their children. BabyBadger provides the app; the family decides to use it.`],
+  ['What is collected', 'Your phone’s location, clock-in and clock-out times, trips you start, and entries you add (food, notes, photos).'],
+  ['When', 'Only from clock-in to clock-out. If you forget to clock out, sharing stops automatically 2 hours after the shift’s end time.'],
+  ['Why', 'So the family knows their children are safe and where they are during pick-ups and outings.'],
+  ['Who sees it', `Parents in ${family.replace(/^The /, 'the ')}. Not other families, and not BabyBadger staff except for support you ask for.`],
   ['How long it’s kept', '[RETENTION PERIOD], then deleted.'],
   ['Your choices', 'You can see everything the family sees, and you can leave the family at any time. Without location, you can’t clock in for this family.'],
+  ['Contact', '[CONTACT FOR PRIVACY QUESTIONS]'],
 ];
 
 export default function Consent() {
   const { familyId } = useLocalSearchParams<{ familyId: string }>();
   const { sitterLinks, profile, refresh } = useSession();
   const family = sitterLinks.find((l) => l.family_id === familyId)?.family.name ?? 'This family';
+  const { data: parents } = useQuery(() => api.familyParents(familyId!), [familyId]);
+  const parentNames = (parents ?? []).map((p) => p.full_name).filter(Boolean).join(' and ');
   const [read, setRead] = useState(false);
   const [reading, setReading] = useState(false);
   const [agree, setAgree] = useState(false);
@@ -41,22 +46,33 @@ export default function Consent() {
   }
 
   // Wireframe S2a: the notice itself, with a short summary on top.
+  // Wireframe S2a, translated from its HTML (app/src/wireframes/S2a.tsx). Left out until built: download a copy.
   if (reading)
     return (
-      <Screen title="Monitoring notice" subtitle={`${family} · ${NOTICE_VERSION}`} back onBack={() => setReading(false)} footer={<Button label="I’ve read it" onPress={() => { setRead(true); setReading(false); }} />}>
+      <Screen
+        title="Monitoring notice"
+        subtitle={`${family} · v1.0`}
+        back
+        onBack={() => setReading(false)}
+        gap={14}
+        footer={
+          <>
+            <Button label="I’ve read it" onPress={() => { setRead(true); setReading(false); }} />
+            <Text style={st.legal}>[LEGAL REVIEW] Final wording depends on state law, e.g. employee monitoring notice rules.</Text>
+          </>
+        }>
         <View style={st.short}>
           <Text style={st.shortLabel}>IN SHORT</Text>
-          <T>{family} sees your location only between clock-in and clock-out. Nothing is shared between shifts. You can see everything they see.</T>
+          <Text style={st.shortText}>{family} sees your location only between clock-in and clock-out. Nothing is shared between shifts. You can see everything they see.</Text>
         </View>
-        {NOTICE(family).map(([h, b], i) => (
+        {NOTICE(family, parentNames).map(([h, b], i) => (
           <View key={h} style={{ gap: 4 }}>
             <Text style={st.h}>
               {i + 1}. {h}
             </Text>
-            <T variant="muted">{b}</T>
+            <Text style={st.body}>{b}</Text>
           </View>
         ))}
-        <T variant="small">[LEGAL REVIEW] Final wording depends on state law, e.g. employee monitoring notice rules.</T>
       </Screen>
     );
 
@@ -131,9 +147,13 @@ const st = StyleSheet.create({
   fact: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 9 },
   factKey: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
   factVal: { fontFamily: font.bodySemi, fontSize: 14, color: color.ink, flexShrink: 1 },
-  short: { backgroundColor: color.primaryTint, borderRadius: 18, padding: 14, gap: 6 },
-  shortLabel: { fontFamily: font.bodyBold, fontSize: 12, letterSpacing: 0.6, color: color.primaryStrong },
-  h: { fontFamily: font.bodyBold, fontSize: 16, color: color.ink },
+  // S2a values
+  short: { backgroundColor: color.primaryTint, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 14, gap: 6 },
+  shortLabel: { fontFamily: font.bodyBold, fontSize: 13, letterSpacing: 0.4, color: color.primaryStrong },
+  shortText: { fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink },
+  h: { fontFamily: font.display, fontSize: 17, color: color.ink, marginVertical: -2.62 },
+  body: { fontFamily: font.body, fontSize: 14, lineHeight: 21, color: color.ink },
+  legal: { fontFamily: font.body, fontSize: 12, color: color.ink2, textAlign: 'center' },
   docRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60 },
   docIcon: { width: 36, height: 36, borderRadius: 10, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
   check: { width: 24, height: 24, borderRadius: 7, borderWidth: 2, borderColor: color.lineStrong, alignItems: 'center', justifyContent: 'center' },
