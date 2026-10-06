@@ -947,4 +947,382 @@ do $$ begin
      or (select body->0->>'body' from net.sent where body->0->>'title' like 'Urgent:%') <> 'Sick kid at home.' then raise exception 'FAIL cancel alert'; end if;
 end $$;
 
+-- Homes and places (migration 16, wireframes P56-P58): parents manage their family's homes and places; one main home;
+-- signed sitters read them through places_for_sitter, without the address when "Sitters see the address" is off;
+-- strangers and other families see nothing. A shift can only be at one of its family's homes.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a16a1', 'kim-parent@example.com'),
+  ('00000000-0000-0000-0000-0000000a16b1', 'noa-sitter@example.com'),
+  ('00000000-0000-0000-0000-0000000a16c1', 'lou-stranger@example.com');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a16a1');
+insert into ctx values ('pfam', (select public.create_family('The Park family', 'Kim Park')::text));
+insert into kids (family_id, name) select v::uuid, 'Bo' from ctx where k = 'pfam';
+insert into ctx values ('pcode', (select public.create_invite((select v::uuid from ctx where k='pfam'), 'Noa')));
+insert into places (family_id, kind, name, address, lat, lng, radius_ft, is_main, notes)
+  select v::uuid, 'home', 'Home', '214 Bayshore Ct, Tampa, FL 33606', 27.93, -82.48, 150, true, 'Gate code 4721' from ctx where k = 'pfam';
+insert into places (family_id, kind, name, address, lat, lng, radius_ft, kid_ids, days, show_address)
+  select f.v::uuid, 'home', 'Sam''s apartment', '88 Channelside Dr, Apt 4B, Tampa', 27.94, -82.45, 75, array[(select id from kids where name = 'Bo')], '{5,6,0}', false
+  from ctx f where f.k = 'pfam';
+insert into places (family_id, kind, name, address, lat, lng, radius_ft)
+  select v::uuid, 'place', 'Lincoln Elementary', '1207 W Swann Ave, Tampa', 27.94, -82.47, 300 from ctx where k = 'pfam';
+insert into ctx select 'home2', id::text from places where name = 'Sam''s apartment';
+do $$ begin
+  if (select count(*) from places) <> 3 then raise exception 'FAIL parent cannot read her places'; end if;
+  -- making the apartment main moves "main" off the first home
+  update places set is_main = true where id = (select v::uuid from ctx where k = 'home2');
+  if (select count(*) from places where is_main) <> 1 or not (select is_main from places where id = (select v::uuid from ctx where k = 'home2')) then raise exception 'FAIL one main home'; end if;
+  update places set is_main = true where name = 'Home';
+  -- a place (not a home) can't be main; a bad zone size or day is refused; kids must be the family's
+  begin
+    update places set is_main = true where kind = 'place';
+    raise exception 'FAIL a place became main';
+  exception when check_violation then null; end;
+  begin
+    update places set radius_ft = 5 where name = 'Home';
+    raise exception 'FAIL tiny zone accepted';
+  exception when check_violation then null; end;
+  begin
+    update places set days = '{7}' where name = 'Home';
+    raise exception 'FAIL day 7 accepted';
+  exception when check_violation then null; end;
+  begin
+    update places set kid_ids = array[gen_random_uuid()] where name = 'Home';
+    raise exception 'FAIL another family''s kid accepted';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  update places set notes = 'Gate code 4721 · park on the street' where name = 'Home';
+  if (select address from places_for_sitter where id = (select v::uuid from ctx where k = 'home2')) is null then raise exception 'FAIL parent view hides her own address'; end if;
+end $$;
+
+-- Invited (not signed) sitter: nothing yet
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a16b1');
+select public.accept_invite((select v from ctx where k='pcode'), 'Noa Levi');
+do $$ begin
+  if (select count(*) from places) <> 0 or (select count(*) from places_for_sitter) <> 0 then raise exception 'FAIL unsigned sitter sees places'; end if;
+end $$;
+-- Signed: reads them through the view; the hidden address is blank but the zone is there; can't write or read the table
+select public.sign_consent((select v::uuid from ctx where k='pfam'), 'Noa Levi', 'notice-1.0', 'terms-1.0');
+do $$ begin
+  if (select count(*) from places) <> 0 then raise exception 'FAIL sitter reads the places table (hidden addresses)'; end if;
+  if (select count(*) from places_for_sitter) <> 3 then raise exception 'FAIL sitter cannot read places: %', (select count(*) from places_for_sitter); end if;
+  if (select address from places_for_sitter where id = (select v::uuid from ctx where k = 'home2')) is not null then raise exception 'FAIL sitter sees a hidden address'; end if;
+  if (select lat from places_for_sitter where id = (select v::uuid from ctx where k = 'home2')) is null then raise exception 'FAIL sitter lost the zone'; end if;
+  if (select address from places_for_sitter where name = 'Home') <> '214 Bayshore Ct, Tampa, FL 33606' then raise exception 'FAIL sitter cannot see a shown address'; end if;
+  if (select notes from places_for_sitter where name = 'Home') <> 'Gate code 4721 · park on the street' then raise exception 'FAIL sitter cannot see arriving notes'; end if;
+  insert into places (family_id, kind, name) select v::uuid, 'place', 'Sneaky' from ctx where k = 'pfam';
+  raise exception 'FAIL sitter added a place';
+exception when insufficient_privilege then null;
+  when others then if sqlerrm like 'FAIL%' then raise; elsif sqlerrm not like '%row-level security%' then raise; end if;
+end $$;
+do $$ begin
+  update places set show_address = true;
+  delete from places;
+end $$;
+
+-- Stranger: nothing to see, change or delete
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a16c1');
+insert into ctx values ('pfam2', (select public.create_family('The Ng family', 'Lou Ng')::text));
+insert into places (family_id, kind, name) select v::uuid, 'home', 'Lou''s place' from ctx where k = 'pfam2';
+insert into ctx select 'lhome', id::text from places where name = 'Lou''s place';
+do $$ begin
+  if (select count(*) from places) <> 1 or (select count(*) from places_for_sitter) <> 1 then raise exception 'FAIL stranger sees another family''s places'; end if;
+  update places set name = 'x' where family_id = (select v::uuid from ctx where k = 'pfam');
+  delete from places where family_id = (select v::uuid from ctx where k = 'pfam');
+end $$;
+
+-- Back to Kim: the sitter's and stranger's writes did nothing; she books a shift at the apartment, not at Lou's;
+-- removing the apartment leaves the shift at the main home (place_id null); she can delete her places
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a16a1');
+do $$ begin
+  if (select count(*) from places) <> 3 or exists (select 1 from places where name = 'x') then raise exception 'FAIL others changed Kim''s places'; end if;
+  if (select show_address from places where id = (select v::uuid from ctx where k = 'home2')) then raise exception 'FAIL sitter changed a place'; end if;
+end $$;
+insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by, place_id)
+  select f.v::uuid, '00000000-0000-0000-0000-0000000a16b1', now() + interval '1 day', now() + interval '1 day 4 hours', auth.uid(), h.v::uuid
+  from ctx f, ctx h where f.k = 'pfam' and h.k = 'home2';
+do $$ begin
+  begin
+    insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by, place_id)
+      select v::uuid, '00000000-0000-0000-0000-0000000a16b1', now() + interval '2 days', now() + interval '2 days 4 hours', auth.uid(), (select v::uuid from ctx where k = 'lhome')
+      from ctx where k = 'pfam';
+    raise exception 'FAIL shift booked at another family''s home';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  begin
+    insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by, place_id)
+      select v::uuid, '00000000-0000-0000-0000-0000000a16b1', now() + interval '2 days', now() + interval '2 days 4 hours', auth.uid(), (select id from places where kind = 'place')
+      from ctx where k = 'pfam';
+    raise exception 'FAIL shift booked at a place that isn''t a home';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  delete from places where id = (select v::uuid from ctx where k = 'home2');
+  if (select place_id from shifts where family_id = (select v::uuid from ctx where k = 'pfam')) is not null then raise exception 'FAIL shift kept a removed home'; end if;
+  delete from places where family_id = (select v::uuid from ctx where k = 'pfam');
+  if (select count(*) from places) <> 0 then raise exception 'FAIL parent cannot delete places'; end if;
+end $$;
+reset role;
+
+-- Trips and the clock-in zone (migration 17, wireframes S8 / P8 / C2 / S22 / P9): the shift's sitter starts trips on
+-- her active shift; each GPS point runs the geofence against the family's places: leaving the start zone and arriving
+-- push the parents (C2); moving outside every place with no trip open raises one off-plan alert per 30 min. No places
+-- → nothing. "Somewhere else" waits for a parent. A start away from home (S22) is asked and answered. Alerts are
+-- written only by the database; parents read and dismiss them. Kim Fox (parent), Tess Hall (sitter), Uma (stranger).
+reset role;
+delete from net.sent;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a17a1', 'kim-fox@example.com'),
+  ('00000000-0000-0000-0000-0000000a17b1', 'tess@example.com'),
+  ('00000000-0000-0000-0000-0000000a17c1', 'uma@example.com');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17a1');
+insert into ctx values ('tfam', (select public.create_family('The Fox family', 'Kim Fox')::text));
+insert into kids (family_id, name) select v::uuid, 'Ivy' from ctx where k = 'tfam';
+insert into ctx select 'tivy', id::text from kids where name = 'Ivy' and family_id = (select v::uuid from ctx where k = 'tfam');
+select public.register_push_token('ExponentPushToken[kim-phone]', 'ios');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17b1');
+select public.register_push_token('ExponentPushToken[tess-phone]', 'ios');
+reset role;
+update profiles set full_name = 'Tess Hall' where id = '00000000-0000-0000-0000-0000000a17b1';
+insert into family_sitters (family_id, sitter_id, status) select v::uuid, '00000000-0000-0000-0000-0000000a17b1', 'active' from ctx where k = 'tfam';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17a1');
+insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by)
+  select v::uuid, '00000000-0000-0000-0000-0000000a17b1', now() + interval '5 minutes', now() + interval '4 hours', auth.uid() from ctx where k = 'tfam';
+insert into ctx select 'tshift', id::text from shifts where sitter_id = '00000000-0000-0000-0000-0000000a17b1';
+
+-- No places yet: points do nothing (no zones, no alerts)
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17b1');
+select public.clock_in((select v::uuid from ctx where k = 'tshift'));
+insert into locations (shift_id, sitter_id, lat, lng, accuracy_m, recorded_at)
+  select v::uuid, auth.uid(), 27.9550, -82.4550, 10, now() from ctx where k = 'tshift';
+reset role;
+do $$ begin
+  if (select count(*) from alerts) <> 0 or (select count(*) from shift_geo_state) <> 0 then raise exception 'FAIL geofence ran with no places'; end if;
+  if (select count(*) from net.sent) <> 1 then raise exception 'FAIL expected only the clock-in push, got %', (select count(*) from net.sent); end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+
+-- Kim saves the home (150 ft zone) and soccer (300 ft)
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17a1');
+insert into places (family_id, kind, name, lat, lng, radius_ft, is_main)
+  select v::uuid, 'home', 'Fox home', 27.9500, -82.4600, 150, true from ctx where k = 'tfam';
+insert into places (family_id, kind, name, lat, lng, radius_ft)
+  select v::uuid, 'place', 'Riverside soccer fields', 27.9600, -82.4500, 300 from ctx where k = 'tfam';
+insert into ctx select 'thome', id::text from places where name = 'Fox home';
+insert into ctx select 'tsoccer', id::text from places where name = 'Riverside soccer fields';
+
+-- Tess at home, then out with no trip: one off-plan alert, the second point 5 min later is debounced
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17b1');
+insert into locations (shift_id, sitter_id, lat, lng, accuracy_m, recorded_at)
+  select v::uuid, auth.uid(), 27.9500, -82.4600, 10, now() + interval '1 second' from ctx where k = 'tshift';
+insert into locations (shift_id, sitter_id, lat, lng, accuracy_m, recorded_at)
+  select v::uuid, auth.uid(), 27.9550, -82.4550, 400, now() + interval '30 seconds' from ctx where k = 'tshift';  -- bad fix: skipped
+insert into locations (shift_id, sitter_id, lat, lng, accuracy_m, recorded_at)
+  select v::uuid, auth.uid(), 27.9550, -82.4550, 10, now() + interval '1 minute' from ctx where k = 'tshift';
+insert into locations (shift_id, sitter_id, lat, lng, accuracy_m, recorded_at)
+  select v::uuid, auth.uid(), 27.9560, -82.4540, 10, now() + interval '6 minutes' from ctx where k = 'tshift';
+insert into locations (shift_id, sitter_id, lat, lng, accuracy_m, recorded_at)
+  select v::uuid, auth.uid(), 27.9500, -82.4601, 10, now() + interval '8 minutes' from ctx where k = 'tshift';
+do $$ begin
+  if (select count(*) from alerts) <> 0 then raise exception 'FAIL sitter reads alerts'; end if;
+  begin
+    insert into alerts (family_id, shift_id, kind, title) select v::uuid, (select v::uuid from ctx where k = 'tshift'), 'off_plan', 'fake' from ctx where k = 'tfam';
+    raise exception 'FAIL sitter wrote an alert';
+  exception when insufficient_privilege then null; end;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17a1');
+do $$ declare a alerts; begin
+  if (select count(*) from alerts) <> 1 then raise exception 'FAIL expected 1 off-plan alert, got %', (select count(*) from alerts); end if;
+  select * into a from alerts;
+  if a.kind <> 'off_plan' or a.title <> 'Off-plan location' then raise exception 'FAIL off-plan alert: % %', a.kind, a.title; end if;
+  if a.body <> 'Tess left home without starting a trip. She is 0.5 mi away, moving.' then raise exception 'FAIL off-plan body: %', a.body; end if;
+end $$;
+
+-- S8: a trip to soccer with Ivy by car. One open trip at a time; only saved places of this family; Tess can't
+-- mark it arrived or approve it herself
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17b1');
+insert into trips (shift_id, sitter_id, place_id, kid_ids, mode)
+  select s.v::uuid, auth.uid(), p.v::uuid, array[(select v::uuid from ctx where k = 'tivy')], 'car' from ctx s, ctx p where s.k = 'tshift' and p.k = 'tsoccer';
+insert into ctx select 'trip1', id::text from trips;
+do $$ declare t trips; n int; begin
+  select * into t from trips;
+  if t.status <> 'active' or t.needs_approval or t.start_place_id <> (select v::uuid from ctx where k = 'thome') or t.left_start_at is not null
+    or t.family_id <> (select v::uuid from ctx where k = 'tfam') then raise exception 'FAIL trip not set up: %', row_to_json(t); end if;
+  begin
+    insert into trips (shift_id, sitter_id, place_id, mode) select v::uuid, auth.uid(), (select v::uuid from ctx where k = 'thome'), 'walk' from ctx where k = 'tshift';
+    raise exception 'FAIL two open trips';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  begin
+    insert into trips (shift_id, sitter_id, place_id, mode) select v::uuid, auth.uid(), null, 'walk' from ctx where k = 'tshift';
+    raise exception 'FAIL trip with no destination';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  update trips set arrived_at = now(), place_id = null where id = t.id;
+  if (select arrived_at from trips where id = t.id) is not null or (select place_id from trips where id = t.id) is null then raise exception 'FAIL sitter rewrote the trip'; end if;
+  begin
+    update trips set status = 'arrived' where id = t.id;
+    raise exception 'FAIL sitter marked the trip arrived';
+  exception when insufficient_privilege then null; end;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17c1');
+do $$ begin
+  if (select count(*) from trips) + (select count(*) from alerts) + (select count(*) from clockin_requests) <> 0 then raise exception 'FAIL stranger sees trips or alerts'; end if;
+  begin
+    insert into trips (shift_id, sitter_id, custom_dest, mode) select v::uuid, auth.uid(), 'Mall', 'car' from ctx where k = 'tshift';
+    raise exception 'FAIL stranger started a trip';
+  exception when insufficient_privilege then null; end;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+do $$ begin
+  if (select count(*) from trips) + (select count(*) from alerts) <> 0 then raise exception 'FAIL other family sees trips or alerts'; end if;
+end $$;
+reset role;
+delete from net.sent;
+set role authenticated;
+
+-- Leaves home at +10 min (C2 "Trip started"), arrives at soccer at +27 (C2 "Arrival", 17 min); no off-plan in between
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17b1');
+insert into locations (shift_id, sitter_id, lat, lng, accuracy_m, recorded_at)
+  select v::uuid, auth.uid(), 27.9550, -82.4550, 10, now() + interval '10 minutes' from ctx where k = 'tshift';
+insert into locations (shift_id, sitter_id, lat, lng, accuracy_m, recorded_at)
+  select v::uuid, auth.uid(), 27.9590, -82.4510, 10, now() + interval '20 minutes' from ctx where k = 'tshift';
+insert into locations (shift_id, sitter_id, lat, lng, accuracy_m, recorded_at)
+  select v::uuid, auth.uid(), 27.9601, -82.4501, 10, now() + interval '27 minutes' from ctx where k = 'tshift';
+do $$ declare t trips; begin
+  select * into t from trips where id = (select v::uuid from ctx where k = 'trip1');
+  if t.status <> 'arrived' or t.left_start_at is null or t.arrived_at - t.left_start_at not between interval '16 minutes 50 seconds' and interval '17 minutes 10 seconds' then raise exception 'FAIL trip not tracked: %', row_to_json(t); end if;
+end $$;
+reset role;
+do $$ declare b jsonb; begin
+  if (select count(*) from net.sent) <> 2 then raise exception 'FAIL expected 2 trip pushes, got %', (select count(*) from net.sent); end if;
+  select body into b from net.sent order by id limit 1;
+  if b->0->>'to' <> 'ExponentPushToken[kim-phone]' or b->0->>'title' <> 'Tess left home with Ivy' or b->0->>'body' <> 'Heading to Riverside soccer fields by car'
+    or b->0->'data'->>'url' <> '/parent/trip/' || (select v from ctx where k = 'trip1') then raise exception 'FAIL trip-left push: %', b; end if;
+  select body into b from net.sent order by id desc limit 1;
+  if b->0->>'title' <> 'Tess and Ivy arrived at Riverside soccer fields' or b->0->>'body' <> 'Trip by car took 17 min. Tap to see the map.' then raise exception 'FAIL arrival push: %', b; end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+
+-- She leaves soccer with no trip at +40 (past the 30-min wait): a new off-plan alert names soccer
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17b1');
+insert into locations (shift_id, sitter_id, lat, lng, accuracy_m, recorded_at)
+  select v::uuid, auth.uid(), 27.9650, -82.4450, 10, now() + interval '40 minutes' from ctx where k = 'tshift';
+-- "Somewhere else": waits for a parent; she started outside every zone, so it counts as left at once
+insert into trips (shift_id, sitter_id, custom_dest, kid_ids, mode)
+  select v::uuid, auth.uid(), ' Library ', array[(select v::uuid from ctx where k = 'tivy')], 'walk' from ctx where k = 'tshift';
+insert into ctx select 'trip2', id::text from trips where custom_dest is not null;
+do $$ begin
+  if (select status from trips where id = (select v::uuid from ctx where k = 'trip2')) <> 'pending'
+    or not (select needs_approval from trips where id = (select v::uuid from ctx where k = 'trip2')) then raise exception 'FAIL custom trip not pending'; end if;
+  begin
+    update trips set status = 'active' where id = (select v::uuid from ctx where k = 'trip2');
+    raise exception 'FAIL sitter approved her own trip';
+  exception when insufficient_privilege then null; end;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17a1');
+update trips set status = 'active' where id = (select v::uuid from ctx where k = 'trip2');
+do $$ begin
+  if (select approved_at from trips where id = (select v::uuid from ctx where k = 'trip2')) is null then raise exception 'FAIL approval not stamped'; end if;
+  begin
+    update trips set status = 'ended' where id = (select v::uuid from ctx where k = 'trip2');
+    raise exception 'FAIL parent ended the trip';
+  exception when insufficient_privilege then null; end;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17b1');
+update trips set status = 'ended' where id = (select v::uuid from ctx where k = 'trip2');
+do $$ begin
+  if (select ended_at from trips where id = (select v::uuid from ctx where k = 'trip2')) is null then raise exception 'FAIL trip not ended'; end if;
+end $$;
+reset role;
+do $$ declare titles text[]; begin
+  select array_agg(x->>'title' order by s.id) into titles from net.sent s, jsonb_array_elements(s.body) x;
+  if titles <> array['Off-plan location', 'Tess asks to go to Library', 'Tess started a trip with Ivy', 'Kim said yes'] then
+    raise exception 'FAIL pushes: %', titles; end if;
+  if (select x->>'body' from net.sent s, jsonb_array_elements(s.body) x where x->>'title' = 'Off-plan location')
+    <> 'Tess left Riverside soccer fields without starting a trip. She is 0.5 mi away.' then
+    raise exception 'FAIL second off-plan body: %', (select x->>'body' from net.sent s, jsonb_array_elements(s.body) x where x->>'title' = 'Off-plan location'); end if;
+  if (select x->>'body' from net.sent s, jsonb_array_elements(s.body) x where x->>'title' = 'Tess asks to go to Library') <> 'Ivy · on foot. Tap to answer.' then
+    raise exception 'FAIL request body'; end if;
+  if (select x->>'to' from net.sent s, jsonb_array_elements(s.body) x where x->>'title' = 'Kim said yes') <> 'ExponentPushToken[tess-phone]' then
+    raise exception 'FAIL answer went to the wrong phone'; end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+
+-- Kim reads and dismisses alerts; she can't rewrite or add them
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17a1');
+do $$ declare n int; begin
+  if (select count(*) from alerts) <> 6 then raise exception 'FAIL expected 6 alerts, got %', (select count(*) from alerts); end if;
+  update alerts set dismissed_at = now() where kind = 'off_plan';
+  get diagnostics n = row_count;
+  if n <> 2 then raise exception 'FAIL parent cannot dismiss'; end if;
+  begin
+    update alerts set title = 'x';
+    raise exception 'FAIL parent rewrote an alert';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into alerts (family_id, shift_id, kind, title) select v::uuid, (select v::uuid from ctx where k = 'tshift'), 'off_plan', 'fake' from ctx where k = 'tfam';
+    raise exception 'FAIL parent wrote an alert';
+  exception when insufficient_privilege then null; end;
+end $$;
+
+-- Clock-out ends an open trip
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17b1');
+insert into trips (shift_id, sitter_id, place_id, mode) select v::uuid, auth.uid(), (select v::uuid from ctx where k = 'thome'), 'walk' from ctx where k = 'tshift';
+select public.clock_out((select v::uuid from ctx where k = 'tshift'), '');
+do $$ begin
+  if exists (select 1 from trips where status in ('pending', 'active')) then raise exception 'FAIL clock-out left a trip open'; end if;
+end $$;
+
+reset role;
+delete from net.sent;
+set role authenticated;
+-- S22: starting somewhere else. Tess asks (Kim's phone gets it), the stranger can't answer, Kim says yes once.
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17a1');
+insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by)
+  select v::uuid, '00000000-0000-0000-0000-0000000a17b1', now() + interval '10 minutes', now() + interval '3 hours', auth.uid() from ctx where k = 'tfam';
+insert into ctx select 'tshift2', id::text from shifts where sitter_id = '00000000-0000-0000-0000-0000000a17b1' and status = 'scheduled';
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17b1');
+select public.request_clockin_away((select v::uuid from ctx where k = 'tshift2'), 'School pickup at Lincoln.');
+do $$ begin
+  begin
+    insert into clockin_requests (shift_id, family_id, sitter_id) select v::uuid, (select v::uuid from ctx where k = 'tfam'), auth.uid() from ctx where k = 'tshift2';
+    raise exception 'FAIL sitter wrote a request directly';
+  exception when insufficient_privilege then null; end;
+  if (select count(*) from clockin_requests where status = 'pending') <> 1 then raise exception 'FAIL sitter cannot see her request'; end if;
+end $$;
+insert into ctx select 'creq', id::text from clockin_requests;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17c1');
+do $$ begin
+  begin
+    perform public.answer_clockin_away((select v::uuid from ctx where k = 'creq'), true);
+    raise exception 'FAIL stranger answered';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17a1');
+select public.answer_clockin_away((select v::uuid from ctx where k = 'creq'), true);
+do $$ begin
+  begin
+    perform public.answer_clockin_away((select v::uuid from ctx where k = 'creq'), false);
+    raise exception 'FAIL answered twice';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+end $$;
+-- Approved start away: no off-plan until she first reaches a saved place; after that, the usual rule
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a17b1');
+select public.clock_in((select v::uuid from ctx where k = 'tshift2'));
+insert into locations (shift_id, sitter_id, lat, lng, accuracy_m, recorded_at)
+  select v::uuid, auth.uid(), 27.9700, -82.4700, 10, now() from ctx where k = 'tshift2';
+insert into locations (shift_id, sitter_id, lat, lng, accuracy_m, recorded_at)
+  select v::uuid, auth.uid(), 27.9500, -82.4600, 10, now() + interval '20 minutes' from ctx where k = 'tshift2';
+insert into locations (shift_id, sitter_id, lat, lng, accuracy_m, recorded_at)
+  select v::uuid, auth.uid(), 27.9550, -82.4550, 10, now() + interval '30 minutes' from ctx where k = 'tshift2';
+reset role;
+do $$ declare titles text[]; begin
+  select array_agg(x->>'title' order by s.id) into titles from net.sent s, jsonb_array_elements(s.body) x;
+  if titles <> array['Tess asks to clock in away from home', 'Kim said yes', 'Tess clocked in', 'Off-plan location'] then raise exception 'FAIL S22 pushes: %', titles; end if;
+  if (select x->>'body' from net.sent s, jsonb_array_elements(s.body) x where x->>'title' = 'Tess asks to clock in away from home') <> 'School pickup at Lincoln. Tap to answer.' then
+    raise exception 'FAIL S22 request body'; end if;
+end $$;
+reset role;
+
 select 'ALL RLS SCENARIOS PASSED' as result;

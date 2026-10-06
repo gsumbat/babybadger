@@ -7,6 +7,7 @@ import { shiftTaskLines } from '@/lib/care-plan';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { familyRulesState } from '@/lib/house-rules';
+import { defaultHomeFor, homesOf, mainHome, placesApi } from '@/lib/places';
 import { parseTimeOnDay } from '@/lib/shift-logic';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
@@ -28,11 +29,12 @@ export default function NewShift() {
   const fid = family!.id;
   const { data } = useQuery(async () => {
     // care_items arrives with migration 06; until it's run booking just starts with no tasks.
-    const [all, kids, care] = await Promise.all([api.familySitters(fid), api.kids(fid), api.careItems(fid).catch(() => [])]);
+    // places arrives with migration 16; until it's run there's no "Where" row and shifts are at the main home.
+    const [all, kids, care, places] = await Promise.all([api.familySitters(fid), api.kids(fid), api.careItems(fid).catch(() => []), placesApi.list(fid).catch(() => [])]);
     const sitters = all.filter((s) => s.status === 'active');
     // House rules gate (migration 09): sitters who haven't agreed to the current Must rules can't be booked yet.
     const { pending } = await familyRulesState(fid, sitters.map((s) => s.sitter_id));
-    return { sitters, kids, care, pending };
+    return { sitters, kids, care, pending, places };
   }, [fid]);
 
   const days = useMemo(() => nextDays(7), []);
@@ -41,6 +43,7 @@ export default function NewShift() {
   const [start, setStart] = useState('3:00 PM');
   const [end, setEnd] = useState('7:00 PM');
   const [kidIds, setKidIds] = useState<string[]>([]);
+  const [placeId, setPlaceId] = useState<string>();
   // Until the parent types in it, the tasks box follows the care plan items that fall inside the shift.
   const [typed, setTyped] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -58,6 +61,12 @@ export default function NewShift() {
   const valid = !!chosenSitter && !notAgreed && !!startAt && !!endAt;
   const planned = data && startAt && endAt ? shiftTaskLines(data.care, startAt, endAt, shiftKidIds, (id) => data.kids.find((k) => k.id === id)?.name).join('\n') : '';
   const tasks = typed ?? planned;
+  // Where (nP14): only when the kids live in more than one home. Until the parent picks, the home whose days
+  // include the shift's day (and its kids), else the main home. place_id null means the main home, so it's only
+  // sent for another home (keeps booking working before migration 16 runs).
+  const homes = homesOf(data?.places ?? []);
+  const main = mainHome(data?.places ?? []);
+  const homeId = homes.length > 1 ? (placeId ?? defaultHomeFor(homes, days[day], shiftKidIds)?.id) : undefined;
 
   async function book() {
     if (!valid) return;
@@ -65,7 +74,14 @@ export default function NewShift() {
     setErr('');
     const { data: shift, error } = await supabase
       .from('shifts')
-      .insert({ family_id: fid, sitter_id: chosenSitter, starts_at: startAt!.toISOString(), ends_at: endAt!.toISOString(), created_by: session!.user.id })
+      .insert({
+        family_id: fid,
+        sitter_id: chosenSitter,
+        starts_at: startAt!.toISOString(),
+        ends_at: endAt!.toISOString(),
+        created_by: session!.user.id,
+        ...(homeId && homeId !== main?.id ? { place_id: homeId } : {}),
+      })
       .select()
       .single();
     if (error) {
@@ -138,6 +154,16 @@ export default function NewShift() {
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {allowedKids.map((k) => (
               <Chip key={k.id} label={k.name} on={shiftKidIds.includes(k.id)} onPress={() => setKidIds(shiftKidIds.includes(k.id) ? shiftKidIds.filter((x) => x !== k.id) : [...shiftKidIds, k.id])} />
+            ))}
+          </View>
+        </>
+      )}
+      {homes.length > 1 && (
+        <>
+          <Label>Where</Label>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+            {homes.map((h) => (
+              <Chip key={h.id} label={h.name} on={homeId === h.id} onPress={() => setPlaceId(h.id)} />
             ))}
           </View>
         </>

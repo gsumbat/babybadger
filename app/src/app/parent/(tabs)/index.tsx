@@ -20,11 +20,12 @@ import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 import { IncidentCard } from '@/components/IncidentCard';
 import { incidentCard } from '@/lib/alerts-logic';
+import { isOpenTrip, useShiftTrips } from '@/lib/trips';
 
 // Wireframes P4 (live), P4a (setup), P4e (setup skipped), P4b (idle), P4c (starting soon), P4d (ended), translated
 // from their HTML (app/src/wireframes/P4*.tsx). Left out until built: Message / Call / Ask for photo, kids' devices and
 // places, Needs you (invoices, requests), Approve hours, "On my way". P4c shows the sitter's late notice (S21) where it
-// draws "On my way"; P4 has an "Ask Maya to stay longer" link under the live card (S25 request; not drawn yet).
+// draws "On my way". While a trip is open, P4's "On shift" pill reads "On a trip" (P8's pill) and opens P8. P4 has an "Ask Maya to stay longer" link under the live card (S25 request; not drawn yet).
 
 // Optional steps (house rules, the care plan) count toward "n of 5 done" but don't keep the setup checklist open on their own.
 type Step = { done: boolean; locked?: boolean; optional?: boolean; title: string; next: string; sub: string; go: '/parent/kid/new' | '/parent/rules' | '/parent/care' | '/parent/invite?from=setup' | '/parent/shift/new' };
@@ -272,6 +273,8 @@ function FinishSetup({ steps, lock, onOpen }: { steps: Step[]; lock: string; onO
 function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
   const { bundle } = useShiftLive(shift.id);
   const { pending } = usePendingExtension(shift.id);
+  const { trips } = useShiftTrips(shift.id);
+  const openTrip = trips.find(isOpenTrip);
   const [askOpen, setAskOpen] = useState(false);
   if (!bundle) return null;
   const done = bundle.tasks.filter((t) => t.done_at);
@@ -300,10 +303,18 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
         </View>
         <View>
           <LiveMap points={bundle.points} height={220} flush />
-          <View style={st.onShift}>
-            <View style={st.greenDot8} />
-            <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: color.okInk }}>On shift</Text>
-          </View>
+          {openTrip ? (
+            // P8's "On a trip" pill in place of "On shift" while a trip is open; it opens the trip (P8).
+            <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/trip/${openTrip.id}`)} style={[st.onShift, st.onTrip]}>
+              <View style={[st.greenDot8, { backgroundColor: color.primary }]} />
+              <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: color.primary }}>{openTrip.status === 'pending' ? 'Trip · needs you' : 'On a trip'}</Text>
+            </Pressable>
+          ) : (
+            <View style={st.onShift}>
+              <View style={st.greenDot8} />
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: color.okInk }}>On shift</Text>
+            </View>
+          )}
         </View>
       </Pressable>
       {/* Not in wireframe P4: asks her to stay longer (she answers on S25). An open request shows instead. */}
@@ -556,6 +567,7 @@ const st = StyleSheet.create({
   liveTop: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 14, paddingHorizontal: 16 },
   liveTitle: { fontFamily: font.displayBold, fontSize: 17, color: color.ink },
   onShift: { position: 'absolute', top: 10, left: 10, height: 28, paddingHorizontal: 10, borderRadius: 999, backgroundColor: color.okTint, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  onTrip: { height: 32, paddingHorizontal: 12, backgroundColor: color.primaryTint, borderWidth: 1, borderColor: '#FFFFFF' },
   greenDot8: { width: 8, height: 8, borderRadius: 4, backgroundColor: color.ok },
   planCard: { gap: 10, paddingVertical: 14, paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   track: { height: 6, borderRadius: 3, backgroundColor: color.muted, overflow: 'hidden' },

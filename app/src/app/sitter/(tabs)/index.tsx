@@ -12,13 +12,14 @@ import { startSharing } from '@/lib/location-sharing';
 import { useSession } from '@/lib/session';
 import { clockInState, formatClock } from '@/lib/shift-logic';
 import { errorText, supabase } from '@/lib/supabase';
+import { checkClockInZone } from '@/lib/trips';
 import type { Shift } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframes S3 (shift today), S3b (no shift today) and S3d (nothing booked), translated from their HTML
 // (app/src/wireframes/S3*.tsx). "Running late?" opens S21 before clock-in. Left out until built: Needs-you items other than consent, earnings and
-// payout and most tools. Availability and Time off (tools, S3d's "Set your availability") open S11.
+// payout and most tools. Clock in checks the home zone first (S22 when she isn't there yet). Availability and Time off (tools, S3d's "Set your availability") open S11.
 // Times follow the wireframe: "3:00 – 7:00 PM" on the today card, "7:30 – 10 PM" elsewhere.
 export default function SitterHome() {
   const { session, profile, sitterLinks } = useSession();
@@ -61,6 +62,13 @@ export default function SitterHome() {
 
   async function clockIn(s: Shift) {
     setBusy(s.id);
+    // Clock-in zone (migrations 16-17): outside the shift's home, S22 explains and offers "Clock in when I arrive".
+    // No location (web, permission off) or no home on the map: allowed, as before.
+    const zone = await checkClockInZone(s).catch(() => null);
+    if (zone?.kind === 'away') {
+      setBusy(undefined);
+      return router.push(`/sitter/clockin/${s.id}`);
+    }
     const { error: e } = await supabase.rpc('clock_in', { p_shift: s.id });
     if (e) {
       setBusy(undefined);

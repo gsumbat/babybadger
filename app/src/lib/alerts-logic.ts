@@ -66,8 +66,9 @@ export function incidentCard(log: LogEntry, kids: Kid[]): IncidentCard {
   };
 }
 
-/** P9 "EARLIER TODAY" row. icon picks the wireframe's circle: clock (clock-in/out), food (fork), late, or a log kind. */
-export type AlertRow = { id: string; at: string; icon: 'clock' | 'late' | 'food' | LogEntry['kind']; title: string; sub: string };
+/** P9 "EARLIER TODAY" row. icon picks the wireframe's circle: clock (clock-in/out), food (fork), late, a log kind, or
+ * a trip / zone alert (migration 17): arrived (green pin), trip (car), away (pin, clock-in away), offplan. */
+export type AlertRow = { id: string; at: string; icon: 'clock' | 'late' | 'food' | 'arrived' | 'trip' | 'away' | 'offplan' | LogEntry['kind']; title: string; sub: string };
 
 /** Late notice columns (migration 14). Read defensively: before that migration runs they don't exist. */
 type MaybeLate = Partial<{ late_minutes: number | null; late_note: string | null; late_at: string | null }>;

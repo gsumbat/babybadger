@@ -7,13 +7,14 @@ import { Card, ErrorText, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { rulesApi, rulesLabel } from '@/lib/house-rules';
+import { placesApi, placesCountLabel } from '@/lib/places';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe P12b (settings · account; supersedes P12): grouped settings rows, account, sign out.
-// Left out until built: Homes and places, Arrivals and departures, Off-plan and help alerts, Subscription;
+// Homes and places opens P56. Left out until built: Arrivals and departures, Off-plan and help alerts, Subscription;
 // Kids and devices has no detail screen yet (P13), so its row doesn't open anything.
 export default function Settings() {
   const { family, profile, session, signOut, refresh } = useSession();
@@ -30,9 +31,15 @@ export default function Settings() {
   }
   const fid = family!.id;
   const { data, error } = useQuery(async () => {
-    // house_rules arrives with migration 09; until it's run the row reads "None yet".
-    const [kids, sitters, parents, rules] = await Promise.all([api.kids(fid), api.familySitters(fid), api.familyParents(fid), rulesApi.rules(fid).catch(() => [])]);
-    return { kids, sitters, parents, rules };
+    // house_rules arrives with migration 09, places with 16; until they're run the rows read "None yet".
+    const [kids, sitters, parents, rules, places] = await Promise.all([
+      api.kids(fid),
+      api.familySitters(fid),
+      api.familyParents(fid),
+      rulesApi.rules(fid).catch(() => []),
+      placesApi.list(fid).catch(() => []),
+    ]);
+    return { kids, sitters, parents, rules, places };
   }, [fid]);
   const parents = (data?.parents ?? []).map((p) => firstName(p.full_name)).join(', ') || firstName(profile?.full_name);
   const kids = (data?.kids ?? []).map((k) => k.name).join(', ');
@@ -54,6 +61,7 @@ export default function Settings() {
         <SetRow label="Parents" value={parents} />
         <SetRow label="Kids and devices" value={kids || 'None yet'} />
         <SetRow label="Sitters" value={sitters || 'None yet'} onPress={() => router.navigate('/parent/sitters')} />
+        <SetRow label="Homes and places" value={placesCountLabel(data?.places ?? [])} onPress={() => router.push('/parent/places')} />
         <SetRow label="House rules" value={rulesLabel(data?.rules.length ?? 0)} onPress={() => router.push('/parent/rules')} last />
       </Card>
 

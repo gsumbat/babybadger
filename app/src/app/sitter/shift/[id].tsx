@@ -15,14 +15,18 @@ import { type SharingMode, startSharing, stopSharing } from '@/lib/location-shar
 import { useSession } from '@/lib/session';
 import { formatClock, workedMinutes } from '@/lib/shift-logic';
 import { timingApi, usePendingExtension } from '@/lib/shift-timing';
+import { isOpenTrip, placesOrEmpty, tripDest, tripsApi, useShiftTrips } from '@/lib/trips';
 import { nextShiftAfter } from '@/lib/shift-timing-logic';
 import { errorText, supabase } from '@/lib/supabase';
 import type { LogKind } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
-const TILES: { kind: LogKind | 'more'; label: string; icon: IconName }[] = [
-  // Wireframe S4 shows Trip first; trips aren't built yet, so the row starts at Food (Nap is under More logs).
+// S4's Trip tile icon (a car), from the wireframe.
+const CAR = '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-3.5L6 7h12l2 5.5V16zM4 16v2.5M20 16v2.5M7.5 13h0M16.5 13h0"/></svg>';
+const TILES: { kind: LogKind | 'more' | 'trip'; label: string; icon: IconName; xml?: string }[] = [
+  // Wireframe S4: Trip (S8), Food, Photo, More logs (Nap is under More logs).
+  { kind: 'trip', label: 'Trip', icon: 'navigation', xml: CAR },
   { kind: 'food', label: 'Food', icon: 'coffee' },
   { kind: 'photo', label: 'Photo', icon: 'camera' },
   { kind: 'more', label: 'More logs', icon: 'plus' },
@@ -45,6 +49,9 @@ export default function SitterShift() {
   // S25: a parent's open request to stay longer (migration 14), her rate with this family (Extra pay) and her other
   // shifts (the "Tight" warning when her next shift that day starts soon after).
   const { pending: extension, reload: reloadExtension } = usePendingExtension(id);
+  // Trips (S8, migration 17): the open one shows as a strip under the tiles; S9 counts them.
+  const { trips } = useShiftTrips(id);
+  const { data: places } = useQuery(() => (fid ? placesOrEmpty(fid) : Promise.resolve([])), [fid]);
   const sid = bundle?.shift.sitter_id;
   const { data: rate } = useQuery(() => (fid && sid ? timingApi.sitterRate(fid, sid) : Promise.resolve(null)), [fid, sid]);
   const { data: myShifts } = useQuery(() => (extension && sid ? api.sitterShifts(sid) : Promise.resolve([])), [!!extension, sid]);
@@ -91,7 +98,21 @@ export default function SitterShift() {
     router.replace('/sitter');
   }
 
-  const openLog = (kind: LogKind | 'more') => router.push({ pathname: '/sitter/log/[shiftId]', params: { shiftId: shift.id, kind } });
+  const openTrip = trips.find(isOpenTrip);
+  const tripCount = trips.filter((t) => t.status !== 'declined').length;
+  function endTrip() {
+    if (!openTrip) return;
+    Alert.alert(`End the trip to ${tripDest(openTrip, places ?? [])}?`, 'Location sharing keeps running until you clock out.', [
+      { text: 'Keep going', style: 'cancel' },
+      { text: 'End trip', onPress: () => tripsApi.end(openTrip.id).catch((e) => Alert.alert('Couldn’t end the trip', errorText(e))) },
+    ]);
+  }
+  const openLog = (kind: LogKind | 'more' | 'trip') =>
+    kind === 'trip'
+      ? openTrip
+        ? endTrip()
+        : router.push({ pathname: '/sitter/trip/[shiftId]', params: { shiftId: shift.id } })
+      : router.push({ pathname: '/sitter/log/[shiftId]', params: { shiftId: shift.id, kind } });
 
   if (shift.status !== 'active')
     return (
@@ -116,7 +137,7 @@ export default function SitterShift() {
   if (closing) {
     const mins = workedMinutes(shift, new Date(now));
     return (
-      // Wireframe S9, translated from its HTML (app/src/wireframes/S9.tsx). Left out until built: Fix times, Trips, report an injury.
+      // Wireframe S9, translated from its HTML (app/src/wireframes/S9.tsx). Left out until built: Fix times, report an injury.
       <Screen
         header={
           // S9 header: 16 top, 12 below the title (8 here + the content's 4).
@@ -158,8 +179,10 @@ export default function SitterShift() {
             <Text style={st.statNum}>{logs.filter((l) => l.kind === 'food').length}</Text>
             <Text style={st.statLbl}>Meals</Text>
           </View>
-          {/* Trips aren't built yet: its slot stays empty so the tiles keep the wireframe's width. */}
-          <View style={{ flexGrow: 1, flexShrink: 1, flexBasis: 0 }} />
+          <View style={[st.statTile, { backgroundColor: color.primaryTint }]}>
+            <Text style={[st.statNum, { color: color.primaryStrong }]}>{tripCount}</Text>
+            <Text style={[st.statLbl, { color: color.primaryStrong }]}>Trips</Text>
+          </View>
         </View>
         <View style={{ gap: 8 }}>
           <Text style={st.fieldLabel}>How did it go?</Text>
@@ -200,12 +223,22 @@ export default function SitterShift() {
       <View style={st.tiles}>
         {TILES.map((t) => (
           <Pressable key={t.kind} accessibilityRole="button" onPress={() => openLog(t.kind)} style={({ pressed }) => [st.tile, pressed && { opacity: 0.85 }]}>
-            <Icon name={t.icon} size={24} />
+            {t.xml ? <SvgXml xml={t.xml} width={24} height={24} style={{ flexShrink: 0 }} /> : <Icon name={t.icon} size={24} />}
             <Text style={st.tileText}>{t.label}</Text>
           </Pressable>
         ))}
       </View>
 
+      {/* Not drawn in S4: the open trip (S8) as a strip under the tiles, with End trip. */}
+      {openTrip && (
+        <Pressable accessibilityRole="button" onPress={endTrip} style={st.trip}>
+          <SvgXml xml={CAR} width={20} height={20} style={{ flexShrink: 0 }} />
+          <Text style={st.tripText}>
+            <Text style={st.tripBold}>{openTrip.status === 'pending' ? `Waiting for ${parent}’s OK` : 'On a trip'}</Text> · {tripDest(openTrip, places ?? [])}
+          </Text>
+          <Text style={st.tripEnd}>End trip</Text>
+        </Pressable>
+      )}
       {/* S25: the parent's request sits at the top of the shift until she answers. */}
       {extension && (() => {
         const next = nextShiftAfter(shift, myShifts ?? []);
@@ -299,6 +332,10 @@ const st = StyleSheet.create({
   taskTitle: { fontFamily: font.bodyMedium, fontSize: 15, color: color.ink },
   taskDone: { fontFamily: font.body, fontSize: 15, color: color.quiet, textDecorationLine: 'line-through' },
   taskSub: { fontFamily: font.body, fontSize: 13, color: color.quiet },
+  trip: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: color.primaryTint, borderRadius: 12 },
+  tripText: { fontFamily: font.body, fontSize: 14, color: color.ink, flexGrow: 1, flexShrink: 1 },
+  tripBold: { fontFamily: font.bodyBold, color: color.primaryStrong },
+  tripEnd: { fontFamily: font.bodyBold, fontSize: 14, color: color.primary, textDecorationLine: 'underline' },
   rules: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: color.warnTint, borderRadius: 12 },
   rulesText: { fontFamily: font.body, fontSize: 14, color: color.ink, flexGrow: 1, flexShrink: 1 },
   rulesBold: { fontFamily: font.bodyBold, color: color.warnInk },

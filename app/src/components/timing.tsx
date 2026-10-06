@@ -3,6 +3,7 @@
 // generated layouts (app/src/wireframes/S21.tsx, S25.tsx).
 import { type ReactNode, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 
 import { Text, TextInput } from '@/components/Text';
 import { TimeWheel } from '@/components/TimeField';
@@ -26,6 +27,7 @@ import {
   validExtension,
 } from '@/lib/shift-timing-logic';
 import { errorText } from '@/lib/supabase';
+import { distanceLabel, travelMinutes, useDistanceToHome } from '@/lib/trips';
 import type { Shift, Task } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
 
@@ -75,8 +77,13 @@ function PrimaryButton({ label, onPress, busy, disabled }: { label: string; onPr
   );
 }
 
-/** S21 Running late. The distance card is left out (needs the family's address and places). */
+/** S21's car (distance card). */
+const CAR = '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-4l2-5h12l2 5v4z"/><circle cx="7.5" cy="16.5" r="1.8"/><circle cx="16.5" cy="16.5" r="1.8"/></svg>';
+
+/** S21 Running late. The distance card ("You're 4.2 mi away · about 14 min by car") shows when the phone knows
+ * where she is and she's outside the shift's home zone (migrations 16-17); otherwise it's left out. */
 export function RunningLateSheet({ open, onClose, onCancelled, onSent, shift, family, tasks }: { open: boolean; onClose: () => void; onCancelled: () => void; onSent?: (minutes: number) => void; shift: Shift; family: string; tasks: Task[] }) {
+  const away = useDistanceToHome(shift, open);
   const [late, setLate] = useState<number>();
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -123,6 +130,14 @@ export function RunningLateSheet({ open, onClose, onCancelled, onSent, shift, fa
         <Text style={st.title}>Running late?</Text>
         <Text style={st.sub}>{[fam, `shift starts ${timeOf(shift.starts_at)}`, task ? `${taskPhrase(task.title)} at ${clock(task.due_at!)}` : ''].filter(Boolean).join(' · ')}</Text>
       </View>
+      {away != null ? (
+        <View style={st.dist}>
+          <SvgXml xml={CAR} width={22} height={22} style={{ flexShrink: 0 }} />
+          <Text style={st.distText}>
+            You&apos;re <Text style={st.distBold}>{distanceLabel(away)}</Text> away · about <Text style={st.distBold}>{travelMinutes(away)} min</Text> by car
+          </Text>
+        </View>
+      ) : null}
       <Text style={st.label}>HOW LATE</Text>
       <View style={st.chips}>
         {LATE_CHOICES.map((m) => (
@@ -283,6 +298,9 @@ const st = StyleSheet.create({
   title: { fontFamily: font.display, fontSize: 24, color: color.ink },
   sub: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
   label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6 },
+  dist: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: color.canvas, borderRadius: 14 },
+  distText: { fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink, flexShrink: 1 },
+  distBold: { fontFamily: font.bodyBold },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { height: 40, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center' },
   chipOn: { backgroundColor: color.primaryTint, borderWidth: 1.5, borderColor: color.primary },
