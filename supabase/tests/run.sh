@@ -16,4 +16,5 @@ P="psql -h $DIR -p $PORT -U postgres -v ON_ERROR_STOP=1 -q"
 $P -c "create database t"
 $P -d t -f tests/stub_supabase.sql
 $P -d t -f migrations/20261005000001_core.sql
+$P -d t -f migrations/20261005000003_grants.sql
 $P -d t -f tests/rls_scenarios.sql

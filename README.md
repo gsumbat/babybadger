@@ -24,8 +24,8 @@ supabase/   SQL migrations (schema, row-level security, RPCs) and an RLS test th
 
 ## 1. Set up Supabase (about 10 minutes)
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. **SQL editor** → run `supabase/migrations/20261005000001_core.sql`, then `20261005000002_storage.sql`.
+1. Create a project at [supabase.com](https://supabase.com). On the create screen: generate a database password and save it; pick the Americas region; keep **Enable Data API** on; turn **Automatically expose new tables** off (the migrations grant access themselves); **Enable automatic RLS** can be on or off (every table turns RLS on itself).
+2. **SQL editor** → run the three files in `supabase/migrations/` in order: `…01_core.sql`, `…02_storage.sql`, `…03_grants.sql`.
    (Or with the Supabase CLI: `supabase link` then `supabase db push`.)
 3. **Authentication → Providers → Email**: keep Email on. Under **Email templates → Magic link**, make sure the template includes the code: `{{ .Token }}` (the app signs in with a 6-digit code).
 4. **Database → Replication**: the migration adds `locations`, `logs`, `shifts` and `shift_tasks` to `supabase_realtime`; check they're listed.
