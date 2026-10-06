@@ -26,7 +26,7 @@ const KINDS: { kind: LogKind; label: string; icon: IconName }[] = [
   { kind: 'note', label: 'Note', icon: 'file-text' },
 ];
 
-const TITLES: Record<LogKind, string> = { food: 'Log food', nap: 'Log a nap', activity: 'Log an activity', diaper: 'Diaper or potty', note: 'Add a note', photo: 'Photo update' };
+const TITLES: Record<LogKind, string> = { food: 'Log food', nap: 'Log a nap', activity: 'Log an activity', diaper: 'Diaper or potty', note: 'Add a note', photo: 'Photo update', incident: 'Log an incident' }; // incidents have their own screen (S24)
 
 function Choice({ label, options, value, onChange, labels }: { label: string; options: string[]; value: string; onChange: (v: string) => void; labels?: Record<string, string> }) {
   return (
@@ -108,6 +108,7 @@ export default function AddLog() {
         diaper: ['diaper', 'potty', 'note'],
         note: ['category', 'text'],
         photo: ['caption'],
+        incident: ['type', 'where', 'text'],
       }[kind!];
       for (const key of keep) if (f[key]) data[key] = f[key];
       const { error } = await supabase.from('logs').insert({ shift_id: shiftId, author_id: session!.user.id, kind, kid_ids: chosen, data, photo_path, urgent: false });

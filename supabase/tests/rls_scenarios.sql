@@ -689,4 +689,262 @@ do $$ begin
 end $$;
 reset role;
 
+-- Incidents (migration 15, wireframes S24 / P9): the shift's sitter logs an incident (kind 'incident', urgent);
+-- both of the family's parents read it and get the alert right away (even with "Food and tasks" off), and a tap
+-- opens Alerts. Another family's parent and a stranger see nothing. Rosa (signed with the Lees) works the shift.
+delete from net.sent;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by)
+  values ((select v::uuid from ctx where k='fam'), '00000000-0000-0000-0000-00000000c0a2', now() + interval '5 minutes', now() + interval '3 hours', auth.uid());
+insert into ctx select 'ishift', id::text from shifts where sitter_id = '00000000-0000-0000-0000-00000000c0a2' order by created_at desc limit 1;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000c0a2');
+select public.clock_in((select v::uuid from ctx where k='ishift'));
+insert into logs (shift_id, author_id, kind, kid_ids, data, urgent)
+  select s.v::uuid, auth.uid(), 'incident', array[(select id from kids where name = 'Ava')],
+    '{"type":"Fall or bump","where":"Backyard","text":"Scraped her knee. Bandage on."}', true
+  from ctx s where s.k = 'ishift';
+do $$ begin
+  begin
+    insert into logs (shift_id, author_id, kind, data) select v::uuid, auth.uid(), 'bogus', '{}' from ctx where k = 'ishift';
+    raise exception 'FAIL unknown log kind accepted';
+  exception when check_violation then null; end;
+  if (select count(*) from logs where kind = 'incident') <> 1 then raise exception 'FAIL sitter cannot read her incident'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+do $$ begin
+  if (select count(*) from logs where kind = 'incident' and urgent) <> 1 then raise exception 'FAIL parent cannot see the incident'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000c0a1');
+do $$ begin
+  if (select count(*) from logs where kind = 'incident') <> 1 then raise exception 'FAIL co-parent cannot see the incident'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
+do $$ begin
+  if (select count(*) from logs where kind = 'incident') <> 0 then raise exception 'FAIL other family sees the incident'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+do $$ begin
+  if (select count(*) from logs where kind = 'incident') <> 0 then raise exception 'FAIL stranger sees the incident'; end if;
+end $$;
+-- Maya (removed from the Lees) can't log an incident on Rosa's shift
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+do $$ begin
+  begin
+    insert into logs (shift_id, author_id, kind, data, urgent) select v::uuid, auth.uid(), 'incident', '{"type":"Other"}', true from ctx where k = 'ishift';
+    raise exception 'FAIL another sitter logged an incident on the shift';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+do $$ declare m jsonb; begin
+  select body into m from net.sent, jsonb_array_elements(body) x where x->>'title' like '%Incident%' limit 1;
+  if m is null then raise exception 'FAIL no incident alert sent'; end if;
+  if m->0->>'title' <> 'Ava · Incident: Fall or bump' then raise exception 'FAIL incident alert title: %', m->0->>'title'; end if;
+  if m->0->>'body' <> 'Backyard · Scraped her knee. Bandage on.' then raise exception 'FAIL incident alert body: %', m->0->>'body'; end if;
+  if m->0->'data'->>'url' <> '/parent/alerts' then raise exception 'FAIL incident alert link: %', m->0->'data'; end if;
+  if (select count(*) from jsonb_array_elements(m) x where x->>'to' in ('ExponentPushToken[jen-phone]', 'ExponentPushToken[dan-phone]')) <> 2
+    or jsonb_array_length(m) <> 2 then raise exception 'FAIL incident alert should reach both parents only: %', m; end if;
+end $$;
+
+-- Shift timing (migration 14): S21 running late / can't make it, S25 stay longer. Only the shift's sitter sends a
+-- late notice, cancels her shift or answers; only the family's parents ask her to stay; nobody fakes them by
+-- writing the tables; a finished shift can't be extended.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a1401', 'pia-parent@example.com'),
+  ('00000000-0000-0000-0000-0000000a1402', 'sol-sitter@example.com');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1401');
+insert into ctx values ('fam14', (select public.create_family('The Cruz family', 'Pia Cruz')::text));
+select public.register_push_token('ExponentPushToken[pia-phone]', 'ios');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1402');
+select public.register_push_token('ExponentPushToken[sol-phone]', 'ios');
+reset role;
+update profiles set full_name = 'Sol Reyes' where id = '00000000-0000-0000-0000-0000000a1402';
+insert into family_sitters (family_id, sitter_id, status, rate)
+  select v::uuid, '00000000-0000-0000-0000-0000000a1402', 'active', 22 from ctx where k = 'fam14';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1401');
+insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by, late_minutes)
+  select v::uuid, '00000000-0000-0000-0000-0000000a1402', now() + interval '5 minutes', now() + interval '4 hours', auth.uid(), 30 from ctx where k = 'fam14';
+insert into ctx select 'shift14', id::text from shifts where family_id = (select v::uuid from ctx where k = 'fam14');
+insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by)
+  select v::uuid, '00000000-0000-0000-0000-0000000a1402', now() + interval '1 day', now() + interval '1 day 4 hours', auth.uid() from ctx where k = 'fam14';
+insert into ctx select 'shift14b', id::text from shifts where family_id = (select v::uuid from ctx where k = 'fam14') and starts_at > now() + interval '12 hours';
+insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by)
+  select v::uuid, '00000000-0000-0000-0000-0000000a1402', now() + interval '2 days', now() + interval '2 days 4 hours', auth.uid() from ctx where k = 'fam14';
+insert into ctx select 'shift14c', id::text from shifts where family_id = (select v::uuid from ctx where k = 'fam14') and starts_at > now() + interval '36 hours';
+do $$ begin
+  -- a late notice can't be written on insert or by a parent
+  if (select late_minutes from shifts where id = (select v::uuid from ctx where k = 'shift14')) is not null then raise exception 'FAIL parent wrote a late notice on insert'; end if;
+  begin
+    update shifts set late_minutes = 5, late_note = 'fake' where id = (select v::uuid from ctx where k = 'shift14');
+    raise exception 'FAIL parent faked a late notice';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.report_late((select v::uuid from ctx where k = 'shift14'), 15, 'x', '');
+    raise exception 'FAIL parent sent a late notice';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  begin
+    perform public.cancel_my_shift((select v::uuid from ctx where k = 'shift14'), 'x');
+    raise exception 'FAIL parent cancelled as the sitter';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  begin
+    perform public.request_extension((select v::uuid from ctx where k = 'shift14'), (select ends_at from shifts where id = (select v::uuid from ctx where k = 'shift14')) - interval '5 minutes', '');
+    raise exception 'FAIL extension ending before the shift accepted';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  begin
+    insert into shift_extensions (shift_id, requested_by, new_ends_at) values ((select v::uuid from ctx where k = 'shift14'), auth.uid(), now() + interval '5 hours');
+    raise exception 'FAIL parent wrote shift_extensions directly';
+  exception when insufficient_privilege then null; end;
+end $$;
+-- the parent cancels a shift herself: recorded as cancelled by her, and she can't pin it on the sitter
+update shifts set status = 'cancelled' where id = (select v::uuid from ctx where k = 'shift14c');
+do $$ begin
+  if (select cancelled_by from shifts where id = (select v::uuid from ctx where k = 'shift14c')) <> auth.uid() then raise exception 'FAIL parent cancel not recorded'; end if;
+  begin
+    update shifts set cancelled_by = '00000000-0000-0000-0000-0000000a1402' where id = (select v::uuid from ctx where k = 'shift14c');
+    raise exception 'FAIL parent changed who cancelled';
+  exception when insufficient_privilege then null; end;
+end $$;
+
+reset role;
+delete from net.sent;
+set role authenticated;
+
+-- S21: Sol is running 15 min late; Pia's phone gets it with the note and the at-risk task
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1402');
+select public.report_late((select v::uuid from ctx where k = 'shift14'), 15, 'Traffic on I-275.', 'Pick up Ava at 3:15 is at risk.');
+do $$ declare s shifts; n int; begin
+  select * into s from shifts where id = (select v::uuid from ctx where k = 'shift14');
+  if s.late_minutes <> 15 or s.late_note <> 'Traffic on I-275.' or s.late_at is null then raise exception 'FAIL late notice not stored'; end if;
+  begin
+    perform public.report_late((select v::uuid from ctx where k = 'shift14'), 0, '', '');
+    raise exception 'FAIL 0 minutes late accepted';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  update shifts set late_minutes = 30 where id = s.id;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL sitter wrote the shift directly'; end if;
+  begin
+    perform public.request_extension(s.id, s.ends_at + interval '30 minutes', '');
+    raise exception 'FAIL sitter asked herself to stay';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+end $$;
+reset role;
+do $$ declare b jsonb; begin
+  if (select count(*) from net.sent) <> 1 then raise exception 'FAIL expected 1 late alert, got %', (select count(*) from net.sent); end if;
+  select body into b from net.sent;
+  if b->0->>'to' <> 'ExponentPushToken[pia-phone]' then raise exception 'FAIL late alert went to %', b->0->>'to'; end if;
+  if b->0->>'title' <> 'Sol is running 15 min late' then raise exception 'FAIL late alert title: %', b->0->>'title'; end if;
+  if b->0->>'body' <> 'Traffic on I-275. Pick up Ava at 3:15 is at risk.' then raise exception 'FAIL late alert body: %', b->0->>'body'; end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+
+-- stranger and another family's parent: nothing to see or send
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+do $$ begin
+  if (select count(*) from shifts where id = (select v::uuid from ctx where k = 'shift14')) <> 0 then raise exception 'FAIL other parent sees the shift'; end if;
+  begin
+    perform public.request_extension((select v::uuid from ctx where k = 'shift14'), now() + interval '6 hours', '');
+    raise exception 'FAIL other family''s parent asked for an extension';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+end $$;
+
+-- S25: Sol clocks in; Pia asks for 45 more minutes (Sol's phone gets it), then changes it to 60: one open request
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1402');
+select public.clock_in((select v::uuid from ctx where k = 'shift14'));
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1401');
+select public.request_extension(s.id, s.ends_at + interval '45 minutes', 'Stuck in a meeting.') from shifts s where s.id = (select v::uuid from ctx where k = 'shift14');
+select public.request_extension(s.id, s.ends_at + interval '60 minutes', 'Stuck in a meeting.') from shifts s where s.id = (select v::uuid from ctx where k = 'shift14');
+do $$ begin
+  if (select count(*) from shift_extensions where status = 'pending') <> 1 then raise exception 'FAIL more than one open request'; end if;
+  if (select count(*) from shift_extensions where status = 'withdrawn') <> 1 then raise exception 'FAIL replaced request not withdrawn'; end if;
+  begin
+    perform public.answer_extension((select id from shift_extensions where status = 'pending'), true, null);
+    raise exception 'FAIL parent answered for the sitter';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+do $$ begin
+  if (select count(*) from shift_extensions) <> 0 then raise exception 'FAIL stranger sees extension requests'; end if;
+end $$;
+reset role;
+do $$ begin
+  -- the clock-in alert went to Pia; both requests to Sol only
+  if (select count(*) from net.sent where body->0->>'title' like 'Pia asks%') <> 2 then raise exception 'FAIL expected 2 request alerts'; end if;
+  if exists (select 1 from net.sent, jsonb_array_elements(body) m where net.sent.body->0->>'title' like 'Pia asks%' and m->>'to' <> 'ExponentPushToken[sol-phone]') then raise exception 'FAIL request alert went to someone else'; end if;
+  if (select body->0->>'title' from net.sent where body->0->>'title' like 'Pia asks%' order by id limit 1) <> 'Pia asks: can you stay 45 min longer?' then raise exception 'FAIL request title'; end if;
+  if (select body->0->>'body' from net.sent where body->0->>'title' like 'Pia asks%' order by id limit 1) <> 'Stuck in a meeting.' then raise exception 'FAIL request body'; end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+
+-- Sol sees it and stays 15 min (less than asked); the shift end moves; the answer can't be given twice
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1402');
+insert into ctx select 'end14', ends_at::text from shifts where id = (select v::uuid from ctx where k = 'shift14');
+do $$ begin
+  if (select count(*) from shift_extensions) <> 2 then raise exception 'FAIL sitter cannot see requests on her shift'; end if;
+end $$;
+select public.answer_extension((select id from shift_extensions where status = 'pending'), true, (select v::timestamptz + interval '15 minutes' from ctx where k = 'end14'));
+do $$ begin
+  if (select ends_at from shifts where id = (select v::uuid from ctx where k = 'shift14')) <> (select v::timestamptz + interval '15 minutes' from ctx where k = 'end14') then raise exception 'FAIL shift end not moved'; end if;
+  if (select answered_ends_at from shift_extensions where status = 'accepted') <> (select v::timestamptz + interval '15 minutes' from ctx where k = 'end14') then raise exception 'FAIL agreed end not stored'; end if;
+  begin
+    perform public.answer_extension((select id from shift_extensions where status = 'accepted'), false, null);
+    raise exception 'FAIL request answered twice';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+end $$;
+
+-- Pia asks again; Sol can't stay: end unchanged
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1401');
+select public.request_extension(s.id, s.ends_at + interval '30 minutes', '') from shifts s where s.id = (select v::uuid from ctx where k = 'shift14');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1402');
+select public.answer_extension((select id from shift_extensions where status = 'pending'), false, null);
+do $$ begin
+  if (select ends_at from shifts where id = (select v::uuid from ctx where k = 'shift14')) <> (select v::timestamptz + interval '15 minutes' from ctx where k = 'end14') then raise exception 'FAIL declining moved the end'; end if;
+end $$;
+reset role;
+do $$ begin
+  if (select count(*) from net.sent where body->0->>'to' = 'ExponentPushToken[pia-phone]') <> 2 then raise exception 'FAIL answers not sent to the parent'; end if;
+  if not exists (select 1 from net.sent where body->0->>'title' = 'Sol can stay 15 min longer') then raise exception 'FAIL accept alert title'; end if;
+  if not exists (select 1 from net.sent where body->0->>'title' = 'Sol can''t stay longer') then raise exception 'FAIL decline alert title'; end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+
+-- An open request when the shift ends can't be accepted; a finished shift can't be extended
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1401');
+select public.request_extension(s.id, s.ends_at + interval '30 minutes', '') from shifts s where s.id = (select v::uuid from ctx where k = 'shift14');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1402');
+select public.clock_out((select v::uuid from ctx where k = 'shift14'), '');
+do $$ begin
+  perform public.answer_extension((select id from shift_extensions where status = 'pending'), true, null);
+  raise exception 'FAIL extended a completed shift';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1401');
+do $$ begin
+  perform public.request_extension(s.id, s.ends_at + interval '30 minutes', '') from shifts s where s.id = (select v::uuid from ctx where k = 'shift14');
+  raise exception 'FAIL asked to extend a completed shift';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+
+-- S21 "I can't make it today": Sol cancels tomorrow's shift; Pia gets an urgent alert; it can't be cancelled twice
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1402');
+select public.cancel_my_shift((select v::uuid from ctx where k = 'shift14b'), 'Sick kid at home.');
+do $$ declare s shifts; begin
+  select * into s from shifts where id = (select v::uuid from ctx where k = 'shift14b');
+  if s.status <> 'cancelled' or s.cancelled_by <> auth.uid() or s.cancel_reason <> 'Sick kid at home.' or s.cancelled_at is null then raise exception 'FAIL sitter cancel not stored'; end if;
+  begin
+    perform public.cancel_my_shift(s.id, '');
+    raise exception 'FAIL cancelled twice';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+end $$;
+reset role;
+do $$ begin
+  if (select count(*) from net.sent where body->0->>'title' like 'Urgent:%') <> 1 then raise exception 'FAIL expected 1 cancel alert'; end if;
+  if (select body->0->>'title' from net.sent where body->0->>'title' like 'Urgent:%') <> 'Urgent: Sol can''t make it'
+     or (select body->0->>'to' from net.sent where body->0->>'title' like 'Urgent:%') <> 'ExponentPushToken[pia-phone]'
+     or (select body->0->>'body' from net.sent where body->0->>'title' like 'Urgent:%') <> 'Sick kid at home.' then raise exception 'FAIL cancel alert'; end if;
+end $$;
+
 select 'ALL RLS SCENARIOS PASSED' as result;

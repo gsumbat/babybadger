@@ -140,7 +140,7 @@ export function Thread({
               style={st.input}
             />
             <Pressable accessibilityRole="button" accessibilityLabel="Send" disabled={busy || !text.trim()} onPress={send} style={({ pressed }) => [st.send, pressed && { opacity: 0.85 }]}>
-              <SvgXml xml={p ? SEND_P10 : SEND_S37} width={22} height={22} />
+              <SvgXml xml={p ? SEND_P10 : SEND_S37} width={22} height={22} style={{ flexShrink: 0 }} />
             </Pressable>
           </View>
         </View>

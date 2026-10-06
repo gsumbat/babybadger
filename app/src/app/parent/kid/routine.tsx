@@ -80,7 +80,7 @@ export default function KidRoutine() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                   <Text style={st.rowTitle}>{r.title}</Text>
                   <Pressable accessibilityRole="button" accessibilityLabel={`More about ${r.title}`} onPress={r.open} hitSlop={8} style={st.more}>
-                    <SvgXml xml={MORE} width={20} height={20} />
+                    <SvgXml xml={MORE} width={20} height={20} style={{ flexShrink: 0 }} />
                   </Pressable>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
@@ -120,7 +120,7 @@ export default function KidRoutine() {
         </View>
       ) : null}
       <Pressable accessibilityRole="button" onPress={() => add('')} style={st.add}>
-        <SvgXml xml={PLUS} width={20} height={20} />
+        <SvgXml xml={PLUS} width={20} height={20} style={{ flexShrink: 0 }} />
         <Text style={st.addText}>Add to {kid.name}’s day</Text>
       </Pressable>
     </Screen>

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
+import { RunningLateSheet } from '@/components/timing';
 import { ErrorText, HomeHeader, Icon, type IconName, initialsOf, Screen } from '@/components/ui';
 import { api, useQuery, useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
@@ -16,7 +17,7 @@ import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframes S3 (shift today), S3b (no shift today) and S3d (nothing booked), translated from their HTML
-// (app/src/wireframes/S3*.tsx). Left out until built: Running late, Needs-you items other than consent, earnings and
+// (app/src/wireframes/S3*.tsx). "Running late?" opens S21 before clock-in. Left out until built: Needs-you items other than consent, earnings and
 // payout and most tools. Availability and Time off (tools, S3d's "Set your availability") open S11.
 // Times follow the wireframe: "3:00 – 7:00 PM" on the today card, "7:30 – 10 PM" elsewhere.
 export default function SitterHome() {
@@ -89,7 +90,7 @@ export default function SitterHome() {
       }>
       <ErrorText>{error}</ErrorText>
 
-      {focus && <TodayCard shift={focus} family={famName(focus.family_id)} then={then} thenFamily={then ? famName(then.family_id) : ''} now={now} busy={busy === focus.id} onClockIn={() => clockIn(focus)} />}
+      {focus && <TodayCard shift={focus} family={famName(focus.family_id)} then={then} thenFamily={then ? famName(then.family_id) : ''} now={now} busy={busy === focus.id} onClockIn={() => clockIn(focus)} onCancelled={reload} />}
 
       {!focus && next && (
         <Pressable accessibilityRole="button" onPress={() => router.navigate('/sitter/calendar')} style={st.nextCard}>
@@ -238,14 +239,15 @@ const TIME_OFF =
 function Tool({ icon, xml, label, onPress }: { icon?: IconName; xml?: string; label: string; onPress: () => void }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [st.tool, pressed && { opacity: 0.85 }]}>
-      {xml ? <SvgXml xml={xml} width={22} height={22} /> : icon ? <Icon name={icon} size={22} /> : null}
+      {xml ? <SvgXml xml={xml} width={22} height={22} style={{ flexShrink: 0 }} /> : icon ? <Icon name={icon} size={22} /> : null}
       <Text style={st.toolText}>{label}</Text>
     </Pressable>
   );
 }
 
-function TodayCard({ shift, family, then, thenFamily, now, busy, onClockIn }: { shift: Shift; family: string; then?: Shift; thenFamily: string; now: number; busy: boolean; onClockIn: () => void }) {
+function TodayCard({ shift, family, then, thenFamily, now, busy, onClockIn, onCancelled }: { shift: Shift; family: string; then?: Shift; thenFamily: string; now: number; busy: boolean; onClockIn: () => void; onCancelled: () => void }) {
   const { bundle } = useShiftLive(shift.id);
+  const [lateOpen, setLateOpen] = useState(false);
   const live = shift.status === 'active';
   const ci = clockInState(shift, new Date(now));
   const tasks = bundle?.tasks ?? [];
@@ -270,11 +272,19 @@ function TodayCard({ shift, family, then, thenFamily, now, busy, onClockIn }: { 
           {span(shift.starts_at, shift.ends_at, true)}
         </Text>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-        <View style={st.greenDot} />
-        <Text style={st.okText}>
-          {live ? `On shift · ${formatClock(Math.floor(secs / 60), secs % 60)} · sharing location` : [tasks.length ? `${tasks.length} tasks` : bundle?.kids.map((k) => k.name).join(' and '), firstDue ? `first ${timeOf(firstDue).replace(MERIDIEM, '')}` : ''].filter(Boolean).join(', ')}
-        </Text>
+      {/* S3: status on the left, "Running late?" (S21) on the right until she clocks in. */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
+          <View style={st.greenDot} />
+          <Text style={st.okText}>
+            {live ? `On shift · ${formatClock(Math.floor(secs / 60), secs % 60)} · sharing location` : [tasks.length ? `${tasks.length} tasks` : bundle?.kids.map((k) => k.name).join(' and '), firstDue ? `first ${timeOf(firstDue).replace(MERIDIEM, '')}` : ''].filter(Boolean).join(', ')}
+          </Text>
+        </View>
+        {!live && ci.kind !== 'ended' && (
+          <Text accessibilityRole="button" numberOfLines={1} onPress={() => setLateOpen(true)} style={st.lateLink}>
+            Running late?
+          </Text>
+        )}
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <Pressable accessibilityRole="button" onPress={press} style={st.clockIn}>
@@ -288,6 +298,7 @@ function TodayCard({ shift, family, then, thenFamily, now, busy, onClockIn }: { 
           <Icon name="message-square" size={22} />
         </Pressable>
       </View>
+      {!live && <RunningLateSheet open={lateOpen} onClose={() => setLateOpen(false)} onCancelled={onCancelled} shift={shift} family={family} tasks={tasks} />}
       {then && (
         <View style={st.then}>
           <Text style={st.thenText}>
@@ -309,6 +320,7 @@ const st = StyleSheet.create({
   time: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink, flexShrink: 1 },
   greenDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: color.ok },
   okText: { fontFamily: font.bodySemi, fontSize: 13, color: color.okInk, flexShrink: 1 },
+  lateLink: { fontFamily: font.bodyBold, fontSize: 13, color: color.primary, textDecorationLine: 'underline', flexShrink: 0 },
   clockIn: { flexGrow: 1, flexShrink: 1, height: 48, borderRadius: 999, backgroundColor: color.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   clockInText: { fontFamily: font.displayBold, fontSize: 17, color: '#FFFFFF' },
   round: { width: 48, height: 48, borderRadius: 24, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },

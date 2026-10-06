@@ -51,6 +51,7 @@ export default function WF_P4() {
             <View style={{ right: 10, bottom: 10, paddingTop: 4, paddingRight: 10, paddingBottom: 4, paddingLeft: 10, backgroundColor: "#FFFFFF", borderRadius: 8, position: "absolute" }}><Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960" }}>Updated 1 min ago</Text></View>
           </View>
         </View>
+        <View style={{ alignSelf: "center" }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A", textDecorationLine: "underline" }}>Ask Maya to stay longer</Text></View>
         <View style={{ flexDirection: "column", gap: 8 }}>
           <View style={{ flexDirection: "row", gap: 8 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", height: 48, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P10-Messages.dc.html */}
@@ -85,7 +86,7 @@ export default function WF_P4() {
           </View>
         </View>
       </View>
-      <View style={{ flexDirection: "column", gap: 8, paddingTop: 0, paddingRight: 20, paddingBottom: 14, paddingLeft: 20 }}>
+      <View style={{ flexDirection: "column", gap: 8, marginTop: "auto", paddingTop: 0, paddingRight: 20, paddingBottom: 14, paddingLeft: 20 }}>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>WHAT DO YOU NEED?</Text>
         <View style={{ flexDirection: "column", gap: 8 }}>
           <View style={{ flexDirection: "row", gap: 8 }}>

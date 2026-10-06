@@ -161,7 +161,9 @@ export function useShiftLive(shiftId: string | undefined) {
     load();
     if (!shiftId) return;
     const ch = supabase
-      .channel(`shift-${shiftId}`)
+      // A unique name per subscription: two screens (or a remount) on the same shift would otherwise share one
+      // channel and crash with "cannot add postgres_changes callbacks after subscribe()".
+      .channel(`shift-${shiftId}-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'locations', filter: `shift_id=eq.${shiftId}` }, (p) =>
         setBundle((b) => (b ? { ...b, points: [...b.points, p.new as LocationPoint] } : b)),
       )

@@ -135,7 +135,7 @@ function Pending({ invite, name, familyName }: { invite: InviteRow; name: string
               <View style={{ alignItems: 'center', gap: 3 }}>
                 {isDone ? (
                   <View style={[st.node, { backgroundColor: color.ok }]}>
-                    <SvgXml xml={TICK} width={15} height={15} />
+                    <SvgXml xml={TICK} width={15} height={15} style={{ flexShrink: 0 }} />
                   </View>
                 ) : isNow ? (
                   <View style={[st.node, st.nodeNow]}>
@@ -188,7 +188,7 @@ function Accepted({ name, signedAt, kidIds, kids }: { name: string; signedAt: st
               <Text style={st.bigLetter}>{name[0]?.toUpperCase()}</Text>
             </View>
             <View style={st.badge}>
-              <SvgXml xml={TICK} width={18} height={18} />
+              <SvgXml xml={TICK} width={18} height={18} style={{ flexShrink: 0 }} />
             </View>
           </View>
           <Text style={st.accTitle}>{name} joined your family</Text>

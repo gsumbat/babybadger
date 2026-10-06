@@ -23,7 +23,7 @@ export default function WF_S4() {
       <View style={{ flexDirection: "column", gap: 6, paddingTop: 24, paddingRight: 20, paddingBottom: 56, paddingLeft: 20, backgroundColor: "#47698A" }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
           <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#FFFFFF", flexShrink: 1 }}>On shift · The Lee family</Text>
-          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 28, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#FFFFFF", borderRadius: 999, flexShrink: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 28, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#FFFFFF", borderRadius: 999, flexShrink: 1 }}>
             <View style={{ width: 8, height: 8, backgroundColor: "#1F8A4D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
             </View>
             <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#47698A" }}>Sharing location</Text>
@@ -87,6 +87,7 @@ export default function WF_S4() {
             </View>
           </View>
         </View>
+        <View style={{ alignSelf: "center" }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#A1321F", textDecorationLine: "underline" }}>Report an injury</Text></View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 10, paddingRight: 14, paddingBottom: 10, paddingLeft: 14, backgroundColor: "#F6E3C6", borderRadius: 12 }}>{/* -> S43-ShiftRules.dc.html */}
           <SvgXml xml={SVG[4]} width={20} height={20} />
           <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", flexGrow: 1, flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#7A4E0E" }}>House rules</Text> · 2 logs due</Text>

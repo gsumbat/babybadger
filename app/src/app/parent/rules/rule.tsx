@@ -133,7 +133,7 @@ export default function RuleDetail() {
       </View>
       {rule && isPhoneConduct(rule) && (
         <View style={st.info}>
-          <SvgXml xml={ruleIconXml('shield', color.primaryStrong)} width={20} height={20} />
+          <SvgXml xml={ruleIconXml('shield', color.primaryStrong)} width={20} height={20} style={{ flexShrink: 0 }} />
           <Text style={st.infoText}>
             <Text style={st.infoBold}>This is an agreement, not tracking.</Text> BabyBadger doesn’t watch the sitter’s phone. She agrees once and sees it at the start of every shift.
           </Text>

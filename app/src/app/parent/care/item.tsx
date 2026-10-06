@@ -194,7 +194,7 @@ export default function CareItemScreen() {
               const on = t.type === type;
               return (
                 <Pressable key={t.type} accessibilityRole="radio" accessibilityState={{ selected: on }} onPress={() => pickType(t.type)} style={[st.type, on && st.typeOn]}>
-                  <SvgXml xml={careIconXml(t.type, on ? color.primary : color.ink2)} width={22} height={22} />
+                  <SvgXml xml={careIconXml(t.type, on ? color.primary : color.ink2)} width={22} height={22} style={{ flexShrink: 0 }} />
                   <Text style={[st.typeText, on && { color: color.primary }]}>{t.label}</Text>
                 </Pressable>
               );

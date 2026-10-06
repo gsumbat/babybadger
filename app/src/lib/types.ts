@@ -101,7 +101,8 @@ export type LocationPoint = {
   recorded_at: string;
 };
 
-export type LogKind = 'food' | 'nap' | 'activity' | 'diaper' | 'note' | 'photo';
+/** 'incident' = S24 (migration 15): always urgent, data {type, where, text}. */
+export type LogKind = 'food' | 'nap' | 'activity' | 'diaper' | 'note' | 'photo' | 'incident';
 
 export type LogEntry = {
   id: string;

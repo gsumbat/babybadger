@@ -55,7 +55,7 @@ export default function ShiftRules() {
       footer={<Button kind="tonal" label="Back to shift" onPress={() => router.back()} />}>
       {due > 0 && (
         <View style={st.due}>
-          <SvgXml xml={BELL} width={20} height={20} />
+          <SvgXml xml={BELL} width={20} height={20} style={{ flexShrink: 0 }} />
           <Text style={st.dueText}>
             <Text style={st.dueBold}>{due === 1 ? '1 log due.' : `${due} logs due.`}</Text> {parent} sees them in real time and in the shift report.
           </Text>
@@ -67,14 +67,14 @@ export default function ShiftRules() {
           <View style={st.card}>
             {rows.map((r, i) => (
               <View key={r.rule.id} style={[st.logRow, i < rows.length - 1 && st.line]}>
-                <SvgXml xml={ruleIconXml(ruleIcon(r.rule), color.primary)} width={20} height={20} />
+                <SvgXml xml={ruleIconXml(ruleIcon(r.rule), color.primary)} width={20} height={20} style={{ flexShrink: 0 }} />
                 <View style={{ flexGrow: 1, flexShrink: 1 }}>
                   <Text style={st.logTitle}>{r.title}</Text>
                   {r.sub ? <Text style={st.logSub}>{r.sub}</Text> : null}
                 </View>
                 {r.state === 'done' ? (
                   <View style={st.done}>
-                    <SvgXml xml={DONE} width={14} height={14} />
+                    <SvgXml xml={DONE} width={14} height={14} style={{ flexShrink: 0 }} />
                     <Text style={st.doneText}>Done</Text>
                   </View>
                 ) : r.state === 'due' && open ? (

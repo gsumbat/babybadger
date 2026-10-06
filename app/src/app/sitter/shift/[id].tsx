@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 
 import { SafetyBox, TaskRows } from '@/components/bits';
+import { ExtendRequestCard } from '@/components/timing';
 import { LogTimeline } from '@/components/LogTimeline';
 import { Banner, Button, Card, ChoicePill, ErrorText, Field, Icon, type IconName, Loading, Screen } from '@/components/ui';
 import { api, useQuery, useShiftLive } from '@/lib/data';
@@ -13,6 +14,8 @@ import { rulesApi, shiftRuleRows } from '@/lib/house-rules';
 import { type SharingMode, startSharing, stopSharing } from '@/lib/location-sharing';
 import { useSession } from '@/lib/session';
 import { formatClock, workedMinutes } from '@/lib/shift-logic';
+import { timingApi, usePendingExtension } from '@/lib/shift-timing';
+import { nextShiftAfter } from '@/lib/shift-timing-logic';
 import { errorText, supabase } from '@/lib/supabase';
 import type { LogKind } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
@@ -39,6 +42,12 @@ export default function SitterShift() {
   const { data: parents } = useQuery(() => (fid ? api.familyParents(fid) : Promise.resolve([])), [fid]);
   // House rules (migration 09); until it runs there are none and the strip stays hidden.
   const { data: rules } = useQuery(() => (fid ? rulesApi.rules(fid).catch(() => []) : Promise.resolve([])), [fid]);
+  // S25: a parent's open request to stay longer (migration 14), her rate with this family (Extra pay) and her other
+  // shifts (the "Tight" warning when her next shift that day starts soon after).
+  const { pending: extension, reload: reloadExtension } = usePendingExtension(id);
+  const sid = bundle?.shift.sitter_id;
+  const { data: rate } = useQuery(() => (fid && sid ? timingApi.sitterRate(fid, sid) : Promise.resolve(null)), [fid, sid]);
+  const { data: myShifts } = useQuery(() => (extension && sid ? api.sitterShifts(sid) : Promise.resolve([])), [!!extension, sid]);
   const insets = useSafeAreaInsets();
   const [mode, setMode] = useState<SharingMode | null>(null);
   const [now, setNow] = useState(() => Date.now());
@@ -197,6 +206,25 @@ export default function SitterShift() {
         ))}
       </View>
 
+      {/* S25: the parent's request sits at the top of the shift until she answers. */}
+      {extension && (() => {
+        const next = nextShiftAfter(shift, myShifts ?? []);
+        return (
+          <ExtendRequestCard
+            key={extension.id}
+            request={extension}
+            shift={shift}
+            parentName={((n) => (n ? firstName(n) : 'Parent'))(parents?.find((p) => p.id === extension.requested_by)?.full_name)}
+            rate={rate ?? null}
+            next={next}
+            nextFamily={next ? (sitterLinks.find((l) => l.family_id === next.family_id)?.family.name ?? '') : ''}
+            onAnswered={() => {
+              reloadExtension();
+              reload();
+            }}
+          />
+        );
+      })()}
       {mode === 'foreground' && <Banner kind="warn" icon="alert-triangle">Keep this screen open: background location needs the full app build (not Expo Go).</Banner>}
       {mode === 'denied' && <Banner kind="bad" icon="alert-triangle">Location is off. Allow it for BabyBadger in Settings so the family can see the map.</Banner>}
 
@@ -212,7 +240,7 @@ export default function SitterShift() {
             const isDone = !!t.done_at;
             return (
               <Pressable key={t.id} accessibilityRole="checkbox" accessibilityState={{ checked: isDone }} onPress={() => toggle(t.id, !isDone)} style={st.taskRow}>
-                <View style={[st.box, isDone && st.boxOn]}>{isDone ? <SvgXml xml={CHECK} width={16} height={16} /> : null}</View>
+                <View style={[st.box, isDone && st.boxOn]}>{isDone ? <SvgXml xml={CHECK} width={16} height={16} style={{ flexShrink: 0 }} /> : null}</View>
                 <View style={{ flexShrink: 1 }}>
                   <Text style={isDone ? st.taskDone : st.taskTitle}>{t.title}</Text>
                   {isDone ? <Text style={st.taskSub}>Done {timeOf(t.done_at!)}</Text> : t.due_at ? <Text style={st.taskSub}>{timeOf(t.due_at)}</Text> : null}
@@ -222,10 +250,14 @@ export default function SitterShift() {
           })}
         </View>
       )}
+      {/* Not in wireframe S4 (S23 "Something happened · log it" leads to S24, but the kid app isn't built): opens S24. */}
+      <Pressable accessibilityRole="link" onPress={() => router.push(`/sitter/incident/${shift.id}`)} style={st.incident}>
+        <Text style={st.incidentText}>Report an injury</Text>
+      </Pressable>
       {/* S4's House rules strip -> S43. */}
       {!!rules?.length && (
         <Pressable accessibilityRole="button" onPress={() => router.push(`/sitter/shift-rules/${shift.id}`)} style={st.rules}>
-          <SvgXml xml={BELL} width={20} height={20} />
+          <SvgXml xml={BELL} width={20} height={20} style={{ flexShrink: 0 }} />
           <Text style={st.rulesText}>
             <Text style={st.rulesBold}>House rules</Text>
             {rulesDue ? ` · ${rulesDue} ${rulesDue === 1 ? 'log' : 'logs'} due` : ''}
@@ -273,6 +305,8 @@ const st = StyleSheet.create({
   avoid: { backgroundColor: color.badTint, borderRadius: 12, paddingVertical: 10, paddingHorizontal: 14 },
   avoidText: { fontFamily: font.body, fontSize: 14, color: '#6E2215' },
   avoidBold: { fontFamily: font.bodyBold, color: color.badInk },
+  incident: { alignSelf: 'flex-start', height: 36, justifyContent: 'center' },
+  incidentText: { fontFamily: font.bodySemi, fontSize: 14, color: color.badInk, textDecorationLine: 'underline' },
   clockOut: { height: 52, borderRadius: 999, borderWidth: 1.5, borderColor: color.primary, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   clockOutText: { fontFamily: font.displayBold, fontSize: 17, color: color.primary },
   cardTitle: { fontFamily: font.bodyBold, fontSize: 16, color: color.ink },

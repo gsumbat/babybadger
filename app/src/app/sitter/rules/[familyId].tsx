@@ -83,7 +83,7 @@ export default function SitterHouseRules() {
         </View>
       ))}
       <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: agree }} onPress={() => setAgree((a) => !a)} style={st.agreeRow}>
-        <View style={[st.check, agree && st.checkOn]}>{agree ? <SvgXml xml={CHECK} width={18} height={18} /> : null}</View>
+        <View style={[st.check, agree && st.checkOn]}>{agree ? <SvgXml xml={CHECK} width={18} height={18} style={{ flexShrink: 0 }} /> : null}</View>
         <Text style={st.agree}>I’ve read {names.line} house rules and agree to the must-dos</Text>
       </Pressable>
       <ErrorText>{err}</ErrorText>

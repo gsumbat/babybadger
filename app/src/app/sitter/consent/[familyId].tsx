@@ -175,7 +175,7 @@ export default function Consent() {
       </View>
       {/* Agreeing before reading opens the notice first. */}
       <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: agree }} onPress={() => (read ? setAgree((x) => !x) : setReading(true))} style={st.agreeRow}>
-        <View style={[st.check, agree && st.checkOn]}>{agree ? <SvgXml xml={CHECK} width={16} height={16} /> : null}</View>
+        <View style={[st.check, agree && st.checkOn]}>{agree ? <SvgXml xml={CHECK} width={16} height={16} style={{ flexShrink: 0 }} /> : null}</View>
         <View style={{ flexShrink: 1 }}>
           <Text style={st.agree}>
             I’ve read and agree to the{' '}

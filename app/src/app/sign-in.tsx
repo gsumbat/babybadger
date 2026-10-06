@@ -204,7 +204,7 @@ function CodeStep({
     <Screen title="Check your email" back onBack={back} gap={16} footer={<Button label="Sign in" onPress={verify} busy={busy} disabled={code.length < CODE_LENGTH} />}>
       <View style={[st.card, { marginTop: 4 }]}>
         <View style={st.cardIcon}>
-          <SvgXml xml={MAIL} width={22} height={22} />
+          <SvgXml xml={MAIL} width={22} height={22} style={{ flexShrink: 0 }} />
         </View>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Text style={st.cardTitle}>Code sent to</Text>

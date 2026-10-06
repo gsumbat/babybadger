@@ -28,4 +28,6 @@ $P -d t -f migrations/20261006000010_messages.sql
 $P -d t -f migrations/20261006000011_invite_access.sql
 $P -d t -f migrations/20261006000012_availability.sql
 $P -d t -f migrations/20261006000013_invite_preview_birthdate.sql
+$P -d t -f migrations/20261006000014_shift_timing.sql
+$P -d t -f migrations/20261006000015_incidents_alerts.sql
 $P -d t -f tests/rls_scenarios.sql

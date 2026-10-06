@@ -1,15 +1,19 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 
 import { KidDot, kidSub } from '@/components/bits';
 import { LiveMap } from '@/components/LiveMap';
+import { AskToStaySheet, WALK_ICON } from '@/components/timing';
 import { ActionGrid, dayPart, ErrorText, HomeHeader, Icon, initialsOf, Screen } from '@/components/ui';
 import { api, useQuery, useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
 import { describeLog, parentHomeState, workedMinutes } from '@/lib/shift-logic';
 import { rulesApi } from '@/lib/house-rules';
 import { useSession } from '@/lib/session';
+import { type ShiftTiming, usePendingExtension } from '@/lib/shift-timing';
+import { lateText } from '@/lib/shift-timing-logic';
 import { kv } from '@/lib/storage';
 import type { Kid, Shift } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
@@ -17,7 +21,8 @@ import { Text } from '@/components/Text';
 
 // Wireframes P4 (live), P4a (setup), P4e (setup skipped), P4b (idle), P4c (starting soon), P4d (ended), translated
 // from their HTML (app/src/wireframes/P4*.tsx). Left out until built: Message / Call / Ask for photo, kids' devices and
-// places, Needs you (invoices, requests), Approve hours, "On my way".
+// places, Needs you (invoices, requests), Approve hours, "On my way". P4c shows the sitter's late notice (S21) where it
+// draws "On my way"; P4 has an "Ask Maya to stay longer" link under the live card (S25 request; not drawn yet).
 
 // Optional steps (house rules, the care plan) count toward "n of 5 done" but don't keep the setup checklist open on their own.
 type Step = { done: boolean; locked?: boolean; optional?: boolean; title: string; next: string; sub: string; go: '/parent/kid/new' | '/parent/rules' | '/parent/care' | '/parent/invite?from=setup' | '/parent/shift/new' };
@@ -264,6 +269,8 @@ function FinishSetup({ steps, lock, onOpen }: { steps: Step[]; lock: string; onO
 // P4
 function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
   const { bundle } = useShiftLive(shift.id);
+  const { pending } = usePendingExtension(shift.id);
+  const [askOpen, setAskOpen] = useState(false);
   if (!bundle) return null;
   const done = bundle.tasks.filter((t) => t.done_at);
   const next = bundle.tasks.find((t) => !t.done_at);
@@ -292,6 +299,11 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
           </View>
         </View>
       </Pressable>
+      {/* Not in wireframe P4: asks her to stay longer (she answers on S25). An open request shows instead. */}
+      <Text accessibilityRole="button" onPress={() => setAskOpen(true)} style={st.askLink}>
+        {pending ? `Asked ${sitter} to stay until ${timeOf(pending.new_ends_at)} · waiting` : `Ask ${sitter} to stay longer`}
+      </Text>
+      <AskToStaySheet open={askOpen} onClose={() => setAskOpen(false)} shift={bundle.shift} sitter={sitter} />
       <Pressable onPress={() => router.push(`/parent/shift/${shift.id}`)} style={st.planCard}>
         <View style={st.labelRow}>
           <Text style={st.bold15}>Today’s plan</Text>
@@ -331,6 +343,8 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
 // P4c
 function Soon({ shift, minutes, sitter }: { shift: Shift; minutes: number; sitter: string }) {
   const { bundle } = useShiftLive(shift.id);
+  // The late notice (S21) arrives live through the shift's Realtime updates.
+  const late = (bundle?.shift ?? shift) as ShiftTiming;
   const avoid = (bundle?.kids ?? []).filter((k) => k.avoid_foods || k.allergies);
   return (
     <>
@@ -345,6 +359,15 @@ function Soon({ shift, minutes, sitter }: { shift: Shift; minutes: number; sitte
           </View>
           <Avatar name={sitter} size={52} letterSize={23} />
         </View>
+        {late.late_minutes ? (
+          <View style={st.onWay}>
+            <SvgXml xml={WALK_ICON} width={20} height={20} style={{ flexShrink: 0 }} />
+            <Text style={st.onWayText}>
+              <Text style={{ fontFamily: font.bodyBold }}>{lateText(sitter, late.late_minutes)}</Text>
+              {late.late_note ? ` · ${late.late_note}` : ''}
+            </Text>
+          </View>
+        ) : null}
       </Pressable>
       <View style={st.note}>
         <Text style={st.noteText}>Her location starts sharing when she clocks in at your home. Not before.</Text>
@@ -530,6 +553,10 @@ const st = StyleSheet.create({
   // P4c
   blue: { gap: 12, padding: 16, backgroundColor: color.primary, borderRadius: 20 },
   blueSmall: { fontFamily: font.body, fontSize: 13, color: '#FFFFFF', opacity: 0.85 },
+  // P4c "On my way" line, used for the late notice.
+  onWay: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: 12 },
+  onWayText: { fontFamily: font.body, fontSize: 14, lineHeight: 19, color: '#FFFFFF', flexShrink: 1 },
+  askLink: { fontFamily: font.bodySemi, fontSize: 14, color: color.primary, textDecorationLine: 'underline', textAlign: 'center' },
   blueBig: { fontFamily: font.display, fontSize: 40, color: '#FFFFFF', marginVertical: -10.04 },
   note: { paddingVertical: 10, paddingHorizontal: 14, backgroundColor: color.primaryTint, borderRadius: 12 },
   noteText: { fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.primaryStrong },

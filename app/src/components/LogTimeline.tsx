@@ -10,13 +10,14 @@ import { color } from '@/theme';
 
 import { Icon, type IconName, T } from './ui';
 
-const ICON: Record<LogKind, { icon: IconName; bg: string; fg: string }> = {
+export const LOG_ICON: Record<LogKind, { icon: IconName; bg: string; fg: string }> = {
   food: { icon: 'coffee', bg: color.warnTint, fg: color.warnInk },
   nap: { icon: 'moon', bg: '#ECE7F5', fg: '#6A5A9E' },
   activity: { icon: 'play-circle', bg: color.primaryTint, fg: color.primary },
   diaper: { icon: 'droplet', bg: color.primaryTint, fg: color.primary },
   note: { icon: 'file-text', bg: color.muted, fg: color.ink2 },
   photo: { icon: 'camera', bg: color.accentTint, fg: '#8A5A7A' },
+  incident: { icon: 'alert-triangle', bg: color.badTint, fg: color.bad },
 };
 
 export function LogTimeline({ logs, kids, compact }: { logs: LogEntry[]; kids: Kid[]; compact?: boolean }) {
@@ -47,7 +48,7 @@ export function LogTimeline({ logs, kids, compact }: { logs: LogEntry[]; kids: K
     <View style={{ gap: 12 }}>
       {logs.map((l) => {
         const d = describeLog(l);
-        const ic = ICON[l.kind];
+        const ic = LOG_ICON[l.kind] ?? LOG_ICON.note;
         const who = kidNames(l.kid_ids);
         return (
           <View key={l.id} style={{ flexDirection: 'row', gap: 12 }}>

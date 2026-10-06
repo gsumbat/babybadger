@@ -101,6 +101,9 @@ export function describeLog(log: Pick<LogEntry, 'kind' | 'data'>): { title: stri
       return { title: d.potty ? `Potty: ${d.potty}` : 'Diaper', detail: [diaperLabel(d.diaper), d.note].filter(Boolean).join(' · ') };
     case 'photo':
       return { title: 'Photo update', detail: d.caption ?? '' };
+    case 'incident':
+      // S24 (migration 15 sends the same words): "Incident: Fall or bump", "Backyard · Scraped his knee…"
+      return { title: `Incident: ${d.type || 'Other'}`, detail: [d.where, d.text].filter(Boolean).join(' · ') };
     case 'note':
     default:
       return { title: cap(d.category || 'Note'), detail: d.text ?? '' };

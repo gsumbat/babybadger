@@ -34,7 +34,7 @@ export function StrengthPill({ strength }: { strength: RuleStrength }) {
 export function RuleRow({ icon, title, sub, strength, last, compact, onPress }: { icon: RuleIcon; title: string; sub?: string; strength: RuleStrength; last?: boolean; compact?: boolean; onPress?: () => void }) {
   const inner = (
     <View style={[st.row, compact && st.rowCompact, !last && st.line]}>
-      <SvgXml xml={ruleIconXml(icon, color.primary)} width={20} height={20} />
+      <SvgXml xml={ruleIconXml(icon, color.primary)} width={20} height={20} style={{ flexShrink: 0 }} />
       <View style={st.text}>
         <Text style={st.title}>{title}</Text>
         {sub ? <Text style={st.sub}>{sub}</Text> : null}

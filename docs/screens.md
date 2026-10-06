@@ -44,6 +44,10 @@ If a screen needs something no wireframe covers, it goes into the canvas first, 
 | `onboarding` (sitter) / `sitter/join` → S1 → S42 → S2 | S51, S1 Invite (component), S42, S2 | Decline reason; S51 "Your name" field shows only for brand-new sitters (not drawn) |
 | `parent/(tabs)/calendar` | P6a CalDay, P6b CalWeek, P6c CalMonth | Waiting/requests, trip/food tags, booking with the tapped date |
 | `sitter/(tabs)/calendar`, `sitter/availability` | S6, S6a CalDay, S6c CalMonth, S11 Availability | Requests, travel time, pay cards, editing/removing time off (needs a design) |
+| S3 "Running late?" → sheet | S21 RunningLate; parent sees P4h (late notice on "starting soon") | Distance card (needs places); S22 footer entry |
+| `parent/(tabs)/index` live link → sheet; `sitter/shift/[id]` card | P4g AskStayLonger (parent), S25 ExtendShift (sitter, inline on S4) | S25 dimmed-background presentation; "Location sharing keeps running…" line |
+| `sitter/incident/[shiftId]` (from S4 "Report an injury") | S24 Incident | — |
+| `parent/alerts` (urgent pushes open it) | P9 Alerts | Off-plan location card, trip/arrival rows, "Call Maya" (no phone stored); no visible entry from Home yet |
 
 ## HTML is the source
 
@@ -59,8 +63,8 @@ pixels different (mostly text anti-aliasing); the real screens are held to the s
 
 ## Ported from generated layouts
 
-All 61 built screens are rebuilt from `app/src/wireframes/<ID>.tsx` with live data:
-P0, P0b, P1, P3, P3b, P4, P4a, P4b, P4c, P4d, P4e, P5, P6b, P7, P12b, P18, P18e, P19, P19e, P20, P20a, P20b, P20c, P20d, P20e, P20f, P20g, P23, P24, P25, P26, P6a, P6c, P10, P74, P75, P76, P54, P54b, P55, S2, S2a, S3, S3b, S3d, S4, S5, S9, S10, S39, S44, S45, S50, S51, S1, S6a, S6c, S11, S37, S42, S43.
+All 67 built screens are rebuilt from `app/src/wireframes/<ID>.tsx` with live data:
+P0, P0b, P1, P3, P3b, P4, P4a, P4b, P4c, P4d, P4e, P5, P6b, P7, P12b, P18, P18e, P19, P19e, P20, P20a, P20b, P20c, P20d, P20e, P20f, P20g, P23, P4g, P4h, P9, P24, P25, P26, P6a, P6c, P10, P74, P75, P76, P54, P54b, P55, S2, S2a, S3, S3b, S3d, S4, S5, S9, S10, S39, S44, S45, S50, S51, S1, S6a, S6c, S11, S37, S42, S43, S21, S24, S25.
 
 ## How screens are checked
 

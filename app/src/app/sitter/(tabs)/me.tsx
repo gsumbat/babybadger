@@ -78,7 +78,7 @@ export default function Me() {
       <View style={st.card}>
         <Pressable accessibilityRole="button" onPress={settings} style={st.row}>
           <View style={st.rowIcon}>
-            <SvgXml xml={SETTINGS} width={18} height={18} />
+            <SvgXml xml={SETTINGS} width={18} height={18} style={{ flexShrink: 0 }} />
           </View>
           <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
             <Text style={st.rowTitle}>Settings, privacy and help</Text>

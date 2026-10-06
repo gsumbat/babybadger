@@ -39,7 +39,7 @@ export function CareIcon({ type }: { type: CareType }) {
   const t = CARE_TINT[type];
   return (
     <View style={{ width: 34, height: 34, flexShrink: 0, borderRadius: 14, backgroundColor: t.bg, alignItems: 'center', justifyContent: 'center' }}>
-      <SvgXml xml={careIconXml(type, t.fg)} width={22} height={22} />
+      <SvgXml xml={careIconXml(type, t.fg)} width={22} height={22} style={{ flexShrink: 0 }} />
     </View>
   );
 }

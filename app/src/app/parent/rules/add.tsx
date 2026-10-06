@@ -57,7 +57,7 @@ export default function AddRules() {
               const toggle = have.has(c.key) ? undefined : () => setPicked((p) => (p.includes(c.key) ? p.filter((k) => k !== c.key) : [...p, c.key]));
               return (
                 <Pressable key={c.key} accessibilityRole="checkbox" accessibilityState={{ checked: on, disabled: have.has(c.key) }} onPress={toggle} style={[st.chip, on ? st.chipOn : st.chipOff]}>
-                  <SvgXml xml={on ? CHECK : PLUS} width={14} height={14} />
+                  <SvgXml xml={on ? CHECK : PLUS} width={14} height={14} style={{ flexShrink: 0 }} />
                   <Text style={[st.chipText, { color: on ? color.primaryStrong : color.ink }]}>{c.chip}</Text>
                 </Pressable>
               );

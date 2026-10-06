@@ -22,6 +22,8 @@ code copies those designs.
 - Dropdowns use `SelectField` from `app/src/components/SelectField.tsx` (the wireframes' select box).
 - Text and TextInput come from `@/components/Text` (caps iOS text scaling so sizes match the wireframes).
 - Every UI change goes into both the app and the canvas wireframe, in the same step.
+- Realtime: every `supabase.channel(...)` name must be unique per subscription (add a random suffix). A shared name
+  crashes with "cannot add postgres_changes callbacks after subscribe()" when two screens watch the same row.
 
 ## Where the designs live
 

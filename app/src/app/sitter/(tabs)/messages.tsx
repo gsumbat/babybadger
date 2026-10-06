@@ -132,7 +132,7 @@ export default function Messages() {
           <Text style={st.name}>{[parentName, shortFamily(chosen.family.name)].filter(Boolean).join(' · ')}</Text>
           {onShift ? <OnShift>{`You're on shift until ${timeOf(onShift.ends_at)}`}</OnShift> : null}
         </View>
-        <SvgXml xml={CHEVRON_S37} width={20} height={20} />
+        <SvgXml xml={CHEVRON_S37} width={20} height={20} style={{ flexShrink: 0 }} />
       </Pressable>
     </View>
   );

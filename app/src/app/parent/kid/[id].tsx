@@ -42,7 +42,7 @@ export default function KidProfile() {
             {kid.name}
           </Text>
           <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/kid/new?id=${kid.id}&step=1`)} style={st.edit}>
-            <SvgXml xml={PENCIL} width={16} height={16} />
+            <SvgXml xml={PENCIL} width={16} height={16} style={{ flexShrink: 0 }} />
             <Text style={st.editText}>Edit</Text>
           </Pressable>
         </View>
@@ -58,7 +58,7 @@ export default function KidProfile() {
 
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <Pressable accessibilityRole="button" onPress={() => router.push('/parent/care')} style={st.tile}>
-          <SvgXml xml={LIST} width={20} height={20} />
+          <SvgXml xml={LIST} width={20} height={20} style={{ flexShrink: 0 }} />
           <Text style={st.tileText}>{kid.gender ? `${pronouns(kid.gender).poss[0].toUpperCase()}${pronouns(kid.gender).poss.slice(1)} plan` : 'Plan'}</Text>
         </Pressable>
         <View style={{ flex: 1 }} />
@@ -67,7 +67,7 @@ export default function KidProfile() {
 
       {kid.allergies || rest ? (
         <View style={st.note}>
-          <SvgXml xml={HEART_PLUS} width={20} height={20} />
+          <SvgXml xml={HEART_PLUS} width={20} height={20} style={{ flexShrink: 0 }} />
           <Text style={st.noteText}>
             {kid.allergies ? <Text style={{ fontFamily: font.bodyBold }}>Allergic to {kid.allergies}.</Text> : null}
             {kid.allergies && rest ? ' ' : ''}
