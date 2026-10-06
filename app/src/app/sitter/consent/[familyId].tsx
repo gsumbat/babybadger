@@ -2,13 +2,12 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { SetRow } from '@/components/bits';
 
 import { Button, Card, ErrorText, Field, Icon, Label, Screen, T } from '@/components/ui';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { NOTICE_VERSION, TERMS_VERSION } from '@/lib/types';
-import { color, font } from '@/theme';
+import { cardShadow, color, font } from '@/theme';
 
 // [LEGAL REVIEW] Placeholder text. Final notice wording depends on state law and must come from counsel.
 const NOTICE = (family: string) => [
@@ -89,25 +88,32 @@ export default function Consent() {
           <T variant="small">Off</T>
         </View>
       </Card>
-      <Card style={{ paddingVertical: 0 }}>
-        <SetRow label="Employer" value={family} />
-        <SetRow label="Collected" value="Location, times, entries" />
-        <SetRow label="Seen by" value="Parents in this family" />
-        <SetRow label="Kept for" value="[RETENTION PERIOD]" last />
-      </Card>
+      <View style={st.facts}>
+        {[
+          ['Employer', family],
+          ['Collected', 'Location, times, entries'],
+          ['Seen by', 'Parents in this family'],
+          ['Kept for', '[RETENTION PERIOD]'],
+        ].map(([k, v], i) => (
+          <View key={k} style={[st.fact, i < 3 && { borderBottomWidth: 1, borderBottomColor: color.divider }]}>
+            <Text style={st.factKey}>{k}</Text>
+            <Text style={st.factVal}>{v}</Text>
+          </View>
+        ))}
+      </View>
       <Label right={<T variant="small">Required</T>}>Read before you sign</Label>
-      <Card style={{ paddingVertical: 4 }}>
+      <View style={[st.facts, { paddingVertical: 0, paddingHorizontal: 14 }]}>
         <Pressable accessibilityRole="button" onPress={() => setReading(true)} style={st.docRow}>
           <View style={st.docIcon}>
             <Icon name={read ? 'check' : 'file-text'} size={18} tint={read ? color.ok : color.primary} />
           </View>
           <View style={{ flex: 1 }}>
-            <T variant="strong">Monitoring notice</T>
-            <T variant="small">{read ? 'Read' : `From ${family} · 2 min read`}</T>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 15, lineHeight: 19, color: color.ink }}>Monitoring notice</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 12, color: color.ink2 }}>{read ? 'Read ✓' : `From ${family} · 2 min read`}</Text>
           </View>
           <Icon name="chevron-right" size={18} tint={color.ink2} />
         </Pressable>
-      </Card>
+      </View>
       <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: agree, disabled: !read }} onPress={() => read && setAgree((x) => !x)} style={{ flexDirection: 'row', gap: 10, alignItems: 'flex-start', opacity: read ? 1 : 0.5 }}>
         <View style={[st.check, agree && st.checkOn]}>{agree ? <Icon name="check" size={16} tint="#FFFFFF" /> : null}</View>
         <T style={{ flex: 1 }}>I’ve read and agree to the monitoring notice, the Terms and the Privacy policy.</T>
@@ -120,6 +126,11 @@ export default function Consent() {
 }
 
 const st = StyleSheet.create({
+  // S2 values
+  facts: { paddingVertical: 4, paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
+  fact: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 9 },
+  factKey: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
+  factVal: { fontFamily: font.bodySemi, fontSize: 14, color: color.ink, flexShrink: 1 },
   short: { backgroundColor: color.primaryTint, borderRadius: 18, padding: 14, gap: 6 },
   shortLabel: { fontFamily: font.bodyBold, fontSize: 12, letterSpacing: 0.6, color: color.primaryStrong },
   h: { fontFamily: font.bodyBold, fontSize: 16, color: color.ink },

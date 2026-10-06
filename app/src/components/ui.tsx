@@ -81,7 +81,7 @@ export function Screen({
   const titleBlock = (size: 'back' | 'tab' | 'step') =>
     title || subtitle ? (
       <View style={{ flex: size === 'step' ? undefined : 1, minWidth: 0 }}>
-        {title ? <Text style={[s.hTitle, size === 'back' && s.hTitleBack]}>{title}</Text> : null}
+        {title ? <Text style={[s.hTitle, size === 'back' && s.hTitleBack, size === 'step' && s.hTitleStep]}>{title}</Text> : null}
         {subtitle ? <Text style={s.subtitle}>{subtitle}</Text> : null}
       </View>
     ) : (
@@ -434,6 +434,8 @@ const s = StyleSheet.create({
   // No lineHeight on Baloo titles: on iOS a lineHeight smaller than the font's natural height pushes the glyphs off-center.
   hTitle: { fontFamily: font.display, fontSize: 26, color: color.ink },
   hTitleBack: { fontSize: 22, marginVertical: -4.62 },
+  // Stacked titles often wrap to two lines, so they keep the wireframe's line height.
+  hTitleStep: { fontSize: 24, lineHeight: 30 },
   headerStack: { paddingHorizontal: space.xl, paddingTop: 8, paddingBottom: 8, gap: 14 },
   backRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44 },
   stepText: { flex: 1, fontFamily: font.bodySemi, fontSize: 14, color: color.ink2 },

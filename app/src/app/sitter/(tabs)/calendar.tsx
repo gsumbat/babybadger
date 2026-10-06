@@ -1,23 +1,20 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
 
-import { ShiftList, WeekStrip } from '@/components/calendar';
+import { WeekCalendar } from '@/components/calendar';
 import { ErrorText, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { useSession } from '@/lib/session';
 
-// Wireframe S6: week strip and the shifts families booked with you.
+// Wireframe S6 (same week layout as P6b).
 export default function SitterCalendar() {
   const { session, sitterLinks } = useSession();
   const uid = session!.user.id;
   const { data: shifts, error } = useQuery(() => api.sitterShifts(uid), [uid]);
-  const [day, setDay] = useState(() => new Date());
-  const fam = (fid: string) => sitterLinks.find((l) => l.family_id === fid)?.family.name ?? 'Family';
+  const fam = (fid: string) => (sitterLinks.find((l) => l.family_id === fid)?.family.name ?? 'Family').replace(/^The /, '');
   return (
-    <Screen title="Calendar">
+    <Screen title="Calendar" gap={8}>
       <ErrorText>{error}</ErrorText>
-      <WeekStrip day={day} onDay={setDay} shifts={shifts ?? []} />
-      <ShiftList shifts={shifts ?? []} day={day} title={(s) => fam(s.family_id)} onOpen={(s) => router.push(`/sitter/shift/${s.id}`)} empty="Nothing booked this day." />
+      <WeekCalendar shifts={shifts ?? []} title={(s) => fam(s.family_id)} onOpen={(s) => router.push(`/sitter/shift/${s.id}`)} emptyText="Free" />
     </Screen>
   );
 }

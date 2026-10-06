@@ -58,7 +58,18 @@ export default function Invite() {
     );
 
   return (
-    <Screen title="Invite your sitter" subtitle="Someone you already know and trust" back footer={<Button label="Continue" onPress={create} busy={busy} disabled={name.trim().length < 2} />}>
+    <Screen
+      caption="Invite a sitter"
+      back
+      gap={14}
+      footer={
+        <>
+          <Button label="Continue" onPress={create} busy={busy} disabled={name.trim().length < 2} />
+          <Text style={st.next}>Next: you get a code to send {name.trim() ? first : 'her'}</Text>
+        </>
+      }>
+      <Text style={st.title}>Invite your sitter</Text>
+      <Text style={st.lead}>Someone you already know and trust. Finding new sitters comes later.</Text>
       <Field label="Name" value={name} onChangeText={setName} placeholder="Maya" autoComplete="name" autoCapitalize="words" autoFocus />
       <View style={st.info}>
         <Icon name="shield" size={20} tint={color.primary} />
@@ -75,6 +86,10 @@ export default function Invite() {
 }
 
 const st = StyleSheet.create({
+  // P3 values
+  title: { fontFamily: font.display, fontSize: 26, color: color.ink, marginVertical: -4.83 },
+  lead: { fontFamily: font.body, fontSize: 15, lineHeight: 22, color: color.ink2, marginTop: -6 },
+  next: { fontFamily: font.body, fontSize: 13, color: color.ink2, textAlign: 'center' },
   preview: { backgroundColor: '#FFFFFF', borderRadius: 24, padding: 18, gap: 8, ...cardShadow },
   previewTitle: { fontFamily: font.display, fontSize: 20, color: color.ink },
   code: { fontFamily: font.display, fontSize: 42, letterSpacing: 8, color: color.primaryStrong, textAlign: 'center', marginVertical: 6 },
