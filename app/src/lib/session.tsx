@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import { unregisterPush } from './push';
 import { isConfigured, supabase } from './supabase';
 import type { Family, Profile, SitterLink } from './types';
 
@@ -35,7 +36,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
     const uid = s.user.id;
     const [{ data: prof }, { data: parentOf }, { data: links }] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, role').eq('id', uid).maybeSingle(),
+      supabase.from('profiles').select('id, full_name, role, alert_logs').eq('id', uid).maybeSingle(),
       supabase.from('family_parents').select('family:families(id, name)').eq('user_id', uid).limit(1),
       supabase.from('family_sitters').select('family_id, sitter_id, status, joined_at, family:families(id, name)').eq('sitter_id', uid).neq('status', 'removed'),
     ]);
@@ -69,6 +70,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       sitterLinks,
       refresh: () => load(session),
       signOut: async () => {
+        await unregisterPush().catch(() => {});
         await supabase.auth.signOut();
       },
     }),

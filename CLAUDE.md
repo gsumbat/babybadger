@@ -51,8 +51,10 @@ Run typecheck, lint and tests before every commit. Commit to `main` on github.co
 
 - Core shift loop works: family, kids, invite code, consent, booking, clock in/out, live map, tasks, logs, report.
 - All 25 built screens are ported from their wireframes (list in docs/screens.md).
-- Next: an iOS development build (background location); then phase 1 of the build plan
-  (push notifications, house rules, messages, places, phone sign-in).
+- Push alerts to parents (clock-in, clock-out, each log; P12 "Food and tasks" switch): migration 05 sends them
+  through pg_net and Expo's push service. Setup: `docs/dev-build.md`.
+- Next: George's first iOS development build (EAS, Jobbadger LLC Apple account, bundle id
+  `com.jobbadger.babybadger`); then the rest of phase 1 (house rules, messages, places, phone sign-in).
 
 ## Working with George
 

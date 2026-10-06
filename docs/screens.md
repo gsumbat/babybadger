@@ -19,7 +19,7 @@ If a screen needs something no wireframe covers, it goes into the canvas first, 
 | `parent/invite` | P3 Invite → P24 Review and send | Phone number, rate, requirements; the app shares a code instead of a personal link |
 | `parent/kid/new` | P18 AddChild, P19 ChildCare | P20 routine, P21 sitter access, Add a photo, Lives at home |
 | `parent/(tabs)/messages` | P10 Messages | Messaging (placeholder) |
-| `parent/(tabs)/settings` | P12 Settings | Alerts toggles, homes and places, house rules, subscription |
+| `parent/(tabs)/settings` | P12 Settings | Arrivals and off-plan/help alert rows (need places and help alerts), homes and places, house rules, subscription |
 | `sitter/(tabs)/index` | S3 Today / S3b HomeFree | Running late, credentials, invoices, pay stats, pool requests |
 | `sitter/consent/[familyId]` | S2 Consent, S2a Monitoring notice | Terms and Privacy documents ([LEGAL REVIEW]) |
 | `sitter/shift/[id]` | S4 ActiveShift, S9 EndShift | Trips, house rules due, fix times, report injury |

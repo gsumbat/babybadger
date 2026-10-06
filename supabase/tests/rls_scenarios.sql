@@ -23,10 +23,25 @@ select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
 insert into ctx values ('fam', (select public.create_family('The Lee family', 'Jen Lee')::text));
 insert into kids (family_id, name, avoid_foods) select v::uuid, 'Ava', 'peanuts' from ctx where k = 'fam';
 insert into ctx values ('code', (select public.create_invite((select v::uuid from ctx where k='fam'), 'Maya')));
-
--- 2. Stranger can't see the family or kids
-select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+select public.register_push_token('ExponentPushToken[jen-phone]', 'ios');
 do $$ begin
+  perform public.register_push_token('not-a-token', 'ios');
+  raise exception 'FAIL accepted a bad push token';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+
+-- 2. Stranger can't see the family, kids or anyone's phone; can't send alerts
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+select public.register_push_token('ExponentPushToken[stranger-phone]', 'ios');
+do $$ begin
+  if (select count(*) from push_tokens) <> 1 then raise exception 'FAIL stranger sees other push tokens'; end if;
+  begin
+    perform public.notify_parents((select v::uuid from ctx where k='fam'), 'hi', 'hi', '/', false);
+    raise exception 'FAIL stranger can send alerts';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.first_name_of('00000000-0000-0000-0000-00000000000a');
+    raise exception 'FAIL stranger can read names';
+  exception when insufficient_privilege then null; end;
   if (select count(*) from families) <> 0 then raise exception 'FAIL stranger sees family'; end if;
   if (select count(*) from kids) <> 0 then raise exception 'FAIL stranger sees kids'; end if;
 end $$;
@@ -34,6 +49,7 @@ end $$;
 -- 3. Maya accepts the invite: sees family, but not kids until consent
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 select public.accept_invite((select v from ctx where k='code'), 'Maya Rodriguez');
+select public.register_push_token('ExponentPushToken[maya-phone]', 'ios');
 do $$ begin
   if (select count(*) from families) <> 1 then raise exception 'FAIL sitter cannot see family after invite'; end if;
   if (select count(*) from kids) <> 0 then raise exception 'FAIL sitter sees kids before consent'; end if;
@@ -117,4 +133,23 @@ do $$ declare n int; begin
 end $$;
 
 reset role;
+
+-- 12. Alerts: clock-in, the snack log and clock-out each went to Jen's phone only
+do $$ declare b jsonb; begin
+  if (select count(*) from net.sent) <> 3 then raise exception 'FAIL expected 3 alert sends, got %', (select count(*) from net.sent); end if;
+  if exists (select 1 from net.sent, jsonb_array_elements(body) m where m->>'to' <> 'ExponentPushToken[jen-phone]') then raise exception 'FAIL alert sent to a non-parent'; end if;
+  select body into b from net.sent order by id limit 1 offset 1;
+  if b->0->>'title' <> 'Snack' or b->0->>'body' <> 'apple slices · ate all' then raise exception 'FAIL log alert text: %', b; end if;
+  if (select body->0->>'title' from net.sent order by id limit 1) <> 'Maya clocked in' then raise exception 'FAIL clock-in alert text'; end if;
+end $$;
+-- 13. Jen turns off "Food and tasks": logs stop, clock alerts stay
+update profiles set alert_logs = false where id = '00000000-0000-0000-0000-00000000000a';
+delete from net.sent;
+insert into logs (shift_id, author_id, kind, data) select v::uuid, '00000000-0000-0000-0000-00000000000b', 'note', '{"text":"hi"}' from ctx where k='shift';
+insert into logs (shift_id, author_id, kind, data, urgent) select v::uuid, '00000000-0000-0000-0000-00000000000b', 'note', '{"text":"fell"}', true from ctx where k='shift';
+do $$ begin
+  if (select count(*) from net.sent) <> 1 then raise exception 'FAIL alert_logs off should send only the urgent entry'; end if;
+  if (select body->0->>'title' from net.sent) <> 'Urgent: Note' then raise exception 'FAIL urgent title: %', (select body->0->>'title' from net.sent); end if;
+end $$;
+
 select 'ALL RLS SCENARIOS PASSED' as result;

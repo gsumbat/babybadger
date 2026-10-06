@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { Loading } from '@/components/ui';
 import '@/lib/location-sharing'; // registers the background location task at startup
+import { listenForAlertTaps, registerForPush } from '@/lib/push';
 import { SessionProvider, useSession } from '@/lib/session';
 import { color } from '@/theme';
 
@@ -17,12 +18,20 @@ SplashScreen.preventAutoHideAsync();
 
 function Routes() {
   const { loading, session, profile, family, sitterLinks } = useSession();
-  if (loading) return <Loading />;
-
   const signedIn = !!session;
   const isParent = signedIn && profile?.role === 'parent' && !!family;
   const isSitter = signedIn && profile?.role === 'sitter' && sitterLinks.length > 0;
   const needsOnboarding = signedIn && !isParent && !isSitter;
+  const ready = isParent || isSitter;
+
+  // Once signed in to a family: the system asks to allow notifications, and tapped alerts open their screen.
+  useEffect(() => {
+    if (!ready) return;
+    void registerForPush();
+    return listenForAlertTaps();
+  }, [ready]);
+
+  if (loading) return <Loading />;
 
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.canvas } }}>

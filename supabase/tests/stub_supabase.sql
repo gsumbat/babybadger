@@ -12,3 +12,9 @@ end $$;
 grant usage on schema public, auth to authenticated, anon;
 -- No default grants: migrations must grant access explicitly (like a project with auto-expose off).
 grant execute on function auth.uid() to authenticated, anon;
+
+-- Stand-in for Supabase's pg_net: records outgoing requests instead of sending them.
+create schema if not exists net;
+create table if not exists net.sent (id bigserial primary key, url text, body jsonb, headers jsonb, at timestamptz default now());
+create or replace function net.http_post(url text, body jsonb default '{}', params jsonb default '{}', headers jsonb default '{}', timeout_milliseconds int default 5000)
+returns bigint language sql as $$ insert into net.sent (url, body, headers) values (url, body, headers) returning id $$;

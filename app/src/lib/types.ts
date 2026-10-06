@@ -1,6 +1,6 @@
 export type Role = 'parent' | 'sitter';
 
-export type Profile = { id: string; full_name: string; role: Role | null };
+export type Profile = { id: string; full_name: string; role: Role | null; alert_logs?: boolean };
 
 export type Family = { id: string; name: string };
 

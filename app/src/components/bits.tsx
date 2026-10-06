@@ -108,7 +108,25 @@ export function SetRow({ label, value, onPress, last }: { label: string; value?:
   );
 }
 
+/** Settings row with a switch, from wireframe P12 › Alerts (50×30 track, 24 knob). */
+export function ToggleRow({ label, sub, value, onChange, last }: { label: string; sub?: string; value: boolean; onChange: (v: boolean) => void; last?: boolean }) {
+  return (
+    <Pressable accessibilityRole="switch" accessibilityState={{ checked: value }} accessibilityLabel={label} onPress={() => onChange(!value)} style={[sr.row, { minHeight: 56, justifyContent: 'space-between' }, !last && sr.line]}>
+      <View style={{ flexShrink: 1 }}>
+        <Text style={sr.label}>{label}</Text>
+        {sub ? <Text style={sr.sub}>{sub}</Text> : null}
+      </View>
+      <View style={[sr.track, { backgroundColor: value ? color.primary : '#C3CCD5' }]}>
+        <View style={[sr.knob, value ? { right: 3 } : { left: 3 }]} />
+      </View>
+    </Pressable>
+  );
+}
+
 const sr = StyleSheet.create({
+  sub: { fontFamily: font.body, fontSize: 13, color: '#5F6D74' },
+  track: { width: 50, height: 30, borderRadius: 15, flexShrink: 0 },
+  knob: { position: 'absolute', top: 3, width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFFFFF' },
   row: { flexDirection: 'row', alignItems: 'center', minHeight: 52, gap: 8 },
   line: { borderBottomWidth: 1, borderBottomColor: color.divider },
   label: { fontFamily: font.body, fontSize: 15, color: color.ink },

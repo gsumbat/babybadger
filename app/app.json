@@ -9,7 +9,7 @@
     "userInterfaceStyle": "light",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.babybadger.app",
+      "bundleIdentifier": "com.jobbadger.babybadger",
       "supportsTablet": false,
       "infoPlist": {
         "UIBackgroundModes": [
@@ -25,7 +25,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.babybadger.app"
+      "package": "com.jobbadger.babybadger"
     },
     "web": {
       "output": "static",
@@ -57,6 +57,12 @@
         {
           "photosPermission": "Choose a photo to send to the parents during a shift.",
           "cameraPermission": "Take a photo to send to the parents during a shift."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#47698A"
         }
       ]
     ],
