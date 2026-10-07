@@ -53,6 +53,11 @@
               "scheme": "https",
               "host": "babybadger.app",
               "pathPrefix": "/f/"
+            },
+            {
+              "scheme": "https",
+              "host": "babybadger.app",
+              "pathPrefix": "/m/"
             }
           ],
           "category": [

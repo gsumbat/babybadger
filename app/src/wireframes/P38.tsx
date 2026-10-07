@@ -43,7 +43,7 @@ export default function WF_P38() {
             </View>
           </View>
         </View>
-        <View style={{ paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 14 }}><Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#34526E", lineHeight: 20 }}>Sam is covered too.</Text> One plan for your household. Invite him in Settings › Parents.</Text></View>
+        <View style={{ paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 14 }}><Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#34526E", lineHeight: 20 }}>Sam is covered too.</Text> One plan for your household. Invite in Settings › Family members.</Text></View>
         <View style={{ flexGrow: 1, flexDirection: "column" }}>
         </View>
         <View style={{ flexDirection: "row" }}>

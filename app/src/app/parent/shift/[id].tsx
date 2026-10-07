@@ -9,6 +9,7 @@ import { Avatar, Button, Card, ErrorText, Icon, Loading, Pill, Screen, T } from 
 import { useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
 import { describeLog, workedMinutes } from '@/lib/shift-logic';
+import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
@@ -18,6 +19,8 @@ export default function ParentShift() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { bundle, error } = useShiftLive(id);
   const [, tick] = useState(0);
+  // A family helper (migration 30) can't cancel a booking.
+  const { familyRole } = useSession();
   useEffect(() => {
     const t = setInterval(() => tick((n) => n + 1), 30_000);
     return () => clearInterval(t);
@@ -163,7 +166,7 @@ export default function ParentShift() {
       title={shift.status === 'cancelled' ? 'Cancelled shift' : 'Booked shift'}
       subtitle={when}
       back
-      footer={shift.status === 'scheduled' ? <Button label="Cancel shift" kind="outline" onPress={cancel} /> : undefined}>
+      footer={shift.status === 'scheduled' && familyRole === 'parent' ? <Button label="Cancel shift" kind="outline" onPress={cancel} /> : undefined}>
       <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
         <Avatar name={name} size={48} />
         <View style={{ flex: 1 }}>

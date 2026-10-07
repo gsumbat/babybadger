@@ -3,6 +3,7 @@ import type { ComponentType } from 'react';
 
 import WF_C2 from './C2';
 import WF_E2w from './E2w';
+import WF_M0 from './M0';
 import WF_P0 from './P0';
 import WF_P0b from './P0b';
 import WF_P1 from './P1';
@@ -79,6 +80,7 @@ import WF_P4i from './P4i';
 import WF_P4j from './P4j';
 import WF_P4k from './P4k';
 import WF_P4l from './P4l';
+import WF_P4m from './P4m';
 import WF_P5 from './P5';
 import WF_P54 from './P54';
 import WF_P54b from './P54b';
@@ -110,6 +112,13 @@ import WF_P77 from './P77';
 import WF_P77b from './P77b';
 import WF_P77c from './P77c';
 import WF_P77d from './P77d';
+import WF_P78 from './P78';
+import WF_P78b from './P78b';
+import WF_P78c from './P78c';
+import WF_P78d from './P78d';
+import WF_P78e from './P78e';
+import WF_P78f from './P78f';
+import WF_P78s from './P78s';
 import WF_P7a from './P7a';
 import WF_P7b from './P7b';
 import WF_P8 from './P8';
@@ -202,6 +211,7 @@ import WF_S9 from './S9';
 export const WIREFRAMES: Record<string, ComponentType> = {
   C2: WF_C2,
   E2w: WF_E2w,
+  M0: WF_M0,
   P0: WF_P0,
   P0b: WF_P0b,
   P1: WF_P1,
@@ -278,6 +288,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P4j: WF_P4j,
   P4k: WF_P4k,
   P4l: WF_P4l,
+  P4m: WF_P4m,
   P5: WF_P5,
   P54: WF_P54,
   P54b: WF_P54b,
@@ -309,6 +320,13 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P77b: WF_P77b,
   P77c: WF_P77c,
   P77d: WF_P77d,
+  P78: WF_P78,
+  P78b: WF_P78b,
+  P78c: WF_P78c,
+  P78d: WF_P78d,
+  P78e: WF_P78e,
+  P78f: WF_P78f,
+  P78s: WF_P78s,
   P7a: WF_P7a,
   P7b: WF_P7b,
   P8: WF_P8,

@@ -5,7 +5,8 @@
         "appIDs": ["ZHR7DW76TD.com.jobbadger.babybadger"],
         "components": [
           { "/": "/i/*", "comment": "Family invite links (S0b)" },
-          { "/": "/f/*", "comment": "A sitter's family links (S0f)" }
+          { "/": "/f/*", "comment": "A sitter's family links (S0f)" },
+          { "/": "/m/*", "comment": "Family member links (M0)" }
         ]
       }
     ],

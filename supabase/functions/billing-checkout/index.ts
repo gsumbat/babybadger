@@ -43,8 +43,10 @@ Deno.serve(async (req) => {
     if (!price || !Deno.env.get('STRIPE_SECRET_KEY')) return json({ error: 'Billing is not set up yet.' }, 503);
 
     // 2. Only a parent of the family can buy its plan.
-    const { data: parent } = await admin.from('family_parents').select('user_id').eq('family_id', familyId).eq('user_id', user.id).maybeSingle();
-    if (!parent) return json({ error: 'Only a parent of this family can do that.' }, 403);
+    const { data: parent } = await admin.from('family_parents').select('*').eq('family_id', familyId).eq('user_id', user.id).maybeSingle();
+    // Family helpers (migration 30, role 'helper') are covered by the plan but can't manage it. Before migration 30 there
+    // is no role column: every row is a parent.
+    if (!parent || (parent as { role?: string }).role === 'helper') return json({ error: 'Only a parent of this family can do that.' }, 403);
     const { data: fam } = await admin.from('families').select('name').eq('id', familyId).maybeSingle();
     const { data: sub } = await admin.from('family_subscriptions').select('*').eq('family_id', familyId).maybeSingle();
 

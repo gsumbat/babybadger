@@ -16,6 +16,10 @@
       "destination": "/f/[token]"
     },
     {
+      "source": "/m/:token",
+      "destination": "/m/[token]"
+    },
+    {
       "source": "/((?!\\.well-known/|_expo/|assets/|img/|privacy$|terms$|robots\\.txt$|sitemap\\.xml$|styles\\.css$|favicon\\.|apple-touch-icon\\.png$).+)",
       "destination": "/app-shell"
     }

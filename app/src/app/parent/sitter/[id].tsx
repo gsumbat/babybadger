@@ -25,7 +25,9 @@ import { cardShadow, color, font } from '@/theme';
 // location consent, no credentials yet, the remove confirm.
 export default function SitterProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { family } = useSession();
+  const { family, familyRole } = useSession();
+  // A family helper (migration 30) messages the sitter; booking and removing her are the parents'.
+  const parent = familyRole === 'parent';
   const fid = family!.id;
   const { data, error } = useQuery(async () => {
     const [sitters, shifts, bundle, req, consent] = await Promise.all([
@@ -83,12 +85,14 @@ export default function SitterProfile() {
       footer={
         <>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Button label="Message" kind="tonal" onPress={() => router.push('/parent/messages')} style={st.half} />
-            <Button label="Book a shift" onPress={() => router.push({ pathname: '/parent/shift/new', params: { sitter: id } })} style={st.half} />
+            <Button label="Message" kind={parent ? 'tonal' : undefined} onPress={() => router.push('/parent/messages')} style={parent ? st.half : { flex: 1 }} />
+            {parent ? <Button label="Book a shift" onPress={() => router.push({ pathname: '/parent/shift/new', params: { sitter: id } })} style={st.half} /> : null}
           </View>
-          <Pressable accessibilityRole="button" onPress={confirmRemove} disabled={busy} style={st.removeRow}>
-            <Text style={st.remove}>Remove {first} from your family</Text>
-          </Pressable>
+          {parent ? (
+            <Pressable accessibilityRole="button" onPress={confirmRemove} disabled={busy} style={st.removeRow}>
+              <Text style={st.remove}>Remove {first} from your family</Text>
+            </Pressable>
+          ) : null}
         </>
       }>
       <ErrorText>{err}</ErrorText>

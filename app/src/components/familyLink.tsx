@@ -30,7 +30,7 @@ export function FamilyLinkHead() {
 }
 
 /** S0f page frame: the wireframe's 390 px column (24 px top, 16 gap), centred on wide screens. */
-function FamilyPage({ children }: { children: ReactNode }) {
+export function FamilyPage({ children }: { children: ReactNode }) {
   const insets = useSafeAreaInsets();
   return (
     <View style={st.page}>
@@ -64,7 +64,7 @@ export function SitterLinkCard({ preview, title, sub, saved, big }: { preview: F
   );
 }
 
-function Bullet({ icon, children }: { icon: IconName; children: string }) {
+export function Bullet({ icon, children }: { icon: IconName; children: string }) {
   return (
     <View style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start' }}>
       <Icon name={icon} size={20} tint={color.primary} />
@@ -109,7 +109,7 @@ export function FamilyLanding({ token, preview, onStart, onHaveApp }: { token: s
 }
 
 /** S0f store button: 48 px, the muted "Coming soon to …" box until the store link is set. */
-function Store({ label, url }: { label: string; url: string | null }) {
+export function Store({ label, url }: { label: string; url: string | null }) {
   if (!url)
     return (
       <View accessibilityRole="text" style={[st.store, { backgroundColor: color.muted }]}>

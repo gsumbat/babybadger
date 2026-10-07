@@ -8,14 +8,16 @@ import { Text } from '@/components/Text';
 import { ErrorText, Screen } from '@/components/ui';
 import { setTrialReminder, trialTimeline, usePlan } from '@/lib/billing';
 import { api, useQuery } from '@/lib/data';
+import { MAX_FAMILY_MEMBERS } from '@/lib/family-members';
 import { firstName } from '@/lib/format';
 import { useSession } from '@/lib/session';
 import { cardShadow, color, font } from '@/theme';
 
 // Wireframe P38 Trial started (after Stripe Checkout succeeds). Dates come from the trial on the family's plan
 // (30 days). "Remind me before it ends" = family_subscriptions.remind_trial (the webhook pushes 3 days before;
-// Stripe's own email reminder is set in the Stripe dashboard). The "<name> is covered too" card shows only when the
-// family has a second parent; its "Invite him in Settings › Parents" sentence is left out (no co-parent invite yet).
+// Stripe's own email reminder is set in the Stripe dashboard). The card reads "<name> is covered too. One plan for your
+// household. Invite in Settings › Family members." with a second family member; without one (not drawn) its first
+// sentence is "Up to 4 family members." (migration 30: one plan covers up to 4 adults).
 export default function TrialStarted() {
   const { family, profile } = useSession();
   const plan = usePlan();
@@ -69,13 +71,12 @@ export default function TrialStarted() {
         <ToggleRow label="Remind me before it ends" sub="Push, 3 days before" value={remind} onChange={toggle} last />
       </View>
       <ErrorText>{err}</ErrorText>
-      {other ? (
-        <View style={st.note}>
-          <Text style={st.noteText}>
-            <Text style={{ fontFamily: font.bodyBold, color: color.primaryStrong }}>{firstName(other.full_name)} is covered too.</Text> One plan for your household.
-          </Text>
-        </View>
-      ) : null}
+      <View style={st.note}>
+        <Text style={st.noteText}>
+          <Text style={{ fontFamily: font.bodyBold, color: color.primaryStrong }}>{other ? `${firstName(other.full_name)} is covered too.` : `Up to ${MAX_FAMILY_MEMBERS} family members.`}</Text> One plan for
+          your household. Invite in Settings › Family members.
+        </Text>
+      </View>
     </Screen>
   );
 }

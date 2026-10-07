@@ -2470,4 +2470,277 @@ do $$ begin
 end $$;
 reset role;
 
+-- 30. Family members (migration 30): up to 4 adults; parents run the family, helpers (grandma) watch and message.
+--     Bea runs the Bell family; Sia is their signed sitter on a live shift; Sue (grandma) joins as a helper, Ben (dad)
+--     as a parent, Ada (aunt) as a helper. A 5th is refused; the last parent stays; the email lock holds.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a3001', 'bea30@example.com'),
+  ('00000000-0000-0000-0000-0000000a3002', 'sia30@example.com'),
+  ('00000000-0000-0000-0000-0000000a3003', 'sue30@example.com'),
+  ('00000000-0000-0000-0000-0000000a3004', 'ben30@example.com'),
+  ('00000000-0000-0000-0000-0000000a3005', 'ada30@example.com'),
+  ('00000000-0000-0000-0000-0000000a3006', 'ivy30@example.com'),
+  ('00000000-0000-0000-0000-0000000a3007', 'wrong30@example.com');
+create or replace function pg_temp.must_fail(q text, pat text) returns void language plpgsql as $$
+begin
+  execute q;
+  raise exception 'FAIL should have failed: %', q;
+exception when others then
+  if sqlerrm like 'FAIL%' then raise; end if;
+  if sqlerrm not like pat then raise exception 'FAIL % gave "%" (wanted %)', q, sqlerrm, pat; end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3001');
+insert into ctx values ('fam30', (select public.create_family('The Bell family', 'Bea Bell')::text));
+insert into kids (family_id, name, avoid_foods) select v::uuid, 'Kit', 'eggs' from ctx where k = 'fam30';
+insert into care_items (family_id, type, title) select v::uuid, 'other', 'Feed the cat' from ctx where k = 'fam30';
+insert into ctx values ('code30', (select public.create_invite((select v::uuid from ctx where k = 'fam30'), 'Sia')));
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3002');
+select public.accept_invite((select v from ctx where k = 'code30'), 'Sia Moon');
+select public.sign_consent((select v::uuid from ctx where k = 'fam30'), 'Sia Moon', 'notice-1.0', 'terms-1.0');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3001');
+with x as (
+  insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by)
+  select v::uuid, '00000000-0000-0000-0000-0000000a3002', now() - interval '10 minutes', now() + interval '3 hours', auth.uid() from ctx where k = 'fam30'
+  returning id) insert into ctx select 'shift30', id from x;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3002');
+select public.clock_in((select v::uuid from ctx where k = 'shift30'));
+with x as (
+  insert into logs (shift_id, author_id, kind, data) select v::uuid, auth.uid(), 'photo', '{"caption":"Blocks"}' from ctx where k = 'shift30' returning id)
+insert into ctx select 'log30', id from x;
+-- the old creator row is a parent
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3001');
+do $$ begin
+  if (select role from family_parents where user_id = auth.uid()) <> 'parent' then raise exception 'FAIL creator is not a parent'; end if;
+  if not public.is_parent_of((select v::uuid from ctx where k = 'fam30')) then raise exception 'FAIL creator is_parent_of'; end if;
+end $$;
+-- Bea invites Sue (grandma) as a helper, locked to her email
+insert into ctx select 'inv30', public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Grandma Sue', 'Grandma', 'helper', ' Sue30@Example.com ')::text;
+insert into ctx select 'tok30', (select v::jsonb from ctx where k = 'inv30')->>'link_token';
+select public.member_invite_sent(((select v::jsonb from ctx where k = 'inv30')->>'id')::uuid);
+do $$ declare i family_member_invites; begin
+  select * into i from family_member_invites where id = ((select v::jsonb from ctx where k = 'inv30')->>'id')::uuid;
+  if i.email <> 'sue30@example.com' or i.role <> 'helper' or i.relation <> 'Grandma' or i.sent_at is null or i.link_token !~ '^[0-9a-f]{40}$'
+     or i.expires_at < now() + interval '6 days' or i.expires_at > now() + interval '8 days' then raise exception 'FAIL member invite %', row_to_json(i); end if;
+  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Bea again', 'Mom', 'parent', 'bea30@example.com')$q$, 'already_member');
+  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'X', 'Mom', 'boss', null)$q$, 'Pick a role.');
+  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), ' ', 'Mom', 'helper', null)$q$, 'Add their name.');
+end $$;
+-- Strangers and sitters can't invite members or read invites
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3002');
+do $$ begin
+  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Me', 'Other', 'parent', null)$q$, 'not a parent%');
+  if (select count(*) from family_member_invites) <> 0 then raise exception 'FAIL sitter reads member invites'; end if;
+  -- the sitter can't join the family she sits for as an adult
+  perform pg_temp.must_fail($q$select public.accept_member_invite((select v from ctx where k = 'tok30'))$q$, 'This invite was sent to%');
+end $$;
+-- Signed out: the preview says only the family name and Bea's first name
+reset role;
+set role anon;
+do $$ declare p jsonb := public.member_invite_preview((select v from ctx where k = 'tok30')); begin
+  if p <> jsonb_build_object('status', 'open', 'family_name', 'The Bell family', 'invited_by', 'Bea') then raise exception 'FAIL member preview %', p; end if;
+  if public.member_invite_preview(repeat('ab', 20)) <> '{"status": "not_found"}'::jsonb then raise exception 'FAIL unknown member link'; end if;
+  if public.member_invite_preview('nope') <> '{"status": "not_found"}'::jsonb then raise exception 'FAIL bad member link'; end if;
+  begin perform 1 from family_member_invites; raise exception 'FAIL anon reads member invites'; exception when insufficient_privilege then null; end;
+  begin perform public.accept_member_invite((select v from ctx where k = 'tok30')); raise exception 'FAIL anon accepts'; exception when insufficient_privilege then null; end;
+  begin perform public.member_invite_details((select v from ctx where k = 'tok30')); raise exception 'FAIL anon details'; exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+set role authenticated;
+-- Email lock: someone else signed in can't see the details or join
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3007');
+do $$ begin
+  perform pg_temp.must_fail($q$select public.member_invite_details((select v from ctx where k = 'tok30'))$q$, 'This invite was sent to s•••@example.com. Sign in with that email, or ask Bea to resend it.');
+  perform pg_temp.must_fail($q$select public.accept_member_invite((select v from ctx where k = 'tok30'), 'Wrong')$q$, 'This invite was sent to s•••@example.com%');
+  if exists (select 1 from family_parents where user_id = auth.uid()) then raise exception 'FAIL wrong email joined'; end if;
+end $$;
+-- Sue sees the details and joins as a helper; Bea gets "Sue joined"
+reset role;
+insert into push_tokens (token, user_id) values ('ExponentPushToken[bea30-phone]', '00000000-0000-0000-0000-0000000a3001'),
+  ('ExponentPushToken[sue30-phone]', '00000000-0000-0000-0000-0000000a3003');
+delete from net.sent;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3003');
+do $$ declare d jsonb := public.member_invite_details((select v from ctx where k = 'tok30')); begin
+  if d->>'status' <> 'open' or d->>'family_name' <> 'The Bell family' or d->>'invited_by' <> 'Bea' or d->>'role' <> 'helper'
+     or d->>'relation' <> 'Grandma' or d->>'name' <> 'Grandma Sue' or d->'kids' <> '["Kit"]'::jsonb or d->>'block' is not null then raise exception 'FAIL details %', d; end if;
+  if public.accept_member_invite((select v from ctx where k = 'tok30'), 'Sue Bell') <> (select v::uuid from ctx where k = 'fam30') then raise exception 'FAIL accept'; end if;
+  if (select role || '/' || relation from family_parents where user_id = auth.uid()) <> 'helper/Grandma' then raise exception 'FAIL Sue''s row'; end if;
+  if (select role || '/' || full_name from profiles where id = auth.uid()) <> 'parent/Sue Bell' then raise exception 'FAIL Sue''s profile'; end if;
+  if public.is_parent_of((select v::uuid from ctx where k = 'fam30')) then raise exception 'FAIL a helper is a parent'; end if;
+  if not public.is_family_member((select v::uuid from ctx where k = 'fam30')) then raise exception 'FAIL a helper is not a member'; end if;
+  perform pg_temp.must_fail($q$select public.accept_member_invite((select v from ctx where k = 'tok30'))$q$, 'used');
+end $$;
+reset role;
+do $$ begin
+  if not exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[bea30-phone]' and x->>'title' = 'Sue joined The Bell family') then
+    raise exception 'FAIL Bea not told Sue joined'; end if;
+  if exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[sue30-phone]') then raise exception 'FAIL Sue told about herself'; end if;
+end $$;
+insert into family_subscriptions (family_id, status, trial_ends_at) select v::uuid, 'trialing', now() + interval '20 days' from ctx where k = 'fam30';
+set role anon;
+do $$ begin if public.member_invite_preview((select v from ctx where k = 'tok30')) <> '{"status": "used"}'::jsonb then raise exception 'FAIL used member link'; end if; end $$;
+reset role;
+set role authenticated;
+-- Sue (helper) reads the kids, care plan, shift, log and live location; messages the sitter; hearts a photo; asks for one
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3003');
+do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam30'); m jsonb; begin
+  if (select count(*) from families where id = fid) <> 1 then raise exception 'FAIL helper sees family'; end if;
+  if (select avoid_foods from kids where family_id = fid) <> 'eggs' then raise exception 'FAIL helper reads kids'; end if;
+  if (select count(*) from care_items where family_id = fid) <> 1 then raise exception 'FAIL helper reads care plan'; end if;
+  if (select count(*) from shifts where family_id = fid and status = 'active') <> 1 then raise exception 'FAIL helper reads shifts'; end if;
+  if (select count(*) from logs where shift_id = (select v::uuid from ctx where k = 'shift30')) <> 1 then raise exception 'FAIL helper reads logs'; end if;
+  if (select count(*) from family_sitters where family_id = fid) <> 1 then raise exception 'FAIL helper reads sitters'; end if;
+  if (select full_name from profiles where id = '00000000-0000-0000-0000-0000000a3002') <> 'Sia Moon' then raise exception 'FAIL helper reads sitter name'; end if;
+  if (select full_name from profiles where id = '00000000-0000-0000-0000-0000000a3001') <> 'Bea Bell' then raise exception 'FAIL helper reads Bea''s name'; end if;
+  if (select count(*) from family_parents where family_id = fid) <> 2 then raise exception 'FAIL helper reads members'; end if;
+  if not public.family_has_plan(fid) then raise exception 'FAIL helper sees the plan state'; end if;
+  m := public.family_members(fid);
+  if m->>'my_role' <> 'helper' or jsonb_array_length(m->'members') <> 2 or m->'invites' <> '[]'::jsonb or (m->'members'->0->>'name') <> 'Bea Bell'
+     or not (m->'members'->0->>'creator')::boolean or not (m->'members'->1->>'me')::boolean then raise exception 'FAIL helper members list %', m; end if;
+  insert into messages (family_id, sitter_id, author_id, body) values (fid, '00000000-0000-0000-0000-0000000a3002', auth.uid(), 'Hi Sia, it''s Grandma');
+  insert into log_reactions (log_id, parent_id) values ((select v::uuid from ctx where k = 'log30'), auth.uid());
+  perform public.ask_for_photo((select v::uuid from ctx where k = 'shift30'));
+  if (select count(*) from photo_requests where shift_id = (select v::uuid from ctx where k = 'shift30')) <> 1 then raise exception 'FAIL helper reads photo requests'; end if;
+end $$;
+-- ...but can't manage: sitters, kids, bookings, billing, members, requirements, the family
+do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam30'); n int; begin
+  perform pg_temp.must_fail($q$select public.create_invite((select v::uuid from ctx where k = 'fam30'), 'Another sitter')$q$, 'not a parent%');
+  perform pg_temp.must_fail($q$insert into kids (family_id, name) select v::uuid, 'Hacked' from ctx where k = 'fam30'$q$, '%row-level security%');
+  perform pg_temp.must_fail($q$insert into care_items (family_id, type) select v::uuid, 'meal' from ctx where k = 'fam30'$q$, '%row-level security%');
+  perform pg_temp.must_fail($q$insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by) select v::uuid, '00000000-0000-0000-0000-0000000a3002', now() + interval '2 days', now() + interval '2 days 3 hours', auth.uid() from ctx where k = 'fam30'$q$, '%row-level security%');
+  perform pg_temp.must_fail($q$select public.set_trial_reminder((select v::uuid from ctx where k = 'fam30'), false)$q$, 'not a parent%');
+  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Gramps', 'Grandpa', 'helper', null)$q$, 'not a parent%');
+  perform pg_temp.must_fail($q$select public.set_member_role((select v::uuid from ctx where k = 'fam30'), auth.uid(), 'parent')$q$, 'not a parent%');
+  perform pg_temp.must_fail($q$select public.remove_family_member((select v::uuid from ctx where k = 'fam30'), '00000000-0000-0000-0000-0000000a3001')$q$, 'not a parent%');
+  perform pg_temp.must_fail($q$select public.request_extension((select v::uuid from ctx where k = 'shift30'), now() + interval '4 hours')$q$, 'not your family%');
+  perform pg_temp.must_fail($q$insert into family_requirements (family_id, kind) select v::uuid, 'cpr' from ctx where k = 'fam30'$q$, '%');
+  perform pg_temp.must_fail($q$insert into family_parents (family_id, user_id) select v::uuid, '00000000-0000-0000-0000-0000000a3006' from ctx where k = 'fam30'$q$, 'permission denied%');
+  perform pg_temp.must_fail($q$update family_parents set role = 'parent' where user_id = auth.uid()$q$, 'permission denied%');
+  if (select count(*) from family_subscriptions) <> 0 then raise exception 'FAIL helper reads the subscription'; end if;
+  if (select count(*) from family_member_invites) <> 0 then raise exception 'FAIL helper reads member invites'; end if;
+  if (select count(*) from invites where family_id = fid) <> 0 then raise exception 'FAIL helper reads sitter invites'; end if;
+  update families set name = 'Hacked' where id = fid;
+  update family_sitters set status = 'removed' where family_id = fid;
+  get diagnostics n = row_count;
+  if n <> 0 or (select name from families where id = fid) <> 'The Bell family' then raise exception 'FAIL helper changed the family'; end if;
+end $$;
+-- The sitter sees Grandma's message and her heart; Sue got the clock-in style alerts as a member
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3002');
+do $$ begin
+  if (select count(*) from messages where body = 'Hi Sia, it''s Grandma') <> 1 then raise exception 'FAIL sitter misses helper message'; end if;
+  if (select count(*) from log_reactions where log_id = (select v::uuid from ctx where k = 'log30')) <> 1 then raise exception 'FAIL sitter misses helper heart'; end if;
+  if (select full_name from profiles where id = '00000000-0000-0000-0000-0000000a3003') <> 'Sue Bell' then raise exception 'FAIL sitter reads helper name'; end if;
+end $$;
+reset role;
+delete from net.sent;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3002');
+insert into logs (shift_id, author_id, kind, data) select v::uuid, auth.uid(), 'note', '{"text":"Snack done"}' from ctx where k = 'shift30';
+reset role;
+do $$ begin
+  if not exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[sue30-phone]') then raise exception 'FAIL helper not alerted about the log'; end if;
+  if not exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[bea30-phone]') then raise exception 'FAIL parent not alerted about the log'; end if;
+end $$;
+-- The trial reminder goes to parents only
+delete from net.sent;
+select public.billing_trial_reminder((select v::uuid from ctx where k = 'fam30'));
+do $$ begin
+  if exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[sue30-phone]') then raise exception 'FAIL helper got the billing reminder'; end if;
+  if not exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[bea30-phone]') then raise exception 'FAIL parent missed the billing reminder'; end if;
+end $$;
+set role authenticated;
+-- Bea invites Ben (dad, parent, no email) and Ada (aunt, helper): 2 members + 2 open invites = 4; a 5th is refused
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3001');
+insert into ctx select 'tok30ben', public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Ben', 'Dad', 'parent', null)->>'link_token';
+insert into ctx select 'inv30ada', public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Ada', 'Aunt', 'helper', 'ada30@example.com')::text;
+do $$ declare m jsonb := public.family_members((select v::uuid from ctx where k = 'fam30')); begin
+  if m->>'my_role' <> 'parent' or jsonb_array_length(m->'invites') <> 2
+     or (select string_agg(x->>'name' || ':' || (x->>'status'), ',' order by x->>'name') from jsonb_array_elements(m->'invites') x) <> 'Ada:open,Ben:open' then raise exception 'FAIL parent members list %', m; end if;
+  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Ivy', 'Other', 'helper', null)$q$, 'family_full');
+end $$;
+-- Cancel frees a seat; Resend can't bring the cancelled one back
+select public.cancel_member_invite(((select v::jsonb from ctx where k = 'inv30ada')->>'id')::uuid);
+do $$ begin
+  perform pg_temp.must_fail($q$select public.resend_member_invite(((select v::jsonb from ctx where k = 'inv30ada')->>'id')::uuid)$q$, 'closed');
+end $$;
+insert into ctx select 'inv30ada2', public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Ada', 'Aunt', 'helper', 'ada30@example.com')::text;
+reset role;
+set role anon;
+do $$ begin if public.member_invite_preview((select v::jsonb from ctx where k = 'inv30ada')->>'link_token') <> '{"status": "closed"}'::jsonb then raise exception 'FAIL cancelled member link'; end if; end $$;
+reset role;
+set role authenticated;
+-- Ben joins as a parent; Ada joins as a helper: 4 of 4
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3004');
+select public.accept_member_invite((select v from ctx where k = 'tok30ben'), 'Ben Bell');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3005');
+select public.accept_member_invite((select v::jsonb from ctx where k = 'inv30ada2')->>'link_token', 'Ada Bell');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3004');
+do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam30'); begin
+  if not public.is_parent_of(fid) then raise exception 'FAIL Ben is not a parent'; end if;
+  if (select count(*) from family_parents where family_id = fid) <> 4 then raise exception 'FAIL 4 members'; end if;
+  if (select count(*) from family_subscriptions) <> 1 then raise exception 'FAIL Ben (parent) reads the subscription'; end if;
+  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Ivy', 'Other', 'helper', null)$q$, 'family_full');
+end $$;
+-- The database itself refuses a 5th adult
+reset role;
+do $$ begin
+  perform pg_temp.must_fail($q$insert into family_parents (family_id, user_id) select v::uuid, '00000000-0000-0000-0000-0000000a3006' from ctx where k = 'fam30'$q$, 'family_full');
+end $$;
+set role authenticated;
+-- Roles and the last parent: Ben makes Bea a helper, then can't make himself one, leave, or be removed
+do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam30'); begin
+  perform public.set_member_role(fid, '00000000-0000-0000-0000-0000000a3001', 'helper');
+  if (select role from family_parents where family_id = fid and user_id = '00000000-0000-0000-0000-0000000a3001') <> 'helper' then raise exception 'FAIL role change'; end if;
+  perform pg_temp.must_fail(format('select public.set_member_role(%L, auth.uid(), %L)', fid, 'helper'), 'last_parent');
+  perform pg_temp.must_fail(format('select public.leave_family(%L)', fid), 'last_parent');
+  perform public.set_member_role(fid, '00000000-0000-0000-0000-0000000a3001', 'parent');
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3001');
+do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam30'); begin
+  -- Bea removes Ben; then she is the last parent
+  perform public.remove_family_member(fid, '00000000-0000-0000-0000-0000000a3004');
+  perform pg_temp.must_fail(format('select public.leave_family(%L)', fid), 'last_parent');
+  perform pg_temp.must_fail(format('select public.remove_family_member(%L, auth.uid())', fid), 'last_parent');
+end $$;
+-- Sue (helper) leaves on her own; a helper can't remove someone else
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3005');
+do $$ begin
+  perform pg_temp.must_fail(format('select public.remove_family_member(%L, %L)', (select v from ctx where k = 'fam30'), '00000000-0000-0000-0000-0000000a3003'), 'not a parent%');
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3003');
+select public.leave_family((select v::uuid from ctx where k = 'fam30'));
+do $$ begin
+  if (select count(*) from kids where family_id = (select v::uuid from ctx where k = 'fam30')) <> 0 then raise exception 'FAIL Sue still sees the kids after leaving'; end if;
+  if (select count(*) from messages) <> 0 then raise exception 'FAIL Sue still reads messages after leaving'; end if;
+end $$;
+-- Someone with another family, or a sitter account, can't join
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3006');
+insert into ctx values ('fam30b', (select public.create_family('The Ivy family', 'Ivy Ray')::text));
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3001');
+insert into ctx select 'tok30ivy', public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Ivy', 'Other', 'helper', null)->>'link_token';
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3006');
+do $$ begin
+  if public.member_invite_details((select v from ctx where k = 'tok30ivy'))->>'block' <> 'other_family' then raise exception 'FAIL other family block'; end if;
+  perform pg_temp.must_fail($q$select public.accept_member_invite((select v from ctx where k = 'tok30ivy'))$q$, 'other_family');
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3002');
+do $$ begin
+  perform pg_temp.must_fail($q$select public.accept_member_invite((select v from ctx where k = 'tok30ivy'))$q$, 'sitter_account');
+end $$;
+-- Expired links: status only; Resend gives 7 more days
+reset role;
+update family_member_invites set expires_at = now() - interval '1 day' where link_token = (select v from ctx where k = 'tok30ivy');
+set role anon;
+do $$ begin if public.member_invite_preview((select v from ctx where k = 'tok30ivy')) <> '{"status": "expired"}'::jsonb then raise exception 'FAIL expired member link'; end if; end $$;
+reset role;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3001');
+do $$ begin
+  if public.resend_member_invite((select id from family_member_invites where link_token = (select v from ctx where k = 'tok30ivy'))) < now() + interval '6 days' then raise exception 'FAIL member resend'; end if;
+end $$;
+reset role;
+
 select 'ALL RLS SCENARIOS PASSED' as result;

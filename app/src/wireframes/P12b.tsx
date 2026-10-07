@@ -19,9 +19,9 @@ export default function WF_P12b() {
       <View style={{ flexDirection: "column", gap: 8, flexGrow: 1, paddingTop: 0, paddingRight: 20, paddingBottom: 8, paddingLeft: 20 }}>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>FAMILY</Text>
         <View style={{ flexDirection: "column", paddingTop: 4, paddingRight: 16, paddingBottom: 4, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
-            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Parents</Text>
-            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", flexShrink: 1 }}>Jen, Sam</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>{/* -> P78-FamilyMembers.dc.html */}
+            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Family members</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", flexShrink: 1 }}>Jen, Sam · 2 of 4 ›</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>{/* -> P13-KidsDevices.dc.html */}
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Kids and devices</Text>
@@ -69,7 +69,7 @@ export default function WF_P12b() {
               <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328" }}>Off-plan and help alerts</Text>
               <Text style={{ fontFamily: font.body, fontSize: 13, color: "#5F6D74" }}>Always on for safety</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 26, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999, flexShrink: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 26, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Always</Text>
             </View>
           </View>

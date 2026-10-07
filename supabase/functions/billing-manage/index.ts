@@ -38,8 +38,10 @@ Deno.serve(async (req) => {
 
     const { familyId, action, months, reason } = await req.json().catch(() => ({}));
     if (typeof familyId !== 'string' || !['cancel', 'pause', 'resume'].includes(action)) return json({ error: 'familyId and action are required.' }, 400);
-    const { data: parent } = await admin.from('family_parents').select('user_id').eq('family_id', familyId).eq('user_id', auth.user.id).maybeSingle();
-    if (!parent) return json({ error: 'Only a parent of this family can do that.' }, 403);
+    const { data: parent } = await admin.from('family_parents').select('*').eq('family_id', familyId).eq('user_id', auth.user.id).maybeSingle();
+    // Family helpers (migration 30, role 'helper') are covered by the plan but can't manage it. Before migration 30 there
+    // is no role column: every row is a parent.
+    if (!parent || (parent as { role?: string }).role === 'helper') return json({ error: 'Only a parent of this family can do that.' }, 403);
     const { data: row } = await admin.from('family_subscriptions').select('stripe_subscription_id').eq('family_id', familyId).maybeSingle();
     if (!row?.stripe_subscription_id) return json({ error: 'No plan to change.' }, 404);
 

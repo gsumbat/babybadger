@@ -26,7 +26,9 @@ import { Text } from '@/components/Text';
 // Left out until built: Find a new sitter (P48: the card says "Coming soon", canvas P54e), meet requests (P53),
 // saved sitters (P51).
 export default function Sitters() {
-  const { family } = useSession();
+  const { family, familyRole } = useSession();
+  // A family helper (P4m, migration 30) sees the sitters but doesn't invite them.
+  const parent = familyRole === 'parent';
   const fid = family!.id;
   const { data, error } = useQuery(async () => {
     const [pool, invites] = await Promise.all([poolData(fid), openInvites(fid)]);
@@ -75,10 +77,12 @@ export default function Sitters() {
         // P54 header: 8 px under the title (the shared tab header uses 12).
         <View style={st.head}>
           <Text style={st.title}>Sitters</Text>
-          <Pressable accessibilityRole="button" onPress={() => router.push('/parent/invite')} style={st.inviteBtn}>
-            <Icon name="plus" size={16} strokeWidth={2.2} />
-            <Text style={st.inviteText}>Invite</Text>
-          </Pressable>
+          {parent ? (
+            <Pressable accessibilityRole="button" onPress={() => router.push('/parent/invite')} style={st.inviteBtn}>
+              <Icon name="plus" size={16} strokeWidth={2.2} />
+              <Text style={st.inviteText}>Invite</Text>
+            </Pressable>
+          ) : null}
         </View>
       }>
       <ErrorText>{error}</ErrorText>
@@ -92,7 +96,7 @@ export default function Sitters() {
             </View>
             <Text style={st.emptyTitle}>No sitters yet</Text>
             <Text style={st.emptyBody}>Invite someone you already know and trust. They join your pool once they accept and sign the notice.</Text>
-            <Button label="Invite a sitter" onPress={() => router.push('/parent/invite')} style={st.emptyBtn} />
+            {parent ? <Button label="Invite a sitter" onPress={() => router.push('/parent/invite')} style={st.emptyBtn} /> : null}
           </View>
           {MARKETPLACE ? findCard : null}
         </>

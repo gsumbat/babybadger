@@ -10,6 +10,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { FamilyLinkHead } from '@/components/familyLink';
 import { InviteHead } from '@/components/inviteLink';
+import { MemberLinkHead } from '@/components/memberLink';
 import { Loading } from '@/components/ui';
 import '@/lib/location-sharing'; // registers the background location task at startup
 import { listenForAlertTaps, registerForPush } from '@/lib/push';
@@ -29,6 +30,7 @@ function Routes() {
   const path = usePathname();
   const inviteLink = path.startsWith('/i/');
   const familyLink = path.startsWith('/f/');
+  const memberLink = path.startsWith('/m/');
 
   // Once signed in to a family: the system asks to allow notifications, and tapped alerts open their screen.
   useEffect(() => {
@@ -37,7 +39,7 @@ function Routes() {
     return listenForAlertTaps();
   }, [ready]);
 
-  const head = inviteLink ? <InviteHead /> : familyLink ? <FamilyLinkHead /> : null;
+  const head = inviteLink ? <InviteHead /> : familyLink ? <FamilyLinkHead /> : memberLink ? <MemberLinkHead /> : null;
   if (loading)
     return (
       <>
@@ -55,6 +57,8 @@ function Routes() {
         <Stack.Screen name="i/[token]" />
         {/* A sitter's family link babybadger.app/f/<token> (S0f, P3d): also open signed in or out. */}
         <Stack.Screen name="f/[token]" />
+        {/* A parent's family member invite babybadger.app/m/<token> (M0, P78d): also open signed in or out. */}
+        <Stack.Screen name="m/[token]" />
         {/* Generated wireframe layouts, for side-by-side checks during development only. */}
         <Stack.Protected guard={__DEV__}>
           <Stack.Screen name="wireframe/[id]" />

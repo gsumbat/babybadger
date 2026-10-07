@@ -6,6 +6,7 @@ import { SetRow, ToggleRow } from '@/components/bits';
 import { Card, ErrorText, Screen } from '@/components/ui';
 import { settingsValue, usePlan } from '@/lib/billing';
 import { api, useQuery } from '@/lib/data';
+import { membersRowValue } from '@/lib/family-members';
 import { firstName } from '@/lib/format';
 import { rulesApi, rulesLabel } from '@/lib/house-rules';
 import { placesApi, placesCountLabel } from '@/lib/places';
@@ -15,13 +16,14 @@ import { color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe P12b (settings · account; supersedes P12): grouped settings rows, account, sign out.
-// Sitters opens P27, Homes and places P56, House rules P74. Rows whose screens aren't built show their value and
+// Family members opens P78 ("Jen, Dan · 2 of 4", migration 30). Sitters opens P27, Homes and places P56, House rules P74. Rows whose screens aren't built show their value and
 // don't open anything: Kids and devices (P13), Consent records. Subscription: with billing on (EXPO_PUBLIC_BILLING=1)
 // it reads the plan ("Free trial · ends Nov 6", "Family · monthly", "Payment issue", "Start free trial") and opens
 // P39, or P36 when the family has no plan; with billing off it reads "Coming soon" and opens nothing. Alerts: "Arrivals and departures" is profiles.alert_arrivals (migration 21; trip alerts skip a
 // parent who turned it off), "Food and tasks" is alert_logs, "Off-plan and help alerts" is always on (a label).
+// A family helper (P4m) doesn't see Subscription: the family's plan covers them and only parents manage it.
 export default function Settings() {
-  const { family, profile, session, signOut, refresh } = useSession();
+  const { family, profile, session, signOut, refresh, familyRole } = useSession();
   const plan = usePlan();
   const [logAlerts, setLogAlerts] = useState(profile?.alert_logs ?? true);
   const [arrivals, setArrivals] = useState(profile?.alert_arrivals ?? true);
@@ -47,7 +49,7 @@ export default function Settings() {
     ]);
     return { kids, sitters, parents, rules, places };
   }, [fid]);
-  const parents = (data?.parents ?? []).map((p) => firstName(p.full_name)).join(', ') || firstName(profile?.full_name);
+  const members = membersRowValue(data?.parents.length ? data.parents.map((p) => p.full_name) : [profile?.full_name ?? '']);
   const kids = (data?.kids ?? []).map((k) => k.name).join(', ');
   const sitterLinks = data?.sitters ?? [];
   const sitters = sitterLinks.map((s) => firstName(s.profile?.full_name)).join(', ');
@@ -64,9 +66,9 @@ export default function Settings() {
       <ErrorText>{error}</ErrorText>
       <Text style={st.section}>FAMILY</Text>
       <Card style={st.card}>
-        <SetRow label="Parents" value={parents} />
+        <SetRow label="Family members" value={members} onPress={() => router.push('/parent/members')} />
         <SetRow label="Kids and devices" value={kids || 'None yet'} />
-        <SetRow label="Sitters" value={sitters || 'None yet'} onPress={() => router.push('/parent/sitter-list')} />
+        <SetRow label="Sitters" value={sitters || 'None yet'} onPress={familyRole === 'helper' ? undefined : () => router.push('/parent/sitter-list')} />
         <SetRow label="Homes and places" value={placesCountLabel(data?.places ?? [])} onPress={() => router.push('/parent/places')} />
         <SetRow label="House rules" value={rulesLabel(data?.rules.length ?? 0)} onPress={() => router.push('/parent/rules')} last />
       </Card>
@@ -90,8 +92,8 @@ export default function Settings() {
       <Text style={[st.section, { marginTop: 2 }]}>PRIVACY</Text>
       <Card style={st.card}>
         <SetRow label="Consent records" value={`${signed} signed`} />
-        <SetRow label="Keep location history" value="[RETENTION]" />
-        {plan.enabled ? (
+        <SetRow label="Keep location history" value="[RETENTION]" last={familyRole === 'helper'} />
+        {familyRole === 'helper' ? null : plan.enabled ? (
           <SetRow
             label="Subscription"
             value={plan.loaded ? settingsValue(plan.sub) : ''}

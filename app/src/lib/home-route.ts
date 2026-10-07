@@ -10,6 +10,10 @@ export function useHomeRoute() {
   // An invite link opened before signing in (S0b/S0c) comes back after sign-in, unless she's a parent.
   const pending = peekPendingInvite();
   if (pending && profile?.role !== 'parent') return `/i/${pending}` as const;
+  // A family member link (M0, babybadger.app/m/<token>) opened before signing in: P78d Join the family. A new person
+  // never goes through onboarding, the family setup or the plans: the family's plan covers them.
+  const memberLink = peekPendingMemberLink();
+  if (memberLink && profile?.role !== 'sitter') return `/m/${memberLink}` as const;
   if (profile?.role === 'parent' && family) {
     if (familySetupPending(family.id)) return '/parent/setup' as const;
     // A sitter's family link (S0f) opened before signing in: P3d Connect with her, once the family exists.
@@ -107,6 +111,28 @@ export function rememberPendingFamilyLink(token: string | null) {
 export function peekPendingFamilyLink(): string | null {
   try {
     const v = kv.get(PENDING_FAMILY_LINK);
+    return isLinkToken(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+// A family member link opened on this phone (babybadger.app/m/<token>, M0): kept while the person signs in or signs up,
+// then P78d asks them to join. Cleared when they join, tap Not now, or the link can't be used.
+const PENDING_MEMBER_LINK = 'bb.pendingMemberLink';
+
+export function rememberPendingMemberLink(token: string | null) {
+  try {
+    if (token) kv.set(PENDING_MEMBER_LINK, token);
+    else kv.remove(PENDING_MEMBER_LINK);
+  } catch {
+    // Storage unavailable: they open the link again after signing in.
+  }
+}
+
+export function peekPendingMemberLink(): string | null {
+  try {
+    const v = kv.get(PENDING_MEMBER_LINK);
     return isLinkToken(v) ? v : null;
   } catch {
     return null;

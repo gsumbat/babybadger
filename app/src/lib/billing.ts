@@ -32,7 +32,30 @@ export async function fetchSubscription(fid: string): Promise<FamilySubscription
   // Before migration 24 runs the table is missing: treat it as "no plan yet".
   const { data, error } = await supabase.from('family_subscriptions').select('*').eq('family_id', fid).maybeSingle();
   if (error) return null;
-  return (data as FamilySubscription | null) ?? null;
+  if (data) return data as FamilySubscription;
+  // A family helper can't read the row (migration 30) but the family's plan covers them: family_has_plan says whether
+  // the live map is on. They only ever see "covered" or "paused", never the plan's details.
+  const { data: on } = await supabase.rpc('family_has_plan', { fid });
+  return on === true ? coveredPlan(fid) : null;
+}
+
+/** What a family helper's app knows about the family's plan: on. */
+function coveredPlan(fid: string): FamilySubscription {
+  return {
+    family_id: fid,
+    stripe_customer_id: null,
+    stripe_subscription_id: null,
+    status: 'active',
+    plan: null,
+    trial_ends_at: null,
+    current_period_end: null,
+    cancel_at_period_end: false,
+    paused_until: null,
+    had_trial: true,
+    remind_trial: false,
+    payer_id: null,
+    updated_at: new Date(0).toISOString(),
+  };
 }
 
 export async function refreshPlan(fid: string) {

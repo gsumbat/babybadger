@@ -4,6 +4,7 @@ import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
 import { KidDot, kidSub } from '@/components/bits';
+import { MembersNote } from '@/components/familyMembers';
 import { LockedMap, PaymentIssueBanner } from '@/components/billing';
 import { LiveMap } from '@/components/LiveMap';
 import { ParentRequestsNeedYou } from '@/components/poolRequest';
@@ -11,6 +12,8 @@ import { AskToStaySheet, WALK_ICON } from '@/components/timing';
 import { ActionGrid, dayPart, ErrorText, HomeHeader, Icon, type IconName, initialsOf, Screen } from '@/components/ui';
 import { takePlansIntro, usePlan } from '@/lib/billing';
 import { api, useQuery, useShiftLive } from '@/lib/data';
+import { membersApi } from '@/lib/family-members-api';
+import { namesLine } from '@/lib/invite-links';
 import { dayOf, firstName, timeOf } from '@/lib/format';
 import { describeLog, parentHomeState, workedMinutes } from '@/lib/shift-logic';
 import { rulesApi } from '@/lib/house-rules';
@@ -50,11 +53,21 @@ const TILE_SETS = {
   soon: ['book', 'care', 'devices'],
   ended: ['book', 'pay', 'care'],
 };
+// P4m: a family helper (migration 30) doesn't book, pay or set requirements; those tiles are left out.
+const HELPER_HIDDEN = ['book', 'pay', 'requirements'];
+const HELPER_TILES = ['rules', 'care', 'devices'];
 
 /** Home tab. `full` = the live shift on its own screen (P4, opened from the P4k "Shift now" card). */
 export default function ParentHome({ full = false }: { full?: boolean }) {
-  const { family, profile } = useSession();
+  const { family, profile, familyRole } = useSession();
+  const helper = familyRole === 'helper';
   const fid = family!.id;
+  // P4m's note names the parents ("Jen and Sam manage sitters, pay and the plan").
+  const { data: parentNames } = useQuery(async () => {
+    if (!helper) return '';
+    const list = await membersApi.list(fid, profile!.id).catch(() => null);
+    return namesLine((list?.members ?? []).filter((m) => m.role === 'parent').map((m) => firstName(m.name)));
+  }, [fid, helper]);
   const { data, error } = useQuery(async () => {
     // care_items arrives with migration 06; until it's run the care plan step just shows as not done.
     // house_rules arrives with migration 09; same fallback.
@@ -80,7 +93,8 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
   // "Skip for now" on P4a is remembered on this phone; the P4e card brings the checklist back.
   const skipKey = `bb_setup_skipped_${fid}`;
   const [skipped, setSkipped] = useState(() => kv.get(skipKey) === '1');
-  const incomplete = steps.some((s) => !s.done && !s.optional) && state?.kind === 'idle' && !state.next;
+  // A helper never sees the setup checklist (P4a / P4e): setting the family up is the parents' job.
+  const incomplete = !helper && steps.some((s) => !s.done && !s.optional) && state?.kind === 'idle' && !state.next;
   const setup = incomplete && !skipped;
   const explore = incomplete && skipped;
 
@@ -88,9 +102,9 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
   const plan = usePlan();
   const focused = useIsFocused();
   useEffect(() => {
-    if (full || !focused || !plan.enabled || !plan.loaded || plan.state !== 'none') return;
+    if (full || helper || !focused || !plan.enabled || !plan.loaded || plan.state !== 'none') return;
     if (takePlansIntro(fid)) router.push('/parent/plans?from=setup');
-  }, [full, focused, plan.enabled, plan.loaded, plan.state, fid]);
+  }, [full, helper, focused, plan.enabled, plan.loaded, plan.state, fid]);
 
   return (
     <Screen
@@ -106,7 +120,7 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
       }>
       <ErrorText>{error}</ErrorText>
       {/* P40: payment failed, still inside the grace period. */}
-      {!full && <PaymentIssueBanner />}
+      {!full && !helper && <PaymentIssueBanner />}
 
       {setup && (
         <Setup
@@ -135,10 +149,10 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
         <Ended shift={state.shift} sitter={sitterName(state.shift.sitter_id)} next={data!.shifts.find((s) => s.status === 'scheduled' && new Date(s.starts_at) > new Date())} sitterName={sitterName} />
       )}
       {state?.kind === 'idle' && state.next && <NextShift shift={state.next} sitter={sitterName(state.next.sitter_id)} />}
-      {!setup && !full && data && data.kids.length > 0 && (state?.kind === 'idle' || state?.kind === 'live') && <Kids kids={data.kids} add={!explore} />}
+      {!setup && !full && data && data.kids.length > 0 && (state?.kind === 'idle' || state?.kind === 'live') && <Kids kids={data.kids} add={!explore && !helper} />}
 
       {/* P4b "Needs you": open pool requests (P46). Invoices aren't built. */}
-      {!setup && !full && <ParentRequestsNeedYou familyId={fid} />}
+      {!setup && !full && !helper && <ParentRequestsNeedYou familyId={fid} />}
 
       {/* P4a has no grid. Tiles not built yet are left out: Find a sitter, Kids & devices, Ask my pool, Pay sitter. P4b's Requirements tile opens P7a. */}
       {explore ? (
@@ -161,8 +175,17 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
         // P4b/P4k: the grid sits inside the content (gap 10); P4c/P4d: 12 below it. Label to grid: 8.
         <View style={{ gap: 8, marginTop: state.kind === 'soon' || state.kind === 'ended' ? 2 : 0 }}>
           <Text style={st.label}>WHAT DO YOU NEED?</Text>
-          <ActionGrid items={TILE_SETS[state.kind === 'soon' || state.kind === 'ended' ? state.kind : 'full'].map((k) => TILES[k])} height={state.kind === 'soon' || state.kind === 'ended' ? 70 : 76} columns={3} />
+          <ActionGrid
+            items={(helper && state.kind !== 'soon' && state.kind !== 'ended' ? HELPER_TILES : TILE_SETS[state.kind === 'soon' || state.kind === 'ended' ? state.kind : 'full'])
+              .filter((k) => !helper || !HELPER_HIDDEN.includes(k))
+              .map((k) => TILES[k])}
+            height={state.kind === 'soon' || state.kind === 'ended' ? 70 : 76}
+            columns={3}
+          />
         </View>
+      ) : null}
+      {helper && state && !full ? (
+        <MembersNote>{`You’re a family helper. ${parentNames || 'The parents'} manage sitters, pay and the plan.`}</MembersNote>
       ) : null}
     </Screen>
   );
@@ -310,6 +333,7 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
   const openTrip = trips.find(isOpenTrip);
   const [askOpen, setAskOpen] = useState(false);
   const plan = usePlan();
+  const { familyRole } = useSession();
   if (!bundle) return null;
   const done = bundle.tasks.filter((t) => t.done_at);
   const next = bundle.tasks.find((t) => !t.done_at);
@@ -352,9 +376,14 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
         </View>
       </Pressable>
       {/* Not in wireframe P4: asks her to stay longer (she answers on S25). An open request shows instead. */}
-      <Text accessibilityRole="button" onPress={() => setAskOpen(true)} style={st.askLink}>
-        {pending ? `Asked ${sitter} to stay until ${timeOf(pending.new_ends_at)} · waiting` : `Ask ${sitter} to stay longer`}
-      </Text>
+      {/* A family helper sees an open request but can't ask (it changes the booking and the pay). */}
+      {familyRole === 'helper' ? (
+        pending ? <Text style={st.askLink}>{`Asked ${sitter} to stay until ${timeOf(pending.new_ends_at)} · waiting`}</Text> : null
+      ) : (
+        <Text accessibilityRole="button" onPress={() => setAskOpen(true)} style={st.askLink}>
+          {pending ? `Asked ${sitter} to stay until ${timeOf(pending.new_ends_at)} · waiting` : `Ask ${sitter} to stay longer`}
+        </Text>
+      )}
       <AskToStaySheet open={askOpen} onClose={() => setAskOpen(false)} shift={bundle.shift} sitter={sitter} />
       <Pressable onPress={() => router.push(`/parent/shift/${shift.id}`)} style={st.planCard}>
         {/* P4i: with no tasks on the shift the plan header and bar are left out; the log row stays. */}
