@@ -1,3 +1,4 @@
+import { isLinkToken } from './invite-links';
 import { useSession } from './session';
 import { kv } from './storage';
 import type { Role } from './types';
@@ -6,6 +7,9 @@ import type { Role } from './types';
 export function useHomeRoute() {
   const { session, profile, family, sitterLinks } = useSession();
   if (!session) return '/sign-in' as const;
+  // An invite link opened before signing in (S0b/S0c) comes back after sign-in, unless she's a parent.
+  const pending = peekPendingInvite();
+  if (pending && profile?.role !== 'parent') return `/i/${pending}` as const;
   if (profile?.role === 'parent' && family) return familySetupPending(family.id) ? ('/parent/setup' as const) : ('/parent' as const);
   if (profile?.role === 'sitter' && sitterLinks.length) return '/sitter' as const;
   return '/onboarding' as const;
@@ -57,5 +61,27 @@ export function familySetupPending(familyId: string): boolean {
     return kv.get(FAMILY_SETUP) === familyId;
   } catch {
     return false;
+  }
+}
+
+// Invite link opened on this phone (babybadger.app/i/<token>, S0b–S0d): the link's token (never the 6-digit code): kept until she accepts or declines it, or the
+// link turns out to be used / expired, so closing the app while she fetches the email code doesn't lose it.
+const PENDING_INVITE = 'bb.pendingInvite';
+
+export function rememberPendingInvite(token: string | null) {
+  try {
+    if (token) kv.set(PENDING_INVITE, token);
+    else kv.remove(PENDING_INVITE);
+  } catch {
+    // Storage unavailable: she opens the link again, or enters the code (S51).
+  }
+}
+
+export function peekPendingInvite(): string | null {
+  try {
+    const v = kv.get(PENDING_INVITE);
+    return isLinkToken(v) ? v : null;
+  } catch {
+    return null;
   }
 }

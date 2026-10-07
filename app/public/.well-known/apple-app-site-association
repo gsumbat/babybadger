@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["ZHR7DW76TD.com.jobbadger.babybadger"],
+        "components": [{ "/": "/i/*", "comment": "Family invite links (S0b)" }]
+      }
+    ],
+    "apps": []
+  },
+  "webcredentials": {
+    "apps": ["ZHR7DW76TD.com.jobbadger.babybadger"]
+  }
+}

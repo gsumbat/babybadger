@@ -22,7 +22,7 @@ export default function WF_P25() {
           <SvgXml xml={SVG[0]} width={22} height={22} />
         </View>
         <Text style={{ fontFamily: font.display, fontSize: 22, color: "#1B2328", flexGrow: 1, flexShrink: 1 }}>Maya</Text>
-        <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#F6E3C6", borderRadius: 999 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#F6E3C6", borderRadius: 999 }}>
           <View style={{ width: 7, height: 7, backgroundColor: "#B7791F", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
           </View>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#7A4E0E" }}>Waiting</Text>
@@ -53,7 +53,7 @@ export default function WF_P25() {
             </View>
             <View style={{ flexDirection: "column", paddingBottom: 10, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#1B2328" }}>Opened</Text>
-              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Maya confirmed her phone · 5:50 PM</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Maya confirmed her email · 5:50 PM</Text>
             </View>
           </View>
           <View style={{ flexDirection: "row", gap: 12 }}>

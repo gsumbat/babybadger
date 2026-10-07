@@ -6,7 +6,8 @@ import { Linking, Pressable, Share, StyleSheet, View } from 'react-native';
 import { KidDot } from '@/components/bits';
 import { Button, ErrorText, Field, Icon, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
-import { firstName, inviteMessage } from '@/lib/format';
+import { firstName } from '@/lib/format';
+import { emailOk, firstWord, inviteMailto, inviteSubject, inviteText, inviteUrl } from '@/lib/invite-links';
 import { inviteApi, kidIdsFor, PAY_OPTIONS, parseRate, payLine, type InviteChoices, type PaySchedule } from '@/lib/invites';
 import { ageLabel } from '@/lib/kid-profile';
 import { useSession } from '@/lib/session';
@@ -17,7 +18,8 @@ import { Text } from '@/components/Text';
 // Wireframes P3 (invite your sitter, from the Home setup list), P3b (invite a sitter, from anywhere else), P23 (who
 // she looks after, what she can do, pay) and P24 (review and send). Home setup opens this with ?from=setup.
 // Sending (or emailing) the invite opens P25 (invite/[id]).
-// Left out until built (P3, P3b): Mobile number (the app shares a code; invites don't store a phone).
+// P3/P3b's Mobile number is an optional Email for now (sign-in is by email; migration 28): an existing sitter with that
+// email gets the invite as a push (S0e). P24 shares the S0a text: babybadger.app/i/<token> plus the code as a fallback.
 type Step = 'name' | 'access' | 'review';
 
 export default function Invite() {
@@ -34,6 +36,7 @@ export default function Invite() {
   const [step, setStep] = useState<Step>('name');
   const [copied, setCopied] = useState(false);
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   // P23 choices. Every kid starts chosen and every switch on, as the wireframe draws them.
   const [unpicked, setUnpicked] = useState<string[]>([]);
   const [canDrive, setCanDrive] = useState(true);
@@ -41,7 +44,7 @@ export default function Invite() {
   const [canMessage, setCanMessage] = useState(true);
   const [rateText, setRateText] = useState('');
   const [pay, setPay] = useState<PaySchedule>('weekly');
-  const [invite, setInvite] = useState<{ id: string; code: string } | null>(null);
+  const [invite, setInvite] = useState<{ id: string; code: string; token: string | null } | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const first = name.trim().split(/\s+/)[0] || 'Your sitter';
@@ -55,8 +58,10 @@ export default function Invite() {
     setErr('');
     const choices: InviteChoices = { kid_ids: kidIdsFor(picked, allKidIds), can_drive: canDrive, can_trip: canTrip, can_message: canMessage, rate, pay_schedule: pay };
     try {
+      const inv = invite ?? (await inviteApi.create(family!.id, name.trim(), choices));
       if (invite) await inviteApi.update(invite.id, name.trim(), choices);
-      else setInvite(await inviteApi.create(family!.id, name.trim(), choices));
+      else setInvite(inv);
+      await inviteApi.setEmail(inv.id, email);
       setStep('review');
     } catch (e) {
       setErr(errorText(e));
@@ -65,11 +70,15 @@ export default function Invite() {
     }
   }
 
-  // Wireframe P24. Left out until built: sending to a phone number from the app.
+  // Wireframe P24. Send by text opens the share sheet with the S0a text (it goes from the parent's own phone), Email a
+  // mailto with the same text, Copy link the babybadger.app/i/<token> link. Each marks the invite sent (an existing
+  // sitter with the email gets her push then).
   if (step === 'review' && invite) {
-    const { code } = invite;
-    const msg = inviteMessage(family!.name, code);
+    const { code, token } = invite;
+    const to = email.trim();
+    const msg = inviteText({ sitter: first === 'Your sitter' ? '' : first, parent: firstWord(profile?.full_name), kids: chosenKids.map((k) => k.name), code, token });
     const pending = () => router.replace({ pathname: '/parent/invite/[id]', params: { id: invite.id } });
+    const sent = () => inviteApi.sent(invite.id).catch(() => {});
     const pill = payLine(rate, pay);
     return (
       <Screen
@@ -83,7 +92,10 @@ export default function Invite() {
               accessibilityRole="button"
               onPress={async () => {
                 const r = await Share.share({ message: msg });
-                if (r.action === Share.sharedAction) pending();
+                if (r.action === Share.sharedAction) {
+                  await sent();
+                  pending();
+                }
               }}
               style={st.sendBtn}>
               <Text style={st.sendText}>Send by text</Text>
@@ -92,7 +104,8 @@ export default function Invite() {
               <Pressable
                 accessibilityRole="button"
                 onPress={async () => {
-                  await Linking.openURL(`mailto:?subject=${encodeURIComponent(`${family!.name} invited you to BabyBadger`)}&body=${encodeURIComponent(msg)}`);
+                  await Linking.openURL(inviteMailto(to || null, inviteSubject(family!.name), msg)).catch(() => {});
+                  await sent();
                   pending();
                 }}
                 style={st.tonalBtn}>
@@ -101,11 +114,12 @@ export default function Invite() {
               <Pressable
                 accessibilityRole="button"
                 onPress={async () => {
-                  await Clipboard.setStringAsync(msg);
+                  await Clipboard.setStringAsync(token ? inviteUrl(token) : msg);
                   setCopied(true);
+                  await sent();
                 }}
                 style={st.tonalBtn}>
-                <Text style={st.tonalText}>{copied ? 'Copied' : 'Copy invite'}</Text>
+                <Text style={st.tonalText}>{copied ? 'Copied' : 'Copy link'}</Text>
               </Pressable>
             </View>
           </View>
@@ -134,20 +148,23 @@ export default function Invite() {
               ) : null}
             </View>
           ) : null}
-          <Text style={st.code}>{code}</Text>
           <Text style={st.note13}>You’ll share location only while clocked in.</Text>
         </View>
         <View style={st.facts}>
           <View style={[st.fact, st.line]}>
             <Text style={st.factKey}>To</Text>
-            <Text style={st.factVal}>{name.trim()}</Text>
+            <Text style={[st.factVal, { flexShrink: 1, textAlign: 'right' }]} numberOfLines={1}>
+              {to ? `${first} · ${to}` : name.trim()}
+            </Text>
           </View>
           <View style={st.fact}>
-            <Text style={st.factKey}>Code works</Text>
+            <Text style={st.factKey}>Link works</Text>
             <Text style={st.factVal}>7 days, once</Text>
           </View>
         </View>
-        <Text style={st.note13}>{first} enters the code in BabyBadger after choosing “I’m a sitter”.</Text>
+        <Text style={st.note13}>
+          {first} opens the link and confirms her email with a 6-digit code. Or she enters code {code} in the app.
+        </Text>
       </Screen>
     );
   }
@@ -231,11 +248,26 @@ export default function Invite() {
       </View>
     </View>
   );
-  const nameField = <Field label="Name" value={name} onChangeText={setName} placeholder="Maya" autoComplete="name" autoCapitalize="words" autoFocus />;
+  const nameField = (
+    <>
+      <Field label="Name" value={name} onChangeText={setName} placeholder="Maya" autoComplete="name" autoCapitalize="words" autoFocus />
+      <Field
+        label="Email (optional)"
+        value={email}
+        onChangeText={setEmail}
+        placeholder="maya@example.com"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="email"
+        hint={emailOk(email) ? undefined : 'Check the email.'}
+      />
+    </>
+  );
   const footer = (
     // P3/P3b footer: 12 px above, 10 px gap (Screen's footer has 8 and 8).
     <View style={{ gap: 10, marginTop: 4 }}>
-      <Button label="Continue" onPress={() => setStep('access')} disabled={name.trim().length < 2} />
+      <Button label="Continue" onPress={() => setStep('access')} disabled={name.trim().length < 2 || !emailOk(email)} />
       <Text style={st.next}>Next: choose what {name.trim() ? first : 'she'} can do and her rate</Text>
     </View>
   );
@@ -344,7 +376,6 @@ const st = StyleSheet.create({
   sendText: { fontFamily: font.displayBold, fontSize: 17, color: '#FFFFFF' },
   tonalBtn: { flex: 1, height: 48, borderRadius: 999, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
   tonalText: { fontFamily: font.displayBold, fontSize: 17, color: color.primary },
-  code: { fontFamily: font.display, fontSize: 40, letterSpacing: 8, color: color.primaryStrong, textAlign: 'center' },
   facts: { backgroundColor: '#FFFFFF', borderRadius: 24, paddingHorizontal: 16, ...cardShadow },
   fact: { flexDirection: 'row', justifyContent: 'space-between', minHeight: 48, alignItems: 'center', gap: 12 },
   line: { borderBottomWidth: 1, borderBottomColor: color.divider },

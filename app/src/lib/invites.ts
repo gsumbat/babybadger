@@ -1,5 +1,6 @@
 // Invite choices and states (wireframes P23 Invite access, P24 Review and send, P25 Invite pending, P26 Invite
 // accepted, S1 Family invite). Needs migration 11 (20261006000011_invite_access.sql).
+import type { LinkPreview } from './invite-links';
 import { supabase } from './supabase';
 import type { Invite, Profile, SitterLink } from './types';
 
@@ -16,7 +17,17 @@ export type InviteChoices = {
 };
 
 /** An invite row with migration 11's columns. */
-export type InviteRow = Invite & Partial<InviteChoices> & { created_at: string; opened_at?: string | null; declined_at?: string | null; accepted_by: string | null };
+export type InviteRow = Invite &
+  Partial<InviteChoices> & { created_at: string; opened_at?: string | null; declined_at?: string | null; accepted_by: string | null; sitter_email?: string | null; sent_at?: string | null; link_token?: string | null };
+
+/** Home "Needs you" (S0e): an open invite sent to the signed-in sitter's email (my_invites, migration 28). */
+export type MyInvite = { link_token: string; family_name: string; kids: string; created_at: string };
+
+/** Migration 28 hasn't been run yet (the column / function doesn't exist). */
+export function needsMigration28(e: unknown) {
+  const m = typeof e === 'object' && e && 'message' in e ? String((e as { message: unknown }).message) : String(e ?? '');
+  return /sitter_email|invite_link_preview|invite_sent|my_invites|schema cache|does not exist/i.test(m);
+}
 
 /** S1: what preview_invite returns. */
 export type InvitePreview = {
@@ -82,9 +93,11 @@ export const inviteApi = {
     });
     if (error) throw error;
     const code = data as string;
-    const row = await supabase.from('invites').select('id').eq('family_id', familyId).eq('code', code).single();
+    // select('*'): link_token arrives with migration 28 (null before, and the text then gives the code only).
+    const row = await supabase.from('invites').select('*').eq('family_id', familyId).eq('code', code).single();
     if (row.error) throw row.error;
-    return { id: (row.data as { id: string }).id, code };
+    const r = row.data as InviteRow;
+    return { id: r.id, code, token: r.link_token ?? null };
   },
   /** Going back from P24 to P23/P3 and on again edits the same invite instead of making a second code. */
   async update(id: string, sitterName: string, c: InviteChoices) {
@@ -128,6 +141,36 @@ export const inviteApi = {
       profile: prof.data as Profile | null,
       signedAt: ((consent.data ?? []) as { signed_at: string }[])[0]?.signed_at ?? null,
     };
+  },
+  /** P3 "Email (optional)" (migration 28). Before it runs only an empty email can be saved. */
+  async setEmail(id: string, email: string) {
+    const v = email.trim() || null;
+    const { error } = await supabase.from('invites').update({ sitter_email: v }).eq('id', id);
+    if (error && (v || !needsMigration28(error))) throw new Error(needsMigration28(error) ? 'Sending to an email needs the latest database update (migration 28). Leave the email empty for now.' : error.message);
+  },
+  /** P24 Send by text / Email / Copy link: marks the invite sent; an existing sitter with that email gets a push (S0e).
+   * Quietly does nothing before migration 28. */
+  async sent(id: string) {
+    const { error } = await supabase.rpc('invite_sent', { p_invite: id });
+    if (error && !needsMigration28(error)) throw error;
+  },
+  /** S0b / S0c: what anyone with the link may see (works signed out; by token only). 'unknown' when it can't be checked. */
+  async linkPreview(token: string): Promise<LinkPreview> {
+    const { data, error } = await supabase.rpc('invite_link_preview', { p_token: token });
+    if (error || !data) return { status: 'unknown' };
+    return data as LinkPreview;
+  },
+  /** Signed in: the link's 6-digit code (for preview / accept / decline), or why the link can't be used. */
+  async codeForLink(token: string): Promise<{ status: LinkPreview['status']; code?: string }> {
+    const { data, error } = await supabase.rpc('invite_code_for_link', { p_token: token });
+    if (error) throw error;
+    return data as { status: LinkPreview['status']; code?: string };
+  },
+  /** Home "Needs you": open invites sent to my email. Empty before migration 28. */
+  async mine(): Promise<MyInvite[]> {
+    const { data, error } = await supabase.rpc('my_invites');
+    if (error) return [];
+    return (data ?? []) as MyInvite[];
   },
   async cancel(id: string) {
     const { error } = await supabase.from('invites').update({ cancelled_at: new Date().toISOString() }).eq('id', id);

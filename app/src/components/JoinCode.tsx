@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { InviteReview } from '@/components/InviteReview';
 import { Button, ErrorText, Field, Icon, Screen } from '@/components/ui';
 import { inviteApi, type InvitePreview } from '@/lib/invites';
+import { rememberPendingInvite } from '@/lib/home-route';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { color, font } from '@/theme';
@@ -18,9 +19,48 @@ import { Text, TextInput } from '@/components/Text';
 // (the family's requirements), then S42 / S2.
 const LENGTH = 6;
 
+/**
+ * S1's two answers, shared by S51 (a typed code) and the invite link (app/i/[token].tsx). Accept goes on to S27 family
+ * requirements (skipped when the family has none) -> S42 house rules -> S2 notice. Both forget a pending invite link.
+ */
+export function useInviteAnswer() {
+  const { refresh } = useSession();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function accept(code: string, yourName: string) {
+    setBusy(true);
+    setErr('');
+    const { data, error } = await supabase.rpc('accept_invite', { p_code: code, p_your_name: yourName });
+    setBusy(false);
+    if (error) return setErr(errorText(error));
+    rememberPendingInvite(null);
+    await refresh();
+    router.replace(`/sitter/requirements/${data as string}?next=consent`);
+  }
+
+  /** True when it was declined. */
+  async function decline(code: string) {
+    setBusy(true);
+    setErr('');
+    try {
+      await inviteApi.decline(code);
+      rememberPendingInvite(null);
+      return true;
+    } catch (e) {
+      setErr(errorText(e));
+      return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return { accept, decline, busy, err };
+}
+
 /** Wireframe S51: join a family with the parent's invite code. Used by the Join screen and by sitter sign-up. */
 export function JoinCode({ onBack }: { onBack?: () => void }) {
-  const { profile, refresh } = useSession();
+  const { profile } = useSession();
   const [code, setCode] = useState('');
   const hasName = !!(profile?.full_name ?? '').trim();
   const [name, setName] = useState('');
@@ -41,32 +81,16 @@ export function JoinCode({ onBack }: { onBack?: () => void }) {
     }
   }
 
-  async function join() {
-    setBusy(true);
-    setErr('');
-    const { data, error } = await supabase.rpc('accept_invite', { p_code: code, p_your_name: yourName });
-    setBusy(false);
-    if (error) return setErr(errorText(error));
-    await refresh();
-    // S1 -> S27 family requirements (skipped when the family has none) -> S42 house rules -> S2 notice.
-    router.replace(`/sitter/requirements/${data as string}?next=consent`);
-  }
-
-  async function decline() {
-    setBusy(true);
-    setErr('');
-    try {
-      await inviteApi.decline(code);
+  const answer = useInviteAnswer();
+  const join = () => answer.accept(code, yourName);
+  const decline = async () => {
+    if (await answer.decline(code)) {
       setPreview(null);
       setCode('');
-    } catch (e) {
-      setErr(errorText(e));
-    } finally {
-      setBusy(false);
     }
-  }
+  };
 
-  if (preview) return <InviteReview invite={preview} onAccept={join} onDecline={decline} busy={busy} err={err} />;
+  if (preview) return <InviteReview invite={preview} onAccept={join} onDecline={decline} busy={answer.busy} err={answer.err} />;
 
   return (
     <Screen

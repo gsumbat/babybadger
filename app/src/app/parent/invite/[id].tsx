@@ -7,7 +7,8 @@ import { SvgXml } from 'react-native-svg';
 
 import { ErrorText, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
-import { dayOf, firstName, inviteMessage, timeOf } from '@/lib/format';
+import { dayOf, firstName, timeOf } from '@/lib/format';
+import { firstWord, inviteText, inviteUrl } from '@/lib/invite-links';
 import { inviteApi, stepsDone, type InviteRow, type InviteStep } from '@/lib/invites';
 import { familyRequirements, requirementStatus, type ReqSummary } from '@/lib/requirements';
 import { useSession } from '@/lib/session';
@@ -31,7 +32,8 @@ export default function InviteStatus() {
     const invite = await inviteApi.get(id!);
     const sitter = invite.accepted_by ? await inviteApi.sitterOf(fid, invite.accepted_by) : null;
     const signed = sitter?.link?.status === 'active';
-    const kids = signed ? await api.kids(fid) : [];
+    // Kids: P26's list once signed; before that the names for the S0a text (Resend).
+    const kids = await api.kids(fid);
     // Requirements (migration 20): P25's Credentials step shows when the family has any; P26 says how she stands.
     const [reqs, req] = await Promise.all([familyRequirements(fid), invite.accepted_by ? requirementStatus(fid, invite.accepted_by) : Promise.resolve(null)]);
     return { invite, sitter, signed, kids, hasReqs: reqs.length > 0, req };
@@ -46,23 +48,25 @@ export default function InviteStatus() {
   if (!data) return error ? <Screen title="Invite" back><ErrorText>{error}</ErrorText></Screen> : <Loading />;
   const name = firstName(data.sitter?.profile?.full_name || data.invite.sitter_name);
   if (data.signed) return <Accepted name={name} signedAt={data.sitter?.signedAt ?? data.invite.accepted_at} kidIds={data.sitter?.link?.kid_ids ?? null} kids={data.kids} req={data.req} />;
-  return <Pending invite={data.invite} name={name} familyName={family!.name} hasReqs={data.hasReqs} />;
+  const kidNames = data.kids.filter((k) => !data.invite.kid_ids || data.invite.kid_ids.includes(k.id)).map((k) => k.name);
+  return <Pending invite={data.invite} name={name} kidNames={kidNames} hasReqs={data.hasReqs} />;
 }
 
 // ---------------------------------------------------------------- P25
 // The Credentials step shows when the family has sitter requirements (P28–P32). Left out until built: "See it from
 // Maya’s side · Open her text" (no text is sent from the app), the Reminder row (no reminders are sent). "Copy link" copies the invite
 // text, as on P24.
-function Pending({ invite, name, familyName, hasReqs }: { invite: InviteRow; name: string; familyName: string; hasReqs: boolean }) {
+function Pending({ invite, name, kidNames, hasReqs }: { invite: InviteRow; name: string; kidNames: string[]; hasReqs: boolean }) {
+  const { profile } = useSession();
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState('');
   const accepted = !!invite.accepted_at;
   const declined = !!invite.declined_at;
   const done = stepsDone(invite, false);
-  const msg = inviteMessage(familyName, invite.code);
+  const msg = inviteText({ sitter: name, parent: firstWord(profile?.full_name), kids: kidNames, code: invite.code, token: invite.link_token });
   const steps: { key: InviteStep | 'credentials'; title: string; sub: string }[] = [
     { key: 'sent', title: 'Invite sent', sub: `${dayOf(invite.created_at)} ${timeOf(invite.created_at)}` },
-    { key: 'opened', title: 'Opened', sub: invite.opened_at ? `${name} entered the code · ${timeOf(invite.opened_at)}` : `${name} enters the code` },
+    { key: 'opened', title: 'Opened', sub: invite.opened_at ? `${name} confirmed her email · ${timeOf(invite.opened_at)}` : `${name} opens the link` },
     { key: 'reviewing', title: 'Reviewing what you’ll see', sub: 'She agrees to location sharing and signs the notice' },
     ...(hasReqs ? [{ key: 'credentials' as const, title: 'Credentials', sub: 'Missing ones are flagged for her to add' }] : []),
     { key: 'ready', title: 'Ready to book', sub: 'You can send her a first shift' },
@@ -107,11 +111,11 @@ function Pending({ invite, name, familyName, hasReqs }: { invite: InviteRow; nam
                 <Pressable
                   accessibilityRole="button"
                   onPress={async () => {
-                    await Clipboard.setStringAsync(msg);
+                    await Clipboard.setStringAsync(invite.link_token ? inviteUrl(invite.link_token) : msg);
                     setCopied(true);
                   }}
                   style={st.tonalBtn}>
-                  <Text style={st.tonalText}>{copied ? 'Copied' : 'Copy invite'}</Text>
+                  <Text style={st.tonalText}>{copied ? 'Copied' : 'Copy link'}</Text>
                 </Pressable>
               </View>
             )}

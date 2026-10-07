@@ -20,6 +20,3 @@ export function firstName(full?: string | null) {
   return (full || '').trim().split(/\s+/)[0] || 'Sitter';
 }
 
-export function inviteMessage(familyName: string, code: string) {
-  return `${familyName} invited you to BabyBadger. Download the app, choose “I’m a sitter” and enter code ${code}. You’ll review the family and sign their location notice before your first shift.`;
-}

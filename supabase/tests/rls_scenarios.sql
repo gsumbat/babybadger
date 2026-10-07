@@ -2153,4 +2153,142 @@ begin
   exception when others then if sqlerrm not like 'already booked then%' then raise exception 'FAIL restore: %', sqlerrm; end if; end;
 end $$;
 
+-- 28. Invite links: the public page works by a long random token only (never by the 6-digit code) and shows only
+-- first names for a usable invite; sending to an existing sitter's email pushes her once and lists it on her Home;
+-- an invite with an email only opens for that email.
+reset role;
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000a2811', 'rosa28@example.com'), ('00000000-0000-0000-0000-0000000a2812', 'new28@example.com');
+insert into profiles (id, full_name, role) values ('00000000-0000-0000-0000-0000000a2811', 'Rosa Diaz', 'sitter') on conflict (id) do update set full_name = excluded.full_name, role = excluded.role;
+insert into push_tokens (user_id, token, platform) values ('00000000-0000-0000-0000-0000000a2811', 'ExponentPushToken[rosa28-phone]', 'ios');
+delete from net.sent;
+grant select on ctx to anon;
+do $$ begin
+  -- every invite (old ones too) has its own 40-character token
+  if exists (select 1 from invites where link_token !~ '^[0-9a-f]{40}$') then raise exception 'FAIL link tokens'; end if;
+  if (select count(distinct link_token) from invites) <> (select count(*) from invites) then raise exception 'FAIL tokens not unique'; end if;
+end $$;
+insert into ctx select 'tok_used', link_token from invites where code = (select v from ctx where k = 'code');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+insert into ctx values ('code28', (select public.create_invite((select v::uuid from ctx where k='fam'), 'Rosa')));
+insert into ctx select 'tok28', link_token from invites where code = (select v from ctx where k = 'code28');
+insert into ctx select 'inv28', id::text from invites where code = (select v from ctx where k = 'code28');
+update invites set sitter_email = '  Rosa28@Example.com ' where code = (select v from ctx where k = 'code28');
+do $$ begin
+  if (select sitter_email from invites where code = (select v from ctx where k = 'code28')) <> 'rosa28@example.com' then raise exception 'FAIL email not tidied'; end if;
+  begin
+    update invites set sitter_email = 'not an email' where code = (select v from ctx where k = 'code28');
+    raise exception 'FAIL bad email saved';
+  exception when check_violation then null; end;
+end $$;
+-- Anyone with the link (anon): the family, Jen's first name, kids' first names. Nothing by the 6-digit code.
+reset role;
+select pg_temp.as_user('');
+set role anon;
+do $$ declare p jsonb := public.invite_link_preview((select v from ctx where k = 'tok28')); begin
+  if p->>'status' <> 'open' then raise exception 'FAIL anon preview status %', p; end if;
+  if p->>'family_name' <> 'The Lee family' or p->>'invited_by' <> 'Jen' or p->>'invited_by_initials' <> 'JL' then raise exception 'FAIL anon preview names %', p; end if;
+  if p->'kids'->0->>'name' <> 'Ava' or (p->'kids'->0) ? 'birthdate' then raise exception 'FAIL anon preview kids %', p; end if;
+  if p ? 'rate' or p ? 'family_id' or p ? 'code' then raise exception 'FAIL anon preview says too much %', p; end if;
+  -- the 6-digit code finds nothing
+  p := public.invite_link_preview((select v from ctx where k = 'code28'));
+  if p <> '{"status": "not_found"}'::jsonb then raise exception 'FAIL anon looked up a code %', p; end if;
+  -- an unknown token: status only
+  p := public.invite_link_preview(repeat('ab', 20));
+  if p <> '{"status": "not_found"}'::jsonb then raise exception 'FAIL unknown token %', p; end if;
+  p := public.invite_link_preview((select v from ctx where k = 'tok_used'));
+  if p <> '{"status": "used"}'::jsonb then raise exception 'FAIL used link %', p; end if;
+  begin
+    perform 1 from invites;
+    raise exception 'FAIL anon reads invites';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.invite_code_for_link((select v from ctx where k = 'tok28'));
+    raise exception 'FAIL anon turns a link into a code';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.preview_invite((select v from ctx where k = 'code28'));
+    raise exception 'FAIL anon previews by code';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.invite_sent((select v::uuid from ctx where k = 'inv28'));
+    raise exception 'FAIL anon marks invites sent';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+update invites set expires_at = now() - interval '1 minute' where code = (select v from ctx where k = 'code28');
+set role anon;
+do $$ begin
+  if public.invite_link_preview((select v from ctx where k = 'tok28')) <> '{"status": "expired"}'::jsonb then raise exception 'FAIL expired link'; end if;
+end $$;
+reset role;
+update invites set expires_at = now() + interval '7 days' where code = (select v from ctx where k = 'code28');
+set role authenticated;
+-- Someone else can't send Jen's invite
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+do $$ begin
+  perform public.invite_sent((select v::uuid from ctx where k = 'inv28'));
+  raise exception 'FAIL stranger sent an invite';
+exception when others then if sqlerrm not like 'not a parent%' then raise exception 'FAIL invite_sent: %', sqlerrm; end if; end $$;
+-- Signed in, the link gives the code; but this invite is Rosa's: the stranger can't open, decline or accept it
+do $$ declare r jsonb := public.invite_code_for_link((select v from ctx where k = 'tok28')); begin
+  if r->>'status' <> 'open' or r->>'code' <> (select v from ctx where k = 'code28') then raise exception 'FAIL code for link %', r; end if;
+  if public.invite_code_for_link('274139') <> '{"status": "not_found"}'::jsonb then raise exception 'FAIL code passed as a link'; end if;
+  begin
+    perform public.accept_invite((select v from ctx where k = 'code28'), 'Stranger');
+    raise exception 'FAIL accepted someone else''s invite';
+  exception when others then
+    if sqlerrm <> 'This invite was sent to r•••@example.com. Sign in with that email, or ask Jen to resend it.' then raise exception 'FAIL email lock: %', sqlerrm; end if;
+  end;
+  begin
+    perform public.preview_invite((select v from ctx where k = 'code28'));
+    raise exception 'FAIL previewed someone else''s invite';
+  exception when others then if sqlerrm not like 'This invite was sent to%' then raise exception 'FAIL preview lock: %', sqlerrm; end if; end;
+  begin
+    perform public.decline_invite((select v from ctx where k = 'code28'));
+    raise exception 'FAIL declined someone else''s invite';
+  exception when others then if sqlerrm not like 'This invite was sent to%' then raise exception 'FAIL decline lock: %', sqlerrm; end if; end;
+end $$;
+-- Jen sends it: Rosa (an existing sitter) gets one push that opens /i/<token>; sending again doesn't repeat it
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+select public.invite_sent((select v::uuid from ctx where k = 'inv28'));
+select public.invite_sent((select v::uuid from ctx where k = 'inv28'));
+reset role;
+do $$ declare n int; m jsonb; begin
+  select count(*) into n from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[rosa28-phone]';
+  if n <> 1 then raise exception 'FAIL invite push count %', n; end if;
+  select x into m from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[rosa28-phone]';
+  if m->>'title' <> 'New family invite' or m->>'body' <> 'The Lee family invited you to sit for Ava. Tap to review.'
+     or m->'data'->>'url' <> '/i/' || (select v from ctx where k = 'tok28') then raise exception 'FAIL invite push text %', m; end if;
+  if (select sent_at from invites where code = (select v from ctx where k = 'code28')) is null then raise exception 'FAIL sent_at'; end if;
+end $$;
+-- Her Home lists it; nobody else's does; she can open it
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2811');
+do $$ declare l jsonb := public.my_invites(); begin
+  if jsonb_array_length(l) <> 1 or l->0->>'link_token' <> (select v from ctx where k = 'tok28') or l->0->>'family_name' <> 'The Lee family' or l->0->>'kids' <> 'Ava' or (l->0) ? 'code' then
+    raise exception 'FAIL my_invites %', l; end if;
+  if public.preview_invite((select v from ctx where k = 'code28'))->>'family_name' <> 'The Lee family' then raise exception 'FAIL Rosa preview'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+do $$ begin if jsonb_array_length(public.my_invites()) <> 0 then raise exception 'FAIL Maya sees Rosa''s invite'; end if; end $$;
+-- An email that doesn't belong to a sitter yet: no push (she signs up from the link instead)
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+insert into ctx values ('code28b', (select public.create_invite((select v::uuid from ctx where k='fam'), 'Nina')));
+update invites set sitter_email = 'new28@example.com' where code = (select v from ctx where k = 'code28b');
+select public.invite_sent((select id from invites where code = (select v from ctx where k = 'code28b')));
+reset role;
+do $$ begin
+  if (select count(*) from net.sent) <> 1 then raise exception 'FAIL pushed an invite to someone who isn''t a sitter'; end if;
+end $$;
+-- The new account with that email can accept it (an invite without an email keeps working for anyone: scenario 1)
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2812');
+select public.accept_invite((select v from ctx where k = 'code28b'), 'Nina Park');
+-- Once Rosa answers (declines), it leaves her Home
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2811');
+select public.decline_invite((select v from ctx where k = 'code28'));
+do $$ begin if jsonb_array_length(public.my_invites()) <> 0 then raise exception 'FAIL declined invite still listed'; end if; end $$;
+reset role;
+
 select 'ALL RLS SCENARIOS PASSED' as result;

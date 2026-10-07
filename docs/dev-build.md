@@ -42,3 +42,8 @@ and adds the alert triggers.
   from another phone, the simulator or the web build. The parent's phone gets the alert; tapping it opens the shift.
 - Background location: sign in as the sitter, clock in, choose "Allow while using" and then "Change to Always
   Allow" when iOS asks. Lock the phone; the parent's map keeps moving (about every minute or 50 m).
+
+## Invite links (babybadger.app/i/…)
+
+`app.json` has Associated Domains (iOS) and an app-link intent filter (Android) for babybadger.app. They need a new
+build (`eas build`), and the site must be live first: see `docs/web-hosting.md`.

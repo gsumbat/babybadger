@@ -7,7 +7,8 @@ import { SITTER_COLORS, shortName } from '@/components/addChild';
 import { ErrorText, Icon, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { setupApi, type SitterAccess } from '@/lib/family-setup';
-import { inviteMessage } from '@/lib/format';
+import { firstName } from '@/lib/format';
+import { firstWord, inviteText } from '@/lib/invite-links';
 import { inviteApi, type InviteRow } from '@/lib/invites';
 import { requirementStatus } from '@/lib/requirements';
 import { useSession } from '@/lib/session';
@@ -45,7 +46,7 @@ function confirmThen(title: string, body: string, action: string, go: () => void
 }
 
 export default function SitterList() {
-  const { family } = useSession();
+  const { family, profile } = useSession();
   const fid = family!.id;
   const [err, setErr] = useState('');
   const { data, error, reload } = useQuery(async () => {
@@ -90,7 +91,11 @@ export default function SitterList() {
       return setErr(errorText(e));
     }
     await reload();
-    Share.share({ message: inviteMessage(family!.name, inv.code) }).catch(() => {});
+    // The S0a text (babybadger.app/i/<token> and the code), as on P24.
+    const kids = await api.kids(family!.id).catch(() => []);
+    const kidNames = kids.filter((k) => !inv.kid_ids || inv.kid_ids.includes(k.id)).map((k) => k.name);
+    const message = inviteText({ sitter: firstName(inv.sitter_name), parent: firstWord(profile?.full_name), kids: kidNames, code: inv.code, token: inv.link_token });
+    Share.share({ message }).catch(() => {});
   }
   function remove(inv: InviteRow) {
     confirmThen('Remove this invite?', `Code ${inv.code} stops working.`, 'Remove', async () => {
