@@ -169,6 +169,12 @@ function EmailStep({
               New here? Get started
             </Text>
           </View>
+          {/* Development builds only: the test accounts (Jen Lee / Maya) can't receive the email code. */}
+          {__DEV__ && (
+            <Text accessibilityRole="link" style={[st.link, { alignSelf: 'center', color: color.ink2 }]} onPress={() => router.push('/dev-login')}>
+              Test accounts
+            </Text>
+          )}
         </View>
       </KeyboardStickyView>
     </View>
