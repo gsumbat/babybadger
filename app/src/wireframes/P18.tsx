@@ -20,11 +20,11 @@ export default function WF_P18() {
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, backgroundColor: "#FFFFFF", borderRadius: 22, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> P13-KidsDevices.dc.html */}
             <SvgXml xml={SVG[0]} width={22} height={22} />
           </View>
-          <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#4B5960", flexGrow: 1, flexShrink: 1 }}>Add a child · 1 of 4</Text>
+          <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#4B5960", flexGrow: 1, flexShrink: 1 }}>Add a child · 1 of 3</Text>
           <View style={{ flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A", textDecorationLine: "underline" }}>Cancel</Text></View>
         </View>
         <View style={{ height: 6, backgroundColor: "#DDE3EA", borderRadius: 3, overflow: "hidden", flexShrink: 1, minHeight: 0, flexDirection: "column" }}>
-          <View style={{ width: "25%", height: 6, backgroundColor: "#47698A", flexDirection: "column" }}>
+          <View style={{ width: "33%", height: 6, backgroundColor: "#47698A", flexDirection: "column" }}>
           </View>
         </View>
       </View>

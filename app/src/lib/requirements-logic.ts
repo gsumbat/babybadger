@@ -421,7 +421,11 @@ export function sitterRows(reqs: Requirement[], rows: ReqStatusRow[], creds: Cre
       const soon = [s, si].find((x) => x?.met && x.reason === 'expiring' && x.expires_on);
       const sub = met
         ? `${creds.some((c) => ['first_aid', 'cpr_child', 'cpr_infant'].includes(c.kind) && c.verified_at) ? 'Verified' : 'In review'}${soon ? ` · ${soon === si ? 'Infant ' : ''}expires ${monthDay(soon.expires_on!)}` : ''}`
-        : !s?.met ? credLine(CRED_KINDS.cpr_first_aid, creds, s) : credLine(CRED_KINDS.cpr_infant, creds, si);
+        : !s?.met && !si?.met
+          ? 'Add both to your profile'
+          : !s?.met
+            ? 'Infant CPR done · add CPR and First Aid'
+            : 'CPR and First Aid done · add Infant CPR';
       out.push({ ids: [r.id, infant.id], key: r.key, title: 'CPR, First Aid, Infant CPR', sub, icon: 'heart', state: met ? 'have' : nice ? 'nice' : 'missing' });
       continue;
     }

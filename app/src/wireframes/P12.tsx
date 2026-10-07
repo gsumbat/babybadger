@@ -23,9 +23,9 @@ export default function WF_P12() {
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Parents</Text>
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", flexShrink: 1 }}>Jen, Sam</Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>{/* -> P13-KidsDevices.dc.html */}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Kids and devices</Text>
-            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", flexShrink: 1 }}>Ava, Leo ›</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", flexShrink: 1 }}>Ava, Leo</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>{/* -> P27-Sitters.dc.html */}
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Sitters</Text>
@@ -58,9 +58,9 @@ export default function WF_P12() {
               <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328" }}>Food and tasks</Text>
               <Text style={{ fontFamily: font.body, fontSize: 13, color: "#5F6D74" }}>Each entry the sitter logs</Text>
             </View>
-            <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#C3CCD5", borderRadius: 15, flexDirection: "column" }}>
-              <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: "#C3CCD5", backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}></View>
-              <View style={{ width: 24, height: 24, top: 3, left: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
+            <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 15, flexDirection: "column" }}>
+              <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: "#47698A", backgroundColor: "#47698A", alignItems: "center", justifyContent: "center" }}><SvgXml xml={CHECK} width={16} height={16} /></View>
+              <View style={{ width: 24, height: 24, top: 3, right: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
               </View>
             </View>
           </View>
@@ -69,7 +69,7 @@ export default function WF_P12() {
               <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328" }}>Off-plan and help alerts</Text>
               <Text style={{ fontFamily: font.body, fontSize: 13, color: "#5F6D74" }}>Always on for safety</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 26, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999, flexShrink: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 26, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Always</Text>
             </View>
           </View>
@@ -84,9 +84,9 @@ export default function WF_P12() {
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Keep location history</Text>
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", flexShrink: 1 }}>[RETENTION]</Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 }}>{/* -> P39-Subscription.dc.html */}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 }}>
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Subscription</Text>
-            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", flexShrink: 1 }}>Family · monthly ›</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", flexShrink: 1 }}>Coming soon</Text>
           </View>
         </View>
       </View>

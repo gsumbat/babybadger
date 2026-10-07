@@ -1,4 +1,4 @@
-// GENERATED from wireframe P21-ChildSitters.dc.html by tools/wf2rn/convert.py. Do not edit by hand:
+// GENERATED from wireframe P21b-ChildSittersMany.dc.html by tools/wf2rn/convert.py. Do not edit by hand:
 // regenerate, then copy into the real screen and bind data there.
 import { Text, TextInput, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
@@ -13,7 +13,7 @@ const SVG = [
 ];
 
 /** Who looks after */
-export default function WF_P21() {
+export default function WF_P21b() {
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F5F8", flexDirection: "column", overflow: "hidden" }}>
       <View style={{ flexDirection: "column", gap: 14, paddingTop: 16, paddingRight: 20, paddingBottom: 8, paddingLeft: 20 }}>
@@ -35,7 +35,7 @@ export default function WF_P21() {
           <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", lineHeight: 22 }}>Sitters you turn on see Mia’s info and care plan during their shifts.</Text>
         </View>
         <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 68 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 68, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 22 }}>
               <Text style={{ fontFamily: font.displayBold, fontSize: 19, color: "#FFFFFF" }}>M</Text>
             </View>
@@ -55,6 +55,32 @@ export default function WF_P21() {
               </View>
             </View>
           </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 68, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, flexShrink: 0, backgroundColor: "#5E7F6A", borderRadius: 22 }}>
+              <Text style={{ fontFamily: font.displayBold, fontSize: 19, color: "#FFFFFF" }}>P</Text>
+            </View>
+            <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 16, color: "#1B2328" }}>Priya K.</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Your sitter since Oct 2026</Text>
+            </View>
+            <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 15, flexDirection: "column" }}>
+              <View style={{ width: 24, height: 24, top: 3, right: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
+              </View>
+            </View>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 68 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, flexShrink: 0, backgroundColor: "#8A6A4E", borderRadius: 22 }}>
+              <Text style={{ fontFamily: font.displayBold, fontSize: 19, color: "#FFFFFF" }}>D</Text>
+            </View>
+            <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 16, color: "#1B2328" }}>Dana W.</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Hasn’t signed yet</Text>
+            </View>
+            <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 15, flexDirection: "column" }}>
+              <View style={{ width: 24, height: 24, top: 3, right: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
+              </View>
+            </View>
+          </View>
         </View>
         <View style={{ flexDirection: "row", gap: 12, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#F6E3C6", borderRadius: 14 }}>
           <SvgXml xml={SVG[1]} width={22} height={22} />
@@ -65,8 +91,8 @@ export default function WF_P21() {
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "column", flexShrink: 1 }}>
-            <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Tell Maya about Mia</Text>
-            <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>She gets a short summary now</Text>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Tell Maya and Priya about Mia</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>They get a short summary now</Text>
           </View>
           <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 15, flexDirection: "column" }}>
             <View style={{ width: 24, height: 24, top: 3, right: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
@@ -76,7 +102,7 @@ export default function WF_P21() {
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "column", flexShrink: 1 }}>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Add Mia to booked shifts</Text>
-            <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>3 upcoming · Maya must accept</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>3 upcoming</Text>
           </View>
           <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#C3CCD5", borderRadius: 15, flexDirection: "column" }}>
             <View style={{ width: 24, height: 24, top: 3, left: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>

@@ -11,6 +11,7 @@ const SVG = [
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #1B2328; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M15 6l-6 6 6 6\"></path></svg>",
   "<svg width=\"28\" height=\"28\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #FFFFFF; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z\"></path><path d=\"M8.5 12l2.5 2.5 4.5-4.5\"></path></svg>",
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #5F6D74; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M9 6l6 6-6 6\"></path></svg>",
+  "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #5F6D74; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M9 6l6 6-6 6\"></path></svg>",
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #5F6D74; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M9 6l6 6-6 6\"></path></svg>"
 ];
 
@@ -19,7 +20,7 @@ export default function WF_S12() {
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F5F8", flexDirection: "column", overflow: "hidden" }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 16, paddingRight: 20, paddingBottom: 12, paddingLeft: 20 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, paddingTop: 0, paddingRight: 0, paddingBottom: 0, paddingLeft: 0, backgroundColor: "#FFFFFF", borderRadius: 22, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> S10-Family.dc.html */}
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, paddingTop: 0, paddingRight: 0, paddingBottom: 0, paddingLeft: 0, backgroundColor: "#FFFFFF", borderRadius: 22, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> S39-Me.dc.html */}
           <SvgXml xml={SVG[0]} width={22} height={22} />
         </View>
         <Text style={{ fontFamily: font.display, fontSize: 22, color: "#1B2328", flexShrink: 1 }}>Privacy</Text>
@@ -28,7 +29,7 @@ export default function WF_S12() {
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 16, paddingRight: 16, paddingBottom: 16, paddingLeft: 16, backgroundColor: "#47698A", borderRadius: 20 }}>
           <SvgXml xml={SVG[1]} width={28} height={28} />
           <View style={{ flexDirection: "column", flexShrink: 1 }}>
-            <Text style={{ fontFamily: font.bodyBold, fontSize: 16, color: "#FFFFFF" }}>You're off shift</Text>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 16, color: "#FFFFFF" }}>You’re off shift</Text>
             <Text style={{ fontFamily: font.body, fontSize: 14, color: "#FFFFFF", opacity: 0.9 }}>No family can see your location right now.</Text>
           </View>
         </View>
@@ -91,9 +92,13 @@ export default function WF_S12() {
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Download my data</Text>
             <SvgXml xml={SVG[2]} width={20} height={20} />
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Delete my account</Text>
             <SvgXml xml={SVG[3]} width={20} height={20} />
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52 }}>{/* -> S0b-InviteLink.dc.html */}
+            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Sign out</Text>
+            <SvgXml xml={SVG[4]} width={20} height={20} />
           </View>
         </View>
       </View>
