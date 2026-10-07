@@ -130,7 +130,10 @@ export default function ParentHome() {
                     { icon: 'message-square' as const, label: 'Message', onPress: () => router.navigate('/parent/messages') },
                     { icon: 'shield' as const, label: 'Requirements', onPress: () => router.push('/parent/requirements') },
                   ]
-                : []),
+                : state.kind === 'live'
+                  ? // P4: Care plan is the one other built tile during a shift (Find a sitter, Kids & devices come later).
+                    [{ icon: 'list' as const, label: 'Care plan', onPress: () => router.push('/parent/care') }]
+                  : []),
             ]}
             height={state.kind === 'idle' ? 76 : 70}
           />
