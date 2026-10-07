@@ -40,7 +40,7 @@ const TILES: Record<string, Tile> = {
   care: { icon: 'list', label: 'Care plan', onPress: () => router.push('/parent/care') },
   devices: { icon: 'smartphone', label: 'Kids & devices', onPress: soon('Kids & devices') },
   pay: { icon: 'credit-card', label: 'Pay sitter', onPress: soon('Pay sitter') },
-  requirements: { icon: 'shield', label: 'Requirements', onPress: () => router.push('/parent/requirements') },
+  requirements: { icon: 'shield', label: 'Required', onPress: () => router.push('/parent/requirements') },
 };
 // P4b / P4k: all eight (House rules in place of Message, which is a tab); P4c (shift soon) and P4d (just ended): the four drawn there.
 const TILE_SETS = {

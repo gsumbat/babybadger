@@ -144,7 +144,7 @@ export default function WF_P4b() {
               </View>
               <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 76, paddingTop: 17, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P7a-SitterRequirements.dc.html */}
                 <SvgXml xml={SVG[13]} width={22} height={22} />
-                <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Requirements</Text>
+                <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Required</Text>
               </View>
             </View>
           </View>
