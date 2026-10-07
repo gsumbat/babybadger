@@ -130,7 +130,7 @@ export function sitterRowTitle(familyName: string, w: TimeWindow): string {
 
 /** Sitter Home row line (S3 "Overlaps your time off · answer by Fri"): how it fits her calendar and the time left. */
 export function sitterRowSub(fit: CalendarFit, left: string): string {
-  const how = fit.kind === 'time_off' ? 'Overlaps your time off' : fit.kind === 'shift' ? 'Overlaps another shift' : 'Fits your calendar';
+  const how = fit.kind === 'time_off' ? 'Overlaps your time off' : fit.kind === 'shift' ? 'You’re already booked then' : 'Fits your calendar';
   return `${how} · ${left}`;
 }
 
@@ -216,7 +216,7 @@ export type CalendarFit =
 
 /** S33 "Fits your calendar" or why not. Her time off (whole days) comes first: S20 lets her offer the free part
  * (the longest stretch she isn't off, the first one on a tie) or give up those days. A shift she already has then
- * shows on S33 as "Overlaps another shift". */
+ * shows on S33 as "You’re already booked then" (Accept greyed out; migration 27 refuses double booking). */
 export function calendarFit(w: TimeWindow, timeOff: DateRange[], shifts: { family_id: string; status: string; starts_at: string; ends_at: string }[]): CalendarFit {
   const offs = timeOff.map(offWindow).filter((o) => +o.start < +w.end && +o.end > +w.start);
   if (offs.length) {

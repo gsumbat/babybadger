@@ -23,7 +23,7 @@ import { cardShadow, color, font } from '@/theme';
 // (app/src/wireframes/S33.tsx, S20.tsx, S34.tsx), for one pool request sent to this sitter (/sitter/request/<id>, from
 // her Home's Needs you row and the "New shift request" push). Opening it marks it Seen for the parent (P46).
 // S33: the family, day and time, kids and home, hours and her rate; "Sent to a few sitters…"; "Fits your calendar ·
-// Nothing else that evening" (or "Overlaps another shift" with the clash, canvas S33b); the parent's note; "See the care
+// Nothing else that evening" (or "You’re already booked then" with the clash and Accept greyed out, canvas S33b); the parent's note; "See the care
 // plan" (S10); Decline / Accept shift; the time-left pill. Accept books her at once with "First to accept" on (->
 // Calendar), else tells the parent (canvas S33c "You said yes"). When the window overlaps her time off: S20 (canvas S20b
 // adds the time-left pill and the note): offer the free part only (the longest stretch she isn't off), accept all and
@@ -109,7 +109,7 @@ export default function SitterRequest() {
           { text: 'Read house rules', onPress: () => router.push(`/sitter/rules/${req!.family_id}`) },
         ]);
       } else {
-        setErr(msg.charAt(0).toUpperCase() + msg.slice(1));
+        setErr(msg.startsWith('already booked then') ? 'You’re already booked at that time.' : msg.charAt(0).toUpperCase() + msg.slice(1));
       }
     } finally {
       setBusy('');
@@ -245,7 +245,8 @@ export default function SitterRequest() {
       footer={
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <PillButton kind="outline" label="Decline" busy={busy === 'decline'} onPress={decline} />
-          <PillButton label="Accept shift" busy={busy === 'accept'} onPress={() => run('accept', () => requestsApi.accept(req.id))} />
+          {/* Migration 27: she can't hold two shifts at once, so a clash can only be declined. */}
+          <PillButton label="Accept shift" busy={busy === 'accept'} disabled={fit.kind === 'shift'} onPress={() => run('accept', () => requestsApi.accept(req.id))} />
         </View>
       }>
       <ErrorText>{err}</ErrorText>
@@ -257,7 +258,7 @@ export default function SitterRequest() {
         </Text>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-        {fit.kind === 'shift' ? <Pill label="Overlaps another shift" kind="warn" /> : <Pill label="Fits your calendar" kind="ok" />}
+        {fit.kind === 'shift' ? <Pill label="You’re already booked then" kind="warn" /> : <Pill label="Fits your calendar" kind="ok" />}
         <Text style={[st.sub13, { flexShrink: 1 }]}>
           {fit.kind === 'shift'
             ? `${(sitterLinks.find((l) => l.family_id === fit.shift.family_id)?.family.name ?? 'Another family').replace(/^The /, '')} · ${spanText(new Date(fit.shift.starts_at), new Date(fit.shift.ends_at))}`

@@ -29,5 +29,7 @@ if (Platform.OS !== 'web') {
 export function errorText(e: unknown): string {
   if (!e) return '';
   const msg = typeof e === 'object' && e && 'message' in e ? String((e as { message: unknown }).message) : String(e);
+  // Migration 27: a sitter can't have two shifts at the same time.
+  if (msg.startsWith('already booked then')) return 'This sitter is already booked at that time. Pick another time or sitter.';
   return msg.charAt(0).toUpperCase() + msg.slice(1);
 }

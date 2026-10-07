@@ -2133,4 +2133,24 @@ do $$ begin
 exception when others then if sqlerrm not like '%isn''t live%' then raise exception 'FAIL after clock-out: %', sqlerrm; end if; end $$;
 reset role;
 
+-- 27. No double booking: overlapping shifts for one sitter are refused; back-to-back and cancelled ones are fine.
+reset role;
+do $$
+declare f uuid; sid uuid; a uuid; d timestamptz := date_trunc('day', now()) + interval '30 days';
+begin
+  select family_id, sitter_id into f, sid from shifts where id = (select v::uuid from ctx where k = 'shift26');
+  insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by) values (f, sid, d + interval '10 hours', d + interval '12 hours', sid) returning id into a;
+  begin
+    insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by) values (f, sid, d + interval '11 hours', d + interval '13 hours', sid);
+    raise exception 'FAIL overlapping shift was booked';
+  exception when others then if sqlerrm not like 'already booked then%' then raise exception 'FAIL double booking: %', sqlerrm; end if; end;
+  insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by) values (f, sid, d + interval '12 hours', d + interval '14 hours', sid);
+  update shifts set status = 'cancelled' where id = a;
+  insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by) values (f, sid, d + interval '10 hours', d + interval '12 hours', sid);
+  begin
+    update shifts set status = 'scheduled' where id = a;
+    raise exception 'FAIL brought back a cancelled shift on top of another';
+  exception when others then if sqlerrm not like 'already booked then%' then raise exception 'FAIL restore: %', sqlerrm; end if; end;
+end $$;
+
 select 'ALL RLS SCENARIOS PASSED' as result;

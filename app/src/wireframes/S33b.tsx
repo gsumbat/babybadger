@@ -46,7 +46,7 @@ export default function WF_S33b() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#F6E3C6", borderRadius: 999 }}>
             <View style={{ width: 7, height: 7, backgroundColor: "#B7791F", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
             </View>
-            <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#7A4E0E" }}>Overlaps another shift</Text>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#7A4E0E" }}>You’re already booked then</Text>
           </View>
           <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", flexShrink: 1 }}>Ortiz · 5:00 – 7:00 PM</Text>
         </View>
@@ -59,7 +59,7 @@ export default function WF_S33b() {
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 54, flexGrow: 1, flexBasis: 0, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#C3CCD5", flexShrink: 1 }}>{/* -> S3-Today.dc.html */}
             <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#1B2328" }}>Decline</Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 54, flexGrow: 1, flexBasis: 0, backgroundColor: "#47698A", borderRadius: 999, flexShrink: 1 }}>{/* -> S6-Calendar.dc.html */}
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 54, flexGrow: 1, flexBasis: 0, backgroundColor: "#47698A", borderRadius: 999, opacity: 0.5, flexShrink: 1 }}>
             <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#FFFFFF" }}>Accept shift</Text>
           </View>
         </View>
