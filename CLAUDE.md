@@ -68,3 +68,6 @@ Run typecheck, lint and tests before every commit. Commit to `main` on github.co
 
 He's a designer, not a developer: explain steps in plain words, give exact commands, and show screens side by
 side with their wireframes when you change UI. He tests on his iPhone in Expo Go.
+
+## Launch phase 1: bring your own sitter
+Families use BabyBadger with sitters they already know, invited by text. **No sitter marketplace is shown** (no "Find a sitter", "Find new", "new sitters nearby", sitter "Get found"): gate any such entry behind `MARKETPLACE` in `app/src/lib/features.ts` (false). Keep building tools; the marketplace boards (P48–P53, S35) stay on the canvas for later.

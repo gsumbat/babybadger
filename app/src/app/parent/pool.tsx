@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { shortName } from '@/components/addChild';
+import { MARKETPLACE } from '@/lib/features';
 import { findComingSoon, openPoolWeek, PickTimeSheet } from '@/components/pool';
 import { Text } from '@/components/Text';
 import { ErrorText, Icon, Screen } from '@/components/ui';
@@ -144,10 +145,12 @@ export default function Pool() {
               {count} {count === 1 ? 'sitter' : 'sitters'} your family trusts
             </Text>
           </View>
-          <Pressable accessibilityRole="button" onPress={findComingSoon} style={st.findBtn}>
-            <Icon name="search" size={16} strokeWidth={2.2} />
-            <Text style={st.findText}>Find new</Text>
-          </Pressable>
+          {MARKETPLACE ? (
+            <Pressable accessibilityRole="button" onPress={findComingSoon} style={st.findBtn}>
+              <Icon name="search" size={16} strokeWidth={2.2} />
+              <Text style={st.findText}>Find new</Text>
+            </Pressable>
+          ) : null}
         </View>
       }
       footer={

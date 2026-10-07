@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { shortName } from '@/components/addChild';
+import { MARKETPLACE } from '@/lib/features';
 import { findComingSoon, openPool, openPoolWeek, PickTimeSheet } from '@/components/pool';
 import { Button, ErrorText, Icon, Screen } from '@/components/ui';
 import { useQuery } from '@/lib/data';
@@ -93,7 +94,7 @@ export default function Sitters() {
             <Text style={st.emptyBody}>Invite someone you already know and trust. They join your pool once they accept and sign the notice.</Text>
             <Button label="Invite a sitter" onPress={() => router.push('/parent/invite')} style={st.emptyBtn} />
           </View>
-          {findCard}
+          {MARKETPLACE ? findCard : null}
         </>
       ) : null}
 
@@ -113,7 +114,7 @@ export default function Sitters() {
                 <Text style={st.chipText}>{' '}Pick a time</Text>
               </Pressable>
             </View>
-            <Text style={st.whenSub}>We check your pool first, then show new sitters nearby.</Text>
+            <Text style={st.whenSub}>{MARKETPLACE ? 'We check your pool first, then show new sitters nearby.' : 'We check who in your pool is free.'}</Text>
           </View>
 
           <View style={st.labelRow}>
@@ -143,7 +144,7 @@ export default function Sitters() {
               );
             })}
           </View>
-          {findCard}
+          {MARKETPLACE ? findCard : null}
         </>
       ) : !sitters.length && invites.length ? (
         findCard

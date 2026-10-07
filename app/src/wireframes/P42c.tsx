@@ -9,7 +9,6 @@ const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="non
 
 const SVG = [
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #1B2328; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M15 6l-6 6 6 6\"></path></svg>",
-  "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"11\" cy=\"11\" r=\"6.5\"></circle><path d=\"M16 16l4.5 4.5\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"></rect><path d=\"M3 10h18M8 3v4M16 3v4\"></path></svg>",
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><rect x=\"3.5\" y=\"3.5\" width=\"7\" height=\"7\" rx=\"1.5\"></rect><rect x=\"13.5\" y=\"3.5\" width=\"7\" height=\"7\" rx=\"1.5\"></rect><rect x=\"3.5\" y=\"13.5\" width=\"7\" height=\"7\" rx=\"1.5\"></rect><rect x=\"13.5\" y=\"13.5\" width=\"7\" height=\"7\" rx=\"1.5\"></rect></svg>"
 ];
@@ -26,15 +25,11 @@ export default function WF_P42c() {
           <Text style={{ fontFamily: font.display, fontSize: 22, color: "#1B2328", marginVertical: -4.62 }}>Sitter pool</Text>
           <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>5 sitters your family trusts</Text>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1 }}>{/* -> P48-Find.dc.html */}
-          <SvgXml xml={SVG[1]} width={16} height={16} />
-          <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#47698A" }}>Find new</Text>
-        </View>
       </View>
       <View style={{ flexDirection: "column", gap: 10, minHeight: 0, flexGrow: 1, paddingTop: 4, paddingRight: 20, paddingBottom: 10, paddingLeft: 20 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
-            <SvgXml xml={SVG[2]} width={22} height={22} />
+            <SvgXml xml={SVG[1]} width={22} height={22} />
           </View>
           <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
             <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#1B2328" }}>Sat, Oct 10 · 6:00 – 10:00 PM</Text>
@@ -136,7 +131,7 @@ export default function WF_P42c() {
         </View>
         <View style={{ flexDirection: "row", gap: 10, marginTop: "auto" }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 50, flexGrow: 0, paddingTop: 0, paddingRight: 18, paddingBottom: 0, paddingLeft: 18, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1 }}>{/* -> P43-PoolWeek.dc.html */}
-            <SvgXml xml={SVG[3]} width={20} height={20} />
+            <SvgXml xml={SVG[2]} width={20} height={20} />
             <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#47698A" }}>Week</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 50, flexGrow: 1, flexBasis: 0, backgroundColor: "#47698A", borderRadius: 999, flexShrink: 1 }}>{/* -> P45-PoolAsk.dc.html */}
