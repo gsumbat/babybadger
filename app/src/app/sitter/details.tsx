@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, View, type TextInputProps } from 'react-native';
 import { CIcon, SitterAvatar } from '@/components/credentials';
 import { Text, TextInput } from '@/components/Text';
 import { Button, ErrorText, Loading, Screen } from '@/components/ui';
+import { DateField } from '@/components/DateField';
 import { BIO_MAX, shortName, sitterBundle, sitterProfileApi, uploadPhoto } from '@/lib/credentials';
 import { useQuery } from '@/lib/data';
 import { useSession } from '@/lib/session';
@@ -20,7 +21,7 @@ export default function Details() {
   const { session, profile, refresh } = useSession();
   const uid = session!.user.id;
   const { data, reload } = useQuery(() => sitterBundle(uid), [uid]);
-  const [edit, setEdit] = useState<{ name?: string; phone?: string; area?: string; bio?: string }>({});
+  const [edit, setEdit] = useState<{ name?: string; phone?: string; area?: string; bio?: string; birthdate?: string }>({});
   const [busy, setBusy] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -30,6 +31,7 @@ export default function Details() {
   const name = edit.name ?? profile?.full_name ?? '';
   const phone = edit.phone ?? p?.phone ?? '';
   const area = edit.area ?? p?.home_area ?? '';
+  const birthdate = edit.birthdate ?? p?.birthdate ?? '';
   const bio = edit.bio ?? p?.bio ?? '';
 
   async function changePhoto() {
@@ -56,7 +58,7 @@ export default function Details() {
     setErr('');
     try {
       if (name.trim() !== (profile?.full_name ?? '')) await sitterProfileApi.setName(uid, name.trim());
-      await sitterProfileApi.save(uid, { phone: phone.trim() || null, home_area: area.trim() || null, bio: bio.trim() || null });
+      await sitterProfileApi.save(uid, { phone: phone.trim() || null, home_area: area.trim() || null, bio: bio.trim() || null, ...(edit.birthdate !== undefined ? { birthdate: birthdate || null } : {}) });
       await refresh();
       router.back();
     } catch (e) {
@@ -91,6 +93,10 @@ export default function Details() {
         <View style={st.box}>
           <Text style={st.value}>{session?.user.email ?? ''}</Text>
         </View>
+      </View>
+      <View style={{ gap: 5 }}>
+        <DateField label="Birthday" value={birthdate} onChange={(v) => setEdit((e) => ({ ...e, birthdate: v ?? '' }))} />
+        <Text style={st.hint}>Families see your age, never the date</Text>
       </View>
       <Box label="Home area" value={area} onChangeText={(t) => setEdit((e) => ({ ...e, area: t }))} maxLength={80} placeholder="Neighborhood, city" hint="Only your area is shown, never your address" />
       <Box label="About me" value={bio} onChangeText={(t) => setEdit((e) => ({ ...e, bio: t }))} multiline maxLength={BIO_MAX} hint={`${bio.length} / ${BIO_MAX}`} />

@@ -6,7 +6,7 @@ import { CIcon, CredTile, credTileKey, SitterAvatar } from '@/components/credent
 import { Text } from '@/components/Text';
 import { Button, ErrorText, Loading, Pill, Screen } from '@/components/ui';
 import { formatHours, hoursOf } from '@/lib/calendar-logic';
-import { certificates, credentialState, levelLabel, monthDay, monthYear, shortExpiry, shortName, sitterBundle, sortLanguages, toDay, type Credential } from '@/lib/credentials';
+import { certificates, credentialState, levelLabel, monthDay, monthYear, shortExpiry, shortName, sitterBundle, sortLanguages, toDay, type Credential, sitterAge } from '@/lib/credentials';
 import { api, useQuery } from '@/lib/data';
 import { dayOf } from '@/lib/format';
 import { requirementStatus } from '@/lib/requirements';
@@ -98,6 +98,7 @@ export default function SitterProfile() {
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <SitterAvatar name={full} photoPath={data.bundle.profile?.photo_path} size={64} fontSize={28} />
         <View style={{ gap: 2, flexShrink: 1 }}>
+          {sitterAge(data.bundle.profile?.birthdate) != null ? <Text style={st.meta}>{sitterAge(data.bundle.profile?.birthdate)} years old</Text> : null}
           {data.link?.joined_at ? <Text style={st.meta}>Sitting for you since {monthYear(toDay(new Date(data.link.joined_at)))}</Text> : null}
           <Text style={st.meta}>{stats}</Text>
         </View>

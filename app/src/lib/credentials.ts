@@ -14,7 +14,10 @@ function must<T>(r: { data: T | null; error: { message: string } | null }): T {
 
 const BUCKET = 'sitter-files';
 const CRED_COLS = 'id, sitter_id, kind, title, issuer, issued_on, expires_on, file_path, verified_at, created_at, updated_at';
-const PROFILE_COLS = 'sitter_id, phone, home_area, bio, years_experience, ages_from, ages_to, can_drive, own_car, rate, teaches_language, photo_path';
+const BASE_COLS = 'sitter_id, phone, home_area, bio, years_experience, ages_from, ages_to, can_drive, own_car, rate, teaches_language, photo_path';
+// birthdate arrives with migration 23; until it's run, reads fall back to the columns without it.
+const PROFILE_COLS = `${BASE_COLS}, birthdate`;
+const missingColumn = (e: unknown) => /birthdate/.test(String((e as { message?: string })?.message ?? e));
 
 /** True when the error means migration 19 hasn't been run yet. */
 export function needsMigration19(error: unknown) {
@@ -36,7 +39,9 @@ export async function sitterLanguages(sitterId: string): Promise<SitterLanguage[
 
 /** S40 details; null until she saves them. Throws before migration 19. */
 export async function sitterProfile(sitterId: string): Promise<SitterProfile | null> {
-  return must(await supabase.from('sitter_profiles').select(PROFILE_COLS).eq('sitter_id', sitterId).maybeSingle()) as SitterProfile | null;
+  const r = await supabase.from('sitter_profiles').select(PROFILE_COLS).eq('sitter_id', sitterId).maybeSingle();
+  if (r.error && missingColumn(r.error)) return must(await supabase.from('sitter_profiles').select(BASE_COLS).eq('sitter_id', sitterId).maybeSingle()) as SitterProfile | null;
+  return must(r) as SitterProfile | null;
 }
 
 export type SitterBundle = { profile: SitterProfile | null; creds: Credential[]; langs: SitterLanguage[]; missing: boolean; error: string };
@@ -73,7 +78,7 @@ export const credentialApi = {
 export const sitterProfileApi = {
   /** Saves S40 (and S16's "Happy to teach a language"); only the given fields change. */
   async save(sitterId: string, fields: Partial<Omit<SitterProfile, 'sitter_id'>>) {
-    return must(await supabase.from('sitter_profiles').upsert({ ...fields, sitter_id: sitterId }, { onConflict: 'sitter_id' }).select(PROFILE_COLS).single()) as SitterProfile;
+    return must(await supabase.from('sitter_profiles').upsert({ ...fields, sitter_id: sitterId }, { onConflict: 'sitter_id' }).select(fields.birthdate !== undefined ? PROFILE_COLS : BASE_COLS).single()) as SitterProfile;
   },
   async setName(sitterId: string, fullName: string) {
     must(await supabase.from('profiles').update({ full_name: fullName }).eq('id', sitterId));

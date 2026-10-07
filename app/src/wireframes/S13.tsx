@@ -32,7 +32,7 @@ export default function WF_S13() {
           </View>
           <View style={{ flexDirection: "column", gap: 2, flexShrink: 1 }}>
             <Text style={{ fontFamily: font.display, fontSize: 24, color: "#1B2328", marginVertical: -5.22 }}>Maya R.</Text>
-            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960" }}>Tampa · 6 years with kids</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960" }}>24 years old · Tampa · 6 years with kids</Text>
             <View style={{}}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A", textDecorationLine: "underline" }}>Edit details and photo</Text></View>
           </View>
         </View>

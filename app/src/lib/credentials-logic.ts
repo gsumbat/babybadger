@@ -37,6 +37,8 @@ export type SitterProfile = {
   rate: number | null;
   teaches_language: boolean;
   photo_path: string | null;
+  /** 'YYYY-MM-DD' (migration 23). Families see her age, never the date. */
+  birthdate?: string | null;
 };
 
 export const BIO_MAX = 300;
@@ -241,10 +243,21 @@ export function languagesLine(langs: Pick<SitterLanguage, 'language' | 'level'>[
 // ---------------------------------------------------------------- profile
 
 /** S13 header line: "Tampa · 6 years with kids" (the city is the last part of the home area). */
-export function profileLine(p: Pick<SitterProfile, 'home_area' | 'years_experience'> | null): string {
+export function profileLine(p: Pick<SitterProfile, 'home_area' | 'years_experience' | 'birthdate'> | null, today = new Date()): string {
   const area = p?.home_area?.split(',').pop()?.trim();
   const years = p?.years_experience;
-  return [area, years != null ? `${years} ${years === 1 ? 'year' : 'years'} with kids` : ''].filter(Boolean).join(' · ');
+  const age = sitterAge(p?.birthdate, today);
+  return [age != null ? `${age} years old` : '', area, years != null ? `${years} ${years === 1 ? 'year' : 'years'} with kids` : ''].filter(Boolean).join(' · ');
+}
+
+/** Whole years from a 'YYYY-MM-DD' birthday; null when not set. */
+export function sitterAge(birthdate: string | null | undefined, today = new Date()): number | null {
+  if (!birthdate) return null;
+  const [y, m, d] = birthdate.split('-').map(Number);
+  if (!y || !m || !d) return null;
+  let age = today.getFullYear() - y;
+  if (today.getMonth() + 1 < m || (today.getMonth() + 1 === m && today.getDate() < d)) age--;
+  return age >= 0 ? age : null;
 }
 
 /** S13 About "Ages": "Newborn – 10". */

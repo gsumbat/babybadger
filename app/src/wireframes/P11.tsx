@@ -37,6 +37,7 @@ export default function WF_P11() {
             <Text style={{ fontFamily: font.display, fontSize: 28, color: "#FFFFFF" }}>M</Text>
           </View>
           <View style={{ flexDirection: "column", gap: 2, flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960" }}>24 years old</Text>
             <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960" }}>Sitting for you since Sep 2026</Text>
             <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960" }}>[N] shifts · [HOURS] hrs · [RATE] / hr</Text>
           </View>

@@ -130,3 +130,14 @@ describe('credentials', () => {
     expect(full).toEqual({ percent: 100, next: 'Your profile is complete.' });
   });
 });
+
+describe('sitterAge', () => {
+  const { sitterAge, profileLine } = require('../credentials-logic');
+  const today = new Date(2026, 9, 6);
+  it('counts whole years, birthday not reached yet', () => {
+    expect(sitterAge('2002-10-07', today)).toBe(23);
+    expect(sitterAge('2002-10-06', today)).toBe(24);
+  });
+  it('is null without a birthday', () => expect(sitterAge(null, today)).toBeNull());
+  it('leads the profile line', () => expect(profileLine({ home_area: 'Hyde Park, Tampa', years_experience: 5, birthdate: '2002-01-01' }, today)).toBe('24 years old · Tampa · 5 years with kids'));
+});

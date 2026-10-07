@@ -37,4 +37,5 @@ $P -d t -f migrations/20261006000019_sitter_credentials.sql
 $P -d t -f migrations/20261006000020_family_requirements.sql
 $P -d t -f migrations/20261006000021_family_setup.sql
 $P -d t -f migrations/20261006000022_more_requirements.sql
+$P -d t -f migrations/20261006000023_sitter_birthdate.sql
 $P -d t -f tests/rls_scenarios.sql

@@ -9,7 +9,8 @@ const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="non
 
 const SVG = [
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #1B2328; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M15 6l-6 6 6 6\"></path></svg>",
-  "<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M4 8h3l2-2.5h6L17 8h3v11H4z\"></path><circle cx=\"12\" cy=\"13\" r=\"3.5\"></circle></svg>"
+  "<svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M4 8h3l2-2.5h6L17 8h3v11H4z\"></path><circle cx=\"12\" cy=\"13\" r=\"3.5\"></circle></svg>",
+  "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #4B5960; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M6 9l6 6 6-6\"></path></svg>"
 ];
 
 /** Personal details */
@@ -58,6 +59,14 @@ export default function WF_S40() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48, paddingTop: 10, paddingRight: 14, paddingBottom: 10, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1.0, borderColor: "#C3CCD5" }}>
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", lineHeight: 21, flexGrow: 1, flexShrink: 1 }}>maya.r@email.com</Text>
           </View>
+        </View>
+        <View style={{ flexDirection: "column", gap: 5 }}>
+          <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960" }}>Birthday</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48, paddingTop: 10, paddingRight: 14, paddingBottom: 10, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1.0, borderColor: "#C3CCD5" }}>
+            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", lineHeight: 21, flexGrow: 1, flexShrink: 1 }}>03/14/2002</Text>
+            <SvgXml xml={SVG[2]} width={18} height={18} />
+          </View>
+          <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960" }}>Families see your age, never the date</Text>
         </View>
         <View style={{ flexDirection: "column", gap: 5 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960" }}>Home area</Text>
