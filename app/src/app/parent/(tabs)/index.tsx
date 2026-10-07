@@ -36,15 +36,15 @@ const TILES: Record<string, Tile> = {
   book: { icon: 'plus', label: 'Book a shift', onPress: () => router.push('/parent/shift/new') },
   find: { icon: 'search', label: 'Find a sitter', onPress: soon('Find a sitter') },
   pool: { icon: 'users', label: 'Ask my pool', onPress: soon('Ask my pool') },
-  message: { icon: 'message-square', label: 'Message', onPress: () => router.navigate('/parent/messages') },
+  rules: { icon: 'clipboard', label: 'House rules', onPress: () => router.push('/parent/rules') },
   care: { icon: 'list', label: 'Care plan', onPress: () => router.push('/parent/care') },
   devices: { icon: 'smartphone', label: 'Kids & devices', onPress: soon('Kids & devices') },
   pay: { icon: 'credit-card', label: 'Pay sitter', onPress: soon('Pay sitter') },
   requirements: { icon: 'shield', label: 'Requirements', onPress: () => router.push('/parent/requirements') },
 };
-// P4b / P4k: all eight; P4c (shift soon) and P4d (just ended): the four drawn there.
+// P4b / P4k: all eight (House rules in place of Message, which is a tab); P4c (shift soon) and P4d (just ended): the four drawn there.
 const TILE_SETS = {
-  full: ['book', 'find', 'pool', 'message', 'care', 'devices', 'pay', 'requirements'],
+  full: ['book', 'find', 'pool', 'rules', 'care', 'devices', 'pay', 'requirements'],
   soon: ['book', 'find', 'care', 'devices'],
   ended: ['book', 'find', 'pool', 'pay'],
 };
