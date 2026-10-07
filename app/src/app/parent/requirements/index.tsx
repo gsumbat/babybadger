@@ -26,6 +26,7 @@ import {
   reqTitle,
   reviewSub,
   toDrafts,
+  youngestUnder1,
   youngestUnder5,
   type ReqDraft,
   type RequirementMode,
@@ -73,6 +74,7 @@ export default function SitterRequirements() {
   if (!data || !drafts) return <Loading />;
 
   const young = youngestUnder5(data.kids);
+  const baby = youngestUnder1(data.kids);
   const extra = drafts.filter((d) => !LIST_KEYS.includes(d.key) && !isLanguage(d.key));
   const langs = drafts.filter((d) => isLanguage(d.key));
   const chips = [...langs.map((d) => languageOf(d)), ...LANGUAGE_SUGGESTIONS.filter((l) => !langs.some((d) => languageOf(d).toLowerCase() === l.toLowerCase()))];
@@ -110,7 +112,7 @@ export default function SitterRequirements() {
   const rows = [
     ...LIST_KEYS.map((key) => {
       const c = catalogueItem(key)!;
-      return { key, ref: key, on: drafts.some((d) => d.key === key), title: c.listTitle ?? c.title, sub: c.listSub, icon: c.icon, hint: key === 'cpr_infant' && young ? `Suggested · ${young.kid.name} is under 5` : '' };
+      return { key, ref: key, on: drafts.some((d) => d.key === key), title: c.listTitle ?? c.title, sub: c.listSub, icon: c.icon, hint: key === 'cpr_infant' && young ? `Suggested · ${young.kid.name} is under 5` : key === 'vaccination' && baby ? `Suggested · ${baby.name} is under 1` : '' };
     }),
     ...extra.map((d) => ({ key: d.key, ref: d.ref, on: true, title: reqTitle(d), sub: reviewSub(d, data.kids), icon: reqIcon(d), hint: '' })),
   ];

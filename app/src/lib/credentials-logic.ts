@@ -1,7 +1,7 @@
 // Sitter profile and credentials (migration 19; wireframes S13, S14–S18, S40, S41, P11). Pure logic only, so it can
 // be unit tested; the data calls are in ./credentials.ts.
 
-export type CredentialKind = 'cpr_infant' | 'cpr_child' | 'first_aid' | 'newborn_care' | 'water_safety' | 'drivers_license' | 'background_check' | 'other';
+export type CredentialKind = 'cpr_infant' | 'cpr_child' | 'first_aid' | 'newborn_care' | 'water_safety' | 'drivers_license' | 'background_check' | 'vaccination' | 'other';
 
 /** One certificate (or the background check). Dates are 'YYYY-MM-DD'. verified_at null = "In review". */
 export type Credential = {
@@ -166,6 +166,7 @@ export const CERT_CHOICES: CertChoice[] = [
   { key: 'cpr_infant', kind: 'cpr_infant', label: 'Infant CPR' },
   { key: 'newborn_care', kind: 'newborn_care', label: 'Newborn care' },
   { key: 'water_safety', kind: 'water_safety', label: 'Water safety' },
+  { key: 'vaccination', kind: 'vaccination', label: 'Vaccinations' },
   { key: 'special_needs', kind: 'other', label: 'Special needs care' },
   { key: 'early_childhood', kind: 'other', label: 'Early childhood ed.' },
   { key: 'drivers_license', kind: 'drivers_license', label: "Driver's license" },
@@ -181,7 +182,7 @@ export function choiceOf(c: Pick<Credential, 'kind' | 'title'>): CertChoice {
 
 /** S14 sections: SAFETY (CPR, first aid, water safety; the background check row is added by the screen), SKILLS (the rest). */
 export function isSafety(kind: CredentialKind) {
-  return kind === 'first_aid' || kind === 'cpr_infant' || kind === 'cpr_child' || kind === 'water_safety';
+  return kind === 'first_aid' || kind === 'cpr_infant' || kind === 'cpr_child' || kind === 'water_safety' || kind === 'vaccination';
 }
 
 /** S14 row sub-line: "American Red Cross · to Mar 2027"; no issuer or date: "Uploaded today" / "Uploaded Oct 2". */

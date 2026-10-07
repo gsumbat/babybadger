@@ -44,7 +44,7 @@ export type ReqStatusRow = { requirement_id: string; met: boolean; reason: ReqRe
 /** What the draft screens edit. `ref` = the saved id, or a local id for a new row. */
 export type ReqDraft = { ref: string; id?: string; key: string; title: string; details: ReqDetails; level: ReqLevel };
 
-export type ReqIcon = 'shield' | 'heart' | 'baby' | 'car' | 'drop' | 'globe' | 'nosmoke' | 'dog' | 'doc';
+export type ReqIcon = 'idcard' | 'refs' | 'syringe' | 'paw' | 'shield' | 'heart' | 'baby' | 'car' | 'drop' | 'globe' | 'nosmoke' | 'dog' | 'doc';
 
 export type CatalogueItem = {
   key: string;
@@ -66,15 +66,19 @@ export const DEFAULT_DRIVING: ReqDetails = { applies: 'car_trips', items: ['lice
 /** P29's rows, in its order (SAFETY, then SKILLS AND LIFESTYLE). */
 export const CATALOGUE: CatalogueItem[] = [
   { key: 'background_check', title: 'Background check', sub: 'Within 12 months', listSub: 'Within the last 12 months', section: 'safety', icon: 'shield', details: { within_months: 12 } },
+  { key: 'age_18', title: 'Age 18 or older', sub: 'Sitter confirms', listSub: 'From her ID', section: 'safety', icon: 'idcard', details: { proof: 'self' } },
+  { key: 'references', title: 'References', sub: 'Sitter confirms', listSub: '2 past families you can call', section: 'safety', icon: 'refs', details: { proof: 'self' } },
   { key: 'cpr_first_aid', title: 'CPR and First Aid', sub: 'Current certificate', listSub: 'Current certificate', section: 'safety', icon: 'heart', details: {} },
   { key: 'cpr_infant', title: 'Infant CPR', sub: 'Suggested for kids under 5', listSub: 'Current certificate', section: 'safety', icon: 'baby', details: {} },
+  { key: 'vaccination', title: 'Vaccinations', sub: 'Suggested for kids under 1', listSub: 'Tdap and flu shots', section: 'safety', icon: 'syringe', details: {} },
   { key: 'water_safety', title: 'Water safety', sub: 'Pool or beach days', listSub: 'You have a pool? Turn this on', section: 'safety', icon: 'drop', details: {} },
-  { key: 'drivers_license', title: 'Driving', listTitle: 'Safe driver', sub: 'License, car seats', listSub: 'License and clean record · for car trips', section: 'skills', icon: 'car', details: DEFAULT_DRIVING },
+  { key: 'drivers_license', title: 'Driving', listTitle: 'Safe driver', sub: 'License, car seats', listSub: 'License, clean record · car trips', section: 'skills', icon: 'car', details: DEFAULT_DRIVING },
+  { key: 'pets', title: 'OK with pets', sub: 'Sitter confirms', listSub: 'You have pets? Turn this on', section: 'skills', icon: 'paw', details: { proof: 'self' } },
   { key: 'non_smoker', title: 'Non-smoker', sub: 'Sitter confirms', listSub: 'Sitter confirms', section: 'skills', icon: 'nosmoke', details: { proof: 'self' } },
 ];
 
 /** P7a's switch rows, in its order. */
-export const LIST_KEYS = ['background_check', 'cpr_first_aid', 'cpr_infant', 'drivers_license', 'water_safety'];
+export const LIST_KEYS = ['background_check', 'age_18', 'references', 'cpr_first_aid', 'cpr_infant', 'vaccination', 'drivers_license', 'water_safety', 'pets'];
 
 /** P7a "Preferred language" chips shown before any is chosen. */
 export const LANGUAGE_SUGGESTIONS = ['Spanish', 'English'];
@@ -101,7 +105,7 @@ export const languageKey = (language: string) => `language:${language.trim()}`;
 /** How the sitter shows it: credential (BabyBadger checks a certificate), language, self (she says Yes), document
  * (a parent reviews it), mixed (Driving: license + record from her credentials, insurance / car seats she confirms). */
 export function proofOf(r: Pick<Requirement, 'key' | 'details'>): 'credential' | 'language' | 'self' | 'document' | 'mixed' {
-  if (['background_check', 'cpr_first_aid', 'cpr_infant', 'cpr_child', 'first_aid', 'newborn_care', 'water_safety'].includes(r.key)) return 'credential';
+  if (['background_check', 'cpr_first_aid', 'cpr_infant', 'cpr_child', 'first_aid', 'newborn_care', 'water_safety', 'vaccination'].includes(r.key)) return 'credential';
   if (r.key === 'drivers_license') return 'mixed';
   if (isLanguage(r.key)) return 'language';
   return r.details.proof === 'document' ? 'document' : 'self';
@@ -116,6 +120,10 @@ export function reqIcon(r: Pick<Requirement, 'key' | 'title'>): ReqIcon {
 
 /** Wireframe tile colors (background, stroke) per icon. */
 export const ICON_TINT: Record<ReqIcon, [string, string]> = {
+  idcard: ['#DCE7F1', '#47698A'],
+  refs: ['#DCE7F1', '#47698A'],
+  syringe: ['#F6DCD6', '#C2412D'],
+  paw: ['#DCE7F1', '#47698A'],
   shield: ['#DCE7F1', '#47698A'],
   heart: ['#F6DCD6', '#C2412D'],
   baby: ['#F6DCD6', '#C2412D'],
@@ -147,6 +155,12 @@ type KidLite = { id: string; name: string; birthdate: string | null };
 export function youngestUnder5(kids: KidLite[], today = new Date()) {
   const aged = kids.filter((k) => k.birthdate).map((k) => ({ kid: k, age: ageYears(k.birthdate!, today) }));
   const under = aged.filter((a) => a.age < 5).sort((a, b) => a.age - b.age);
+  return under[0] ?? null;
+}
+
+/** The youngest kid under 1, for "Suggested · Mia is under 1" on Vaccinations (P7a). */
+export function youngestUnder1(kids: KidLite[], today = new Date()) {
+  const under = kids.filter((k) => k.birthdate && ageYears(k.birthdate, today) < 1);
   return under[0] ?? null;
 }
 
@@ -391,6 +405,7 @@ const CRED_KINDS: Record<string, string[]> = {
   water_safety: ['water_safety'],
   newborn_care: ['newborn_care'],
   drivers_license: ['drivers_license'],
+  vaccination: ['vaccination'],
 };
 
 function credLine(kinds: string[], creds: CredLite[], s: ReqStatusRow | undefined) {

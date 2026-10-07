@@ -85,7 +85,7 @@ export default function AddCert() {
     <Screen back title="Add a certification" gap={12} footer={<Button label="Submit for review" busy={busy} onPress={submit} />}>
       <Text style={st.label}>WHAT IS IT?</Text>
       <View style={{ gap: 8 }}>
-        {[CERT_CHOICES.slice(0, 4), CERT_CHOICES.slice(4)].map((row, r) => (
+        {[CERT_CHOICES.slice(0, 3), CERT_CHOICES.slice(3, 6), CERT_CHOICES.slice(6)].map((row, r) => (
           <View key={r} style={{ flexDirection: 'row', gap: 8 }}>
             {row.map((c) => {
               const on = choice?.key === c.key;

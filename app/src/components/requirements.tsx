@@ -10,6 +10,10 @@ import { Text } from '@/components/Text';
 
 const PATHS: Record<ReqIcon | 'rules' | 'warn' | 'check' | 'chevron' | 'plus', string> = {
   shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/>',
+  idcard: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M5.5 16.5c.6-1.6 2-2.5 3.5-2.5s2.9.9 3.5 2.5M15 10h3M15 13.5h3"/>',
+  refs: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M16 11l2 2 4-4"/>',
+  syringe: '<path d="M18 3l3 3M16.5 4.5l3 3M19.5 6L9 16.5 7.5 15 18 4.5M9 16.5l-1.5 1.5M7.5 15L4 18.5M4 18.5L3 21l2.5-1"/>',
+  paw: '<circle cx="5.5" cy="10" r="1.8"/><circle cx="9.5" cy="6" r="1.8"/><circle cx="14.5" cy="6" r="1.8"/><circle cx="18.5" cy="10" r="1.8"/><path d="M12 11.5c-2.5 0-5 3.5-5 6 0 1.5 1.2 2.5 2.5 2.5 1 0 1.6-.5 2.5-.5s1.5.5 2.5.5c1.3 0 2.5-1 2.5-2.5 0-2.5-2.5-6-5-6z"/>',
   heart: '<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/><path d="M12 10v5M9.5 12.5h5"/>',
   baby: '<circle cx="12" cy="8" r="4"/><path d="M5 21c0-4 3-7 7-7s7 3 7 7"/><path d="M10.5 8h0M13.5 8h0"/>',
   car: '<path d="M4 16v-4l2-5h12l2 5v4z"/><circle cx="7.5" cy="16.5" r="1.8"/><circle cx="16.5" cy="16.5" r="1.8"/>',

@@ -10,10 +10,14 @@ const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="non
 const SVG = [
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #1B2328; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M15 6l-6 6 6 6\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z\"></path><path d=\"M8.5 12l2.5 2.5 4.5-4.5\"></path></svg>",
+  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"></rect><circle cx=\"9\" cy=\"11\" r=\"2.5\"></circle><path d=\"M5.5 16.5c.6-1.6 2-2.5 3.5-2.5s2.9.9 3.5 2.5M15 10h3M15 13.5h3\"></path></svg>",
+  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"9\" cy=\"8\" r=\"3.5\"></circle><path d=\"M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5\"></path><path d=\"M16 11l2 2 4-4\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #C2412D; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z\"></path><path d=\"M12 10v5M9.5 12.5h5\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #C2412D; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"12\" cy=\"8\" r=\"4\"></circle><path d=\"M5 21c0-4 3-7 7-7s7 3 7 7\"></path><path d=\"M10.5 8h0M13.5 8h0\"></path></svg>",
+  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #C2412D; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M18 3l3 3M16.5 4.5l3 3M19.5 6L9 16.5 7.5 15 18 4.5M9 16.5l-1.5 1.5M7.5 15L4 18.5M4 18.5L3 21l2.5-1\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M4 16v-4l2-5h12l2 5v4z\"></path><circle cx=\"7.5\" cy=\"16.5\" r=\"1.8\"></circle><circle cx=\"16.5\" cy=\"16.5\" r=\"1.8\"></circle></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z\"></path></svg>",
+  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"5.5\" cy=\"10\" r=\"1.8\"></circle><circle cx=\"9.5\" cy=\"6\" r=\"1.8\"></circle><circle cx=\"14.5\" cy=\"6\" r=\"1.8\"></circle><circle cx=\"18.5\" cy=\"10\" r=\"1.8\"></circle><path d=\"M12 11.5c-2.5 0-5 3.5-5 6 0 1.5 1.2 2.5 2.5 2.5 1 0 1.6-.5 2.5-.5s1.5.5 2.5.5c1.3 0 2.5-1 2.5-2.5 0-2.5-2.5-6-5-6z\"></path></svg>",
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #34526E; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M6 3h9l4 4v14H6z\"></path><path d=\"M9.5 12h6M9.5 16h6M9.5 8h3\"></path></svg>",
   "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M9 6l6 6-6 6\"></path></svg>"
 ];
@@ -45,8 +49,34 @@ export default function WF_P7a() {
             </View>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 38, height: 38, flexShrink: 0, backgroundColor: "#F6DCD6", borderRadius: 14 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 38, height: 38, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
               <SvgXml xml={SVG[2]} width={22} height={22} />
+            </View>
+            <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Age 18 or older</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>From her ID</Text>
+            </View>
+            <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 15, flexDirection: "column" }}>
+              <View style={{ width: 24, height: 24, top: 3, right: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
+              </View>
+            </View>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 38, height: 38, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
+              <SvgXml xml={SVG[3]} width={22} height={22} />
+            </View>
+            <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>References</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>2 past families you can call</Text>
+            </View>
+            <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 15, flexDirection: "column" }}>
+              <View style={{ width: 24, height: 24, top: 3, right: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
+              </View>
+            </View>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 38, height: 38, flexShrink: 0, backgroundColor: "#F6DCD6", borderRadius: 14 }}>
+              <SvgXml xml={SVG[4]} width={22} height={22} />
             </View>
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>CPR and First Aid</Text>
@@ -59,7 +89,7 @@ export default function WF_P7a() {
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 38, height: 38, flexShrink: 0, backgroundColor: "#F6DCD6", borderRadius: 14 }}>
-              <SvgXml xml={SVG[3]} width={22} height={22} />
+              <SvgXml xml={SVG[5]} width={22} height={22} />
             </View>
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Infant CPR</Text>
@@ -72,25 +102,51 @@ export default function WF_P7a() {
             </View>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 38, height: 38, flexShrink: 0, backgroundColor: "#F6DCD6", borderRadius: 14 }}>
+              <SvgXml xml={SVG[6]} width={22} height={22} />
+            </View>
+            <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Vaccinations</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Tdap and flu shots</Text>
+            </View>
+            <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#C3CCD5", borderRadius: 15, flexDirection: "column" }}>
+              <View style={{ width: 24, height: 24, top: 3, left: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
+              </View>
+            </View>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 38, height: 38, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
-              <SvgXml xml={SVG[4]} width={22} height={22} />
+              <SvgXml xml={SVG[7]} width={22} height={22} />
             </View>
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Safe driver</Text>
-              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>License and clean record · for car trips</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>License, clean record · car trips</Text>
             </View>
             <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 15, flexDirection: "column" }}>
               <View style={{ width: 24, height: 24, top: 3, right: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
               </View>
             </View>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 38, height: 38, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
-              <SvgXml xml={SVG[5]} width={22} height={22} />
+              <SvgXml xml={SVG[8]} width={22} height={22} />
             </View>
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Water safety</Text>
               <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>You have a pool? Turn this on</Text>
+            </View>
+            <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#C3CCD5", borderRadius: 15, flexDirection: "column" }}>
+              <View style={{ width: 24, height: 24, top: 3, left: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
+              </View>
+            </View>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 60 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 38, height: 38, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
+              <SvgXml xml={SVG[9]} width={22} height={22} />
+            </View>
+            <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>OK with pets</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>You have pets? Turn this on</Text>
             </View>
             <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#C3CCD5", borderRadius: 15, flexDirection: "column" }}>
               <View style={{ width: 24, height: 24, top: 3, left: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
@@ -121,11 +177,11 @@ export default function WF_P7a() {
             </View>
           </View>
         </View>
-        <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Maya meets all 4 today. Her Infant CPR expires Oct 22.</Text>
+        <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Maya meets all 6 today. Her Infant CPR expires Oct 22.</Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 10, paddingRight: 14, paddingBottom: 10, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 14 }}>{/* -> P74-HouseRules.dc.html */}
-          <SvgXml xml={SVG[6]} width={20} height={20} />
+          <SvgXml xml={SVG[10]} width={20} height={20} />
           <Text style={{ fontFamily: font.body, fontSize: 13, color: "#1B2328", lineHeight: 18, flexGrow: 1, flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#34526E", lineHeight: 18 }}>House rules</Text> · logs, phone use, visitors, screen time</Text>
-          <SvgXml xml={SVG[7]} width={18} height={18} />
+          <SvgXml xml={SVG[11]} width={18} height={18} />
         </View>
       </View>
       <View style={{ flexDirection: "row", paddingTop: 4, paddingRight: 20, paddingBottom: 32, paddingLeft: 20 }}>

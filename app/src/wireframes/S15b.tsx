@@ -13,6 +13,7 @@ const SVG = [
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #C2412D; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"12\" cy=\"8\" r=\"4\"></circle><path d=\"M5 21c0-4 3-7 7-7s7 3 7 7\"></path><path d=\"M10.5 8h0M13.5 8h0\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"12\" cy=\"9\" r=\"5.5\"></circle><path d=\"M8.5 13.5L7 21l5-2.5 5 2.5-1.5-7.5\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z\"></path></svg>",
+  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #C2412D; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M18 3l3 3M16.5 4.5l3 3M19.5 6L9 16.5 7.5 15 18 4.5M9 16.5l-1.5 1.5M7.5 15L4 18.5M4 18.5L3 21l2.5-1\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M8 13V6a1.5 1.5 0 0 1 3 0v5M11 11V4.5a1.5 1.5 0 0 1 3 0V11M14 11V6a1.5 1.5 0 0 1 3 0v7c0 4-2.5 7-6 7s-5-2-6.5-4.5L3 12.5a1.5 1.5 0 0 1 2.5-1.5L8 13\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z\"></path><path d=\"M4 19V5\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M4 16v-4l2-5h12l2 5v4z\"></path><circle cx=\"7.5\" cy=\"16.5\" r=\"1.8\"></circle><circle cx=\"16.5\" cy=\"16.5\" r=\"1.8\"></circle></svg>",
@@ -51,35 +52,43 @@ export default function WF_S15b() {
               </View>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328", lineHeight: 16 }}>Newborn care</Text>
             </View>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8 }}>
             <View style={{ flexDirection: "column", gap: 6, minHeight: 80, paddingTop: 10, paddingRight: 10, paddingBottom: 10, paddingLeft: 10, backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 32, height: 32, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
                 <SvgXml xml={SVG[4]} width={22} height={22} />
               </View>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328", lineHeight: 16 }}>Water safety</Text>
             </View>
-          </View>
-          <View style={{ flexDirection: "row", gap: 8 }}>
             <View style={{ flexDirection: "column", gap: 6, minHeight: 80, paddingTop: 10, paddingRight: 10, paddingBottom: 10, paddingLeft: 10, backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 32, height: 32, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 32, height: 32, flexShrink: 0, backgroundColor: "#F6DCD6", borderRadius: 14 }}>
                 <SvgXml xml={SVG[5]} width={22} height={22} />
               </View>
-              <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328", lineHeight: 16 }}>Special needs care</Text>
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328", lineHeight: 16 }}>Vaccinations</Text>
             </View>
             <View style={{ flexDirection: "column", gap: 6, minHeight: 80, paddingTop: 10, paddingRight: 10, paddingBottom: 10, paddingLeft: 10, backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 32, height: 32, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
                 <SvgXml xml={SVG[6]} width={22} height={22} />
               </View>
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328", lineHeight: 16 }}>Special needs care</Text>
+            </View>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <View style={{ flexDirection: "column", gap: 6, minHeight: 80, paddingTop: 10, paddingRight: 10, paddingBottom: 10, paddingLeft: 10, backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 32, height: 32, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
+                <SvgXml xml={SVG[7]} width={22} height={22} />
+              </View>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328", lineHeight: 16 }}>Early childhood ed.</Text>
             </View>
             <View style={{ flexDirection: "column", gap: 6, minHeight: 80, paddingTop: 10, paddingRight: 10, paddingBottom: 10, paddingLeft: 10, backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 32, height: 32, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
-                <SvgXml xml={SVG[7]} width={22} height={22} />
+                <SvgXml xml={SVG[8]} width={22} height={22} />
               </View>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328", lineHeight: 16 }}>Driver's license</Text>
             </View>
             <View style={{ flexDirection: "column", gap: 6, minHeight: 80, paddingTop: 10, paddingRight: 10, paddingBottom: 10, paddingLeft: 10, backgroundColor: "#DCE7F1", borderRadius: 14, borderWidth: 2.0, borderColor: "#47698A", flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
               <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 32, height: 32, flexShrink: 0, backgroundColor: "#FFFFFF", borderRadius: 14 }}>
-                <SvgXml xml={SVG[8]} width={22} height={22} />
+                <SvgXml xml={SVG[9]} width={22} height={22} />
               </View>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328", lineHeight: 16 }}>Other</Text>
             </View>
