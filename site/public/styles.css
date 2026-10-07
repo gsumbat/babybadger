@@ -149,6 +149,26 @@ p { margin: 0; }
 .kids-phone { flex-shrink: 0; width: 306px; height: 642px; }
 .kids-phone .phone { --s: 0.74; transform: rotate(-3deg); }
 
+/* Bring your own sitter */
+#bring { background: var(--tint); }
+#bring .kicker { background: #FFFFFF; }
+#bring .sec-lead { color: var(--primary-dark); }
+#bring .bring-badger { position: absolute; right: max(140px, calc((100% - 1200px) / 2 + 20px)); top: 72px; }
+.bring-cta { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.bring-cta span { color: var(--primary-dark); font-size: 15px; font-weight: 600; }
+#sitters .sub-h { font-family: var(--body); font-size: 14px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.8); margin-bottom: -28px; }
+
+/* Kids, compact (coming soon, kept small) */
+.kids-compact.sec { padding-bottom: 72px; }
+.kids-compact h2 { --h2: 34px; }
+.kids-compact .sec-lead { font-size: 18px; }
+.kids-compact .kids-copy { gap: 22px; }
+.kids-compact .checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 28px; }
+.kids-compact .checks b { font-size: 16px; }
+.kids-compact .checks span { font-size: 15px; }
+.kids-compact .kids-phone { width: 232px; height: 486px; }
+.kids-compact .kids-phone .phone { --s: 0.56; }
+
 #safety { background: var(--canvas); }
 .share-bar { background: #FFFFFF; border-radius: 28px; border-bottom: 6px solid var(--primary); padding: 32px; display: flex; flex-direction: column; gap: 16px; }
 .share-bar .t { font-family: var(--display); font-size: 22px; font-weight: 700; }
@@ -286,6 +306,14 @@ p { margin: 0; }
   #how { padding-top: 40px; }
   #how .plane { display: none; }
   .sitter-cta { flex-direction: column; }
+  .bring-cta { flex-direction: column; align-items: stretch; }
+  .bring-cta .btn { width: 100%; }
+  .bring-cta span { align-self: center; text-align: center; }
+  #sitters .sub-h { margin-bottom: -12px; }
+  .kids-compact h2 { --h2: 26px; }
+  .kids-compact .checks { grid-template-columns: minmax(0, 1fr); }
+  .kids-compact .kids-phone { width: 207px; height: 434px; }
+  .kids-compact .kids-phone .phone { --s: 0.5; }
   .sitter-cta .btn { width: 100%; }
   .sitter-cta span { align-self: center; }
   .kids-row { flex-direction: column; gap: 40px; }
