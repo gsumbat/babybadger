@@ -17,6 +17,9 @@ export default function ParentLayout() {
       <Stack.Screen name="care/item" options={{ presentation: 'modal' }} />
       {/* P28–P32 open from the invite (itself a modal), so they're a modal too. */}
       <Stack.Screen name="requirements/setup" options={{ presentation: 'modal' }} />
+      {/* Billing (P36–P41): plans and the trial-started screen are modals, like the store sheet they replace. */}
+      <Stack.Screen name="plans" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="trial-started" options={{ presentation: 'modal', gestureEnabled: false }} />
     </Stack>
   );
 }

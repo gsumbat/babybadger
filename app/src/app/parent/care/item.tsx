@@ -7,6 +7,7 @@ import { careIconXml } from '@/components/care';
 import { ErrorText, Loading, Screen, Segmented } from '@/components/ui';
 import { api } from '@/lib/data';
 import { BOTTLE_UNITS, CARE_TYPES, cleanDetails, DAY_LETTERS, EVERY_DAY, formatTime, hasDay, isCareType, itemTitle, MILKS, parseAmount, parseTime, repeatChoices, repeatLabel, toggleDay, typeLabel } from '@/lib/care-plan';
+import { useRequirePlan } from '@/lib/billing';
 import { useSession } from '@/lib/session';
 import type { BottleUnit, CareType, Milk } from '@/lib/types';
 import { color, font } from '@/theme';
@@ -39,6 +40,8 @@ const parseEvery = (v: string | undefined) => {
 // (P20g) "Which medicine" (the title) and Dose, with Once / Every 4-8 h; Meal, Nap, Bedtime, Activity and Other have
 // no "How often" (saved as once).
 export default function CareItemScreen() {
+  // No plan (billing on): P36 instead (P40 "New bookings and care plan edits" pause).
+  useRequirePlan();
   const { family } = useSession();
   const params = useLocalSearchParams<{ id?: string; kidId?: string; type?: string; title?: string; every?: string }>();
   const editId = params.id;

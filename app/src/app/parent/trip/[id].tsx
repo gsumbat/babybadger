@@ -4,8 +4,10 @@ import { ActivityIndicator, Alert, Pressable, StyleSheet, useWindowDimensions, V
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/Text';
+import { LockedMap } from '@/components/billing';
 import { ErrorText, Icon, Loading, Screen } from '@/components/ui';
 import { type MapZone, ZoneMap } from '@/components/ZoneMap';
+import { usePlan } from '@/lib/billing';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { errorText } from '@/lib/supabase';
@@ -30,7 +32,17 @@ export default function TripView() {
   const { height } = useWindowDimensions();
   const [busy, setBusy] = useState<'yes' | 'no'>();
   const back = () => (router.canGoBack() ? router.back() : router.replace('/parent'));
+  const plan = usePlan();
 
+  // No plan (billing on): trips are paused (P40), the map shows the P4l lock.
+  if (!plan.hasPlan)
+    return (
+      <Screen title="Trip" back onBack={back}>
+        <View style={{ borderRadius: 24, overflow: 'hidden' }}>
+          <LockedMap height={320} />
+        </View>
+      </Screen>
+    );
   if (!trip || !data) return error ? <Screen title="Trip" back onBack={back}><ErrorText>{error}</ErrorText></Screen> : <Loading />;
   const { places, kids, sitter } = data;
   const dest = tripDest(trip, places);

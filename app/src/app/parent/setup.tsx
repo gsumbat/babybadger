@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { KidDot } from '@/components/bits';
 import { Button, ErrorText, Icon, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
+import { markPlansIntro } from '@/lib/billing';
 import { markFamilySetup } from '@/lib/home-route';
 import { ageInMonths, ageLabel } from '@/lib/kid-profile';
 import { DEFAULT_RADIUS_FT, geocode, mainHome, placesApi } from '@/lib/places';
@@ -94,12 +95,14 @@ export default function FamilySetup() {
     setBusy(false);
     if (!ok) return;
     markFamilySetup(null);
+    markPlansIntro(family!.id);
     router.replace('/parent');
     router.push('/parent/invite?from=onboarding');
   }
 
   function leave() {
     markFamilySetup(null);
+    markPlansIntro(family!.id);
     router.replace('/parent');
   }
 

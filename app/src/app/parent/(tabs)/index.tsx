@@ -1,12 +1,14 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
+import { router, useIsFocused } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
 import { KidDot, kidSub } from '@/components/bits';
+import { LockedMap, PaymentIssueBanner } from '@/components/billing';
 import { LiveMap } from '@/components/LiveMap';
 import { AskToStaySheet, WALK_ICON } from '@/components/timing';
 import { ActionGrid, dayPart, ErrorText, HomeHeader, Icon, type IconName, initialsOf, Screen } from '@/components/ui';
+import { takePlansIntro, usePlan } from '@/lib/billing';
 import { api, useQuery, useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
 import { describeLog, parentHomeState, workedMinutes } from '@/lib/shift-logic';
@@ -81,6 +83,14 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
   const setup = incomplete && !skipped;
   const explore = incomplete && skipped;
 
+  // P36 once after first-run setup (P2 → P3): when Home is back in front and the family has no plan yet.
+  const plan = usePlan();
+  const focused = useIsFocused();
+  useEffect(() => {
+    if (full || !focused || !plan.enabled || !plan.loaded || plan.state !== 'none') return;
+    if (takePlansIntro(fid)) router.push('/parent/plans?from=setup');
+  }, [full, focused, plan.enabled, plan.loaded, plan.state, fid]);
+
   return (
     <Screen
       gap={state?.kind === 'live' ? 12 : 10}
@@ -94,6 +104,8 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
         />
       }>
       <ErrorText>{error}</ErrorText>
+      {/* P40: payment failed, still inside the grace period. */}
+      {!full && <PaymentIssueBanner />}
 
       {setup && (
         <Setup
@@ -293,6 +305,7 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
   const { trips } = useShiftTrips(shift.id);
   const openTrip = trips.find(isOpenTrip);
   const [askOpen, setAskOpen] = useState(false);
+  const plan = usePlan();
   if (!bundle) return null;
   const done = bundle.tasks.filter((t) => t.done_at);
   const next = bundle.tasks.find((t) => !t.done_at);
@@ -319,8 +332,8 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
           </View>
         </View>
         <View>
-          <LiveMap points={bundle.points} height={220} flush />
-          {openTrip ? (
+          {plan.hasPlan ? <LiveMap points={bundle.points} height={220} flush /> : <LockedMap />}
+          {!plan.hasPlan ? null : openTrip ? (
             // P8's "On a trip" pill in place of "On shift" while a trip is open; it opens the trip (P8).
             <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/trip/${openTrip.id}`)} style={[st.onShift, st.onTrip]}>
               <View style={[st.greenDot8, { backgroundColor: color.primary }]} />

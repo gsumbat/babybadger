@@ -10,6 +10,7 @@ import { firstName } from '@/lib/format';
 import { familyRulesState } from '@/lib/house-rules';
 import { defaultHomeFor, homesOf, mainHome, placesApi } from '@/lib/places';
 import { parseTimeOnDay } from '@/lib/shift-logic';
+import { useRequirePlan } from '@/lib/billing';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { color, font } from '@/theme';
@@ -26,6 +27,8 @@ function nextDays(n: number) {
 }
 
 export default function NewShift() {
+  // No plan (billing on): P36 instead (P40 "New bookings and care plan edits" pause).
+  useRequirePlan();
   const { family, session } = useSession();
   const fid = family!.id;
   const { data } = useQuery(async () => {

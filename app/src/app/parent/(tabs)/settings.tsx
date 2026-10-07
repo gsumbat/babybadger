@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { SetRow, ToggleRow } from '@/components/bits';
 import { Card, ErrorText, Screen } from '@/components/ui';
+import { settingsValue, usePlan } from '@/lib/billing';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { rulesApi, rulesLabel } from '@/lib/house-rules';
@@ -15,11 +16,13 @@ import { Text } from '@/components/Text';
 
 // Wireframe P12b (settings · account; supersedes P12): grouped settings rows, account, sign out.
 // Sitters opens P27, Homes and places P56, House rules P74. Rows whose screens aren't built show their value and
-// don't open anything: Kids and devices (P13), Consent records, Subscription (P39; no plan stored yet, so it reads
-// "Coming soon"). Alerts: "Arrivals and departures" is profiles.alert_arrivals (migration 21; trip alerts skip a
+// don't open anything: Kids and devices (P13), Consent records. Subscription: with billing on (EXPO_PUBLIC_BILLING=1)
+// it reads the plan ("Free trial · ends Nov 6", "Family · monthly", "Payment issue", "Start free trial") and opens
+// P39, or P36 when the family has no plan; with billing off it reads "Coming soon" and opens nothing. Alerts: "Arrivals and departures" is profiles.alert_arrivals (migration 21; trip alerts skip a
 // parent who turned it off), "Food and tasks" is alert_logs, "Off-plan and help alerts" is always on (a label).
 export default function Settings() {
   const { family, profile, session, signOut, refresh } = useSession();
+  const plan = usePlan();
   const [logAlerts, setLogAlerts] = useState(profile?.alert_logs ?? true);
   const [arrivals, setArrivals] = useState(profile?.alert_arrivals ?? true);
   const [saveErr, setSaveErr] = useState('');
@@ -88,7 +91,16 @@ export default function Settings() {
       <Card style={st.card}>
         <SetRow label="Consent records" value={`${signed} signed`} />
         <SetRow label="Keep location history" value="[RETENTION]" />
-        <SetRow label="Subscription" value="Coming soon" last />
+        {plan.enabled ? (
+          <SetRow
+            label="Subscription"
+            value={plan.loaded ? settingsValue(plan.sub) : ''}
+            onPress={() => router.push(plan.state === 'none' || plan.state === 'ended' ? '/parent/plans?from=settings' : '/parent/subscription')}
+            last
+          />
+        ) : (
+          <SetRow label="Subscription" value="Coming soon" last />
+        )}
       </Card>
 
       <Text style={[st.section, { marginTop: 2 }]}>ACCOUNT</Text>

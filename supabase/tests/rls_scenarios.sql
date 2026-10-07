@@ -1694,4 +1694,74 @@ do $$ begin
 end $$;
 reset role;
 
+-- 24. Billing (migration 24): parents read their family's plan; only the server writes it
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+set role authenticated;
+do $$ begin
+  if (select count(*) from family_subscriptions) <> 0 then raise exception 'FAIL subscription row before checkout'; end if;
+  if public.family_has_plan((select v::uuid from ctx where k = 'fam')) then raise exception 'FAIL plan without a subscription'; end if;
+  begin
+    insert into family_subscriptions (family_id, status) select v::uuid, 'active' from ctx where k = 'fam';
+    raise exception 'FAIL parent wrote her own subscription';
+  exception when insufficient_privilege then null; end;
+end $$;
+select public.set_trial_reminder((select v::uuid from ctx where k = 'fam'), false);
+do $$ begin
+  if (select status || '/' || remind_trial from family_subscriptions) <> 'none/false' then raise exception 'FAIL reminder row'; end if;
+end $$;
+reset role;
+select pg_temp.as_user('');
+update family_subscriptions set status = 'trialing', plan = 'yearly', trial_ends_at = now() + interval '30 days', had_trial = true,
+  current_period_end = now() + interval '30 days', payer_id = '00000000-0000-0000-0000-00000000000a', remind_trial = true
+  where family_id = (select v::uuid from ctx where k = 'fam');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+do $$ begin
+  if not public.family_has_plan((select v::uuid from ctx where k = 'fam')) then raise exception 'FAIL trialing family has no plan'; end if;
+  update family_subscriptions set status = 'active';
+  raise exception 'FAIL parent updated her subscription';
+exception when insufficient_privilege then null; end $$;
+do $$ begin
+  begin
+    delete from family_subscriptions;
+    raise exception 'FAIL parent deleted her subscription';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.billing_trial_reminder((select v::uuid from ctx where k = 'fam'));
+    raise exception 'FAIL parent sent the trial reminder';
+  exception when insufficient_privilege then null; end;
+end $$;
+-- The sitter and a stranger never see the row; the stranger can't change the reminder
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+do $$ begin
+  if (select count(*) from family_subscriptions) <> 0 then raise exception 'FAIL sitter sees the subscription'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+do $$ begin
+  if (select count(*) from family_subscriptions) <> 0 then raise exception 'FAIL stranger sees the subscription'; end if;
+  if public.family_has_plan((select v::uuid from ctx where k = 'fam')) then raise exception 'FAIL stranger reads the plan'; end if;
+  begin
+    perform public.set_trial_reminder((select v::uuid from ctx where k = 'fam'), false);
+    raise exception 'FAIL stranger changed the reminder';
+  exception when insufficient_privilege then null; end;
+end $$;
+-- Grace: past_due counts for 7 days after the period ended; paused and canceled don't
+reset role;
+select pg_temp.as_user('');
+do $$ declare f uuid := (select v::uuid from ctx where k = 'fam'); n int := (select count(*) from net.sent); begin
+  perform public.billing_trial_reminder(f);
+  if (select count(*) from net.sent) <> n + 1 then raise exception 'FAIL trial reminder not sent'; end if;
+  update family_subscriptions set status = 'past_due', current_period_end = now() - interval '3 days' where family_id = f;
+  if not public.family_has_plan(f) then raise exception 'FAIL past_due inside grace'; end if;
+  update family_subscriptions set current_period_end = now() - interval '8 days' where family_id = f;
+  if public.family_has_plan(f) then raise exception 'FAIL past_due after grace'; end if;
+  update family_subscriptions set status = 'paused', current_period_end = now() + interval '20 days' where family_id = f;
+  if public.family_has_plan(f) then raise exception 'FAIL paused family has the plan'; end if;
+  update family_subscriptions set status = 'canceled' where family_id = f;
+  if public.family_has_plan(f) then raise exception 'FAIL canceled family has the plan'; end if;
+  update family_subscriptions set status = 'active', remind_trial = false where family_id = f;
+  perform public.billing_trial_reminder(f);
+  if (select count(*) from net.sent) <> n + 1 then raise exception 'FAIL reminder sent while off'; end if;
+end $$;
+
 select 'ALL RLS SCENARIOS PASSED' as result;
