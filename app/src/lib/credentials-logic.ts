@@ -296,3 +296,24 @@ export function profileStrength(p: SitterProfile | null, creds: Credential[], la
   const done = steps.filter(([ok]) => ok).length;
   return { percent: Math.round((done / steps.length) * 100), next: steps.find(([ok]) => !ok)?.[1] ?? 'Your profile is complete.' };
 }
+
+// ---------------------------------------------------------------- what families see (P11, S19)
+
+/** The credentials a family sees (P11, S19 preview): verified and not expired, the first certificate, then the
+ * background check, then the other certificates (P11 order: CPR + First Aid, Background, Infant CPR, Driver). */
+export function familyCredentials(creds: Credential[], now = new Date()): Credential[] {
+  const shown = creds.filter((c) => c.verified_at && credentialState(c, now) !== 'expired');
+  const certs = certificates(shown);
+  return [...certs.slice(0, 1), ...shown.filter((c) => c.kind === 'background_check'), ...certs.slice(1)];
+}
+
+/** S19 lines under her name: "6 years · ages newborn – 10" and "Drives · $20 / hour" ('' when nothing is set). */
+export function familyViewLines(p: Pick<SitterProfile, 'years_experience' | 'ages_from' | 'ages_to' | 'can_drive' | 'rate'> | null): [string, string] {
+  const years = p?.years_experience;
+  const ages = agesLabel(p?.ages_from ?? null, p?.ages_to ?? null);
+  const rate = p?.rate;
+  return [
+    [years != null ? `${years} ${years === 1 ? 'year' : 'years'}` : '', ages ? `ages ${ages[0].toLowerCase()}${ages.slice(1)}` : ''].filter(Boolean).join(' · '),
+    [p?.can_drive ? 'Drives' : '', rate != null ? `$${Number(rate).toFixed(Number(rate) % 1 ? 2 : 0)} / hour` : ''].filter(Boolean).join(' · '),
+  ];
+}

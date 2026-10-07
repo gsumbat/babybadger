@@ -12,6 +12,8 @@ import {
   driveLabel,
   expiringSoon,
   expiryLine,
+  familyCredentials,
+  familyViewLines,
   fromUsDate,
   languagesLine,
   profileLine,
@@ -140,4 +142,22 @@ describe('sitterAge', () => {
   });
   it('is null without a birthday', () => expect(sitterAge(null, today)).toBeNull());
   it('leads the profile line', () => expect(profileLine({ home_area: 'Hyde Park, Tampa', years_experience: 5, birthdate: '2002-01-01' }, today)).toBe('24 years old · Tampa · 5 years with kids'));
+});
+
+describe('what families see (P11 / S19)', () => {
+  it('lists verified, unexpired credentials: first certificate, background check, then the rest', () => {
+    const creds = [
+      cred({ id: 'cpr', kind: 'first_aid', verified_at: '2026-09-01T00:00:00Z', expires_on: '2027-03-01' }),
+      cred({ id: 'inf', kind: 'cpr_infant', verified_at: '2026-09-01T00:00:00Z', expires_on: '2026-10-22' }),
+      cred({ id: 'bg', kind: 'background_check', verified_at: '2026-08-10T00:00:00Z' }),
+      cred({ id: 'old', kind: 'water_safety', verified_at: '2026-01-01T00:00:00Z', expires_on: '2026-09-01' }),
+      cred({ id: 'new', kind: 'newborn_care' }),
+    ];
+    expect(familyCredentials(creds, NOW).map((c) => c.id)).toEqual(['cpr', 'bg', 'inf']);
+  });
+  it('S19 lines under the name', () => {
+    expect(familyViewLines({ years_experience: 6, ages_from: 0, ages_to: 10, can_drive: true, rate: 20 })).toEqual(['6 years · ages newborn – 10', 'Drives · $20 / hour']);
+    expect(familyViewLines({ years_experience: 1, ages_from: 3, ages_to: null, can_drive: false, rate: 18.5 })).toEqual(['1 year · ages 3 and up', '$18.50 / hour']);
+    expect(familyViewLines(null)).toEqual(['', '']);
+  });
 });

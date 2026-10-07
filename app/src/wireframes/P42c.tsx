@@ -14,7 +14,7 @@ const SVG = [
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><rect x=\"3.5\" y=\"3.5\" width=\"7\" height=\"7\" rx=\"1.5\"></rect><rect x=\"13.5\" y=\"3.5\" width=\"7\" height=\"7\" rx=\"1.5\"></rect><rect x=\"3.5\" y=\"13.5\" width=\"7\" height=\"7\" rx=\"1.5\"></rect><rect x=\"13.5\" y=\"13.5\" width=\"7\" height=\"7\" rx=\"1.5\"></rect></svg>"
 ];
 
-/** Sitter pool · book a free sitter */
+/** Sitter pool · ask the free sitters */
 export default function WF_P42c() {
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F5F8", flexDirection: "column", overflow: "hidden" }}>
@@ -139,8 +139,8 @@ export default function WF_P42c() {
             <SvgXml xml={SVG[3]} width={20} height={20} />
             <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#47698A" }}>Week</Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 50, flexGrow: 1, flexBasis: 0, backgroundColor: "#47698A", borderRadius: 999, flexShrink: 1 }}>{/* -> E2-ParentCalendar.dc.html */}
-            <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#FFFFFF" }}>Book a free sitter</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 50, flexGrow: 1, flexBasis: 0, backgroundColor: "#47698A", borderRadius: 999, flexShrink: 1 }}>{/* -> P45-PoolAsk.dc.html */}
+            <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#FFFFFF" }}>Ask both free sitters</Text>
           </View>
         </View>
       </View>

@@ -66,8 +66,8 @@ export default function WF_P42b() {
             <SvgXml xml={SVG[3]} width={20} height={20} />
             <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#47698A" }}>Week</Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 50, flexGrow: 1, flexBasis: 0, backgroundColor: "#47698A", borderRadius: 999, flexShrink: 1 }}>{/* -> E2-ParentCalendar.dc.html */}
-            <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#FFFFFF" }}>Book Maya</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 50, flexGrow: 1, flexBasis: 0, backgroundColor: "#47698A", borderRadius: 999, flexShrink: 1 }}>{/* -> P45-PoolAsk.dc.html */}
+            <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#FFFFFF" }}>Ask Maya</Text>
           </View>
         </View>
       </View>

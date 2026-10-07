@@ -11,6 +11,7 @@ import { Banner, Button, Card, ChoicePill, ErrorText, Field, Icon, type IconName
 import { api, useQuery, useShiftLive } from '@/lib/data';
 import { firstName, timeOf } from '@/lib/format';
 import { rulesApi, shiftRuleRows } from '@/lib/house-rules';
+import { lovedLogs, openPhotoRequest, shortClock, useShiftReactions } from '@/lib/shift-log';
 import { type SharingMode, startSharing, stopSharing } from '@/lib/location-sharing';
 import { useSession } from '@/lib/session';
 import { formatClock, workedMinutes } from '@/lib/shift-logic';
@@ -23,6 +24,8 @@ import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // S4's Trip tile icon (a car), from the wireframe.
+// S4p photo-request strip: the camera from the wireframes in P77's photo colour.
+const CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="#8A5A7A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2.5"/><circle cx="12" cy="13.5" r="3.5"/><path d="M8.5 7l1.5-2.5h4L15.5 7"/></svg>';
 const CAR = '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16v-3.5L6 7h12l2 5.5V16zM4 16v2.5M20 16v2.5M7.5 13h0M16.5 13h0"/></svg>';
 const TILES: { kind: LogKind | 'more' | 'trip'; label: string; icon: IconName; xml?: string }[] = [
   // Wireframe S4: Trip (S8), Food, Photo, More logs (Nap is under More logs).
@@ -51,6 +54,9 @@ export default function SitterShift() {
   const { pending: extension, reload: reloadExtension } = usePendingExtension(id);
   // Trips (S8, migration 17): the open one shows as a strip under the tiles; S9 counts them.
   const { trips } = useShiftTrips(id);
+  // P77 (migration 26): a parent's "Ask for a photo" shows as a strip until she logs one; hearts on her photos show
+  // in the shift's log list. Empty before migration 26 runs.
+  const { reactions, requests } = useShiftReactions(id);
   const { data: places } = useQuery(() => (fid ? placesOrEmpty(fid) : Promise.resolve([])), [fid]);
   const sid = bundle?.shift.sitter_id;
   const { data: rate } = useQuery(() => (fid && sid ? timingApi.sitterRate(fid, sid) : Promise.resolve(null)), [fid, sid]);
@@ -80,6 +86,7 @@ export default function SitterShift() {
   const secs = shift.clock_in_at ? Math.max(0, Math.floor((now - +new Date(shift.clock_in_at)) / 1000)) : 0;
   const done = tasks.filter((t) => t.done_at).length;
   const parent = firstName(parents?.[0]?.full_name) || 'the family';
+  const photoAsk = openPhotoRequest(requests, logs);
   const rulesDue = shiftRuleRows(rules ?? [], logs, kids, shift.clock_in_at, new Date(now)).filter((r) => r.state === 'due').length;
 
   async function toggle(taskId: string, isDone: boolean) {
@@ -128,7 +135,7 @@ export default function SitterShift() {
         {logs.length > 0 && (
           <Card>
             <Text style={st.cardTitle}>Logs</Text>
-            <LogTimeline logs={logs} kids={kids} />
+            <LogTimeline logs={logs} kids={kids} loved={lovedLogs(reactions)} />
           </Card>
         )}
       </Screen>
@@ -239,6 +246,16 @@ export default function SitterShift() {
           <Text style={st.tripEnd}>End trip</Text>
         </Pressable>
       )}
+      {/* S4p: a parent asked for a photo (P77); the strip goes once a photo is logged after the request. */}
+      {photoAsk && (
+        <Pressable accessibilityRole="button" onPress={() => openLog('photo')} style={st.photoAsk}>
+          <SvgXml xml={CAMERA} width={20} height={20} style={{ flexShrink: 0 }} />
+          <Text style={st.tripText}>
+            <Text style={st.photoAskBold}>{((n) => (n ? firstName(n) : parent))(parents?.find((p) => p.id === photoAsk.parent_id)?.full_name)} asked for a photo</Text> · {shortClock(photoAsk.created_at)}
+          </Text>
+          <Text style={st.photoAskGo}>Add photo</Text>
+        </Pressable>
+      )}
       {/* S25: the parent's request sits at the top of the shift until she answers. */}
       {extension && (() => {
         const next = nextShiftAfter(shift, myShifts ?? []);
@@ -336,6 +353,9 @@ const st = StyleSheet.create({
   tripText: { fontFamily: font.body, fontSize: 14, color: color.ink, flexGrow: 1, flexShrink: 1 },
   tripBold: { fontFamily: font.bodyBold, color: color.primaryStrong },
   tripEnd: { fontFamily: font.bodyBold, fontSize: 14, color: color.primary, textDecorationLine: 'underline' },
+  photoAsk: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: color.accentTint, borderRadius: 12 },
+  photoAskBold: { fontFamily: font.bodyBold, color: '#8A5A7A' },
+  photoAskGo: { fontFamily: font.bodyBold, fontSize: 14, color: '#8A5A7A', textDecorationLine: 'underline' },
   rules: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: color.warnTint, borderRadius: 12 },
   rulesText: { fontFamily: font.body, fontSize: 14, color: color.ink, flexGrow: 1, flexShrink: 1 },
   rulesBold: { fontFamily: font.bodyBold, color: color.warnInk },

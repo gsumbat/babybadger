@@ -16,7 +16,7 @@ import { Text } from '@/components/Text';
 // Wireframe S39, translated from its HTML (app/src/wireframes/S39.tsx).
 // "My profile · N%" opens S13; PROFILE AND CREDENTIALS rows open S40, S14, S17 and S16 (migration 19; before it runs
 // the rows just have no summary); "Settings, privacy and help" opens S12.
-// Money › Hours and pay opens S7 (components/payRow). Left out until built: What families see (S19), Work's Get
+// Money › Hours and pay opens S7 (components/payRow). "What families see" opens S19. Left out until built: Work's Get
 // found, Money's Invoices and payouts (S30).
 // Not drawn: the Certifications row with nothing expiring (sub-line lists them, no pill) and the background check
 // row before it has started (no pill).
@@ -58,6 +58,9 @@ export default function Me() {
         <View style={{ flexDirection: 'row', gap: 8 }}>
           <Pressable accessibilityRole="button" onPress={() => router.push('/sitter/profile')} style={st.profileBtn}>
             <Text style={st.profileBtnText}>{strength != null ? `My profile · ${strength}%` : 'My profile'}</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" onPress={() => router.push('/sitter/family-view')} style={[st.profileBtn, st.previewBtn]}>
+            <Text style={[st.profileBtnText, { color: color.ink }]}>What families see</Text>
           </Pressable>
         </View>
       </View>
@@ -146,6 +149,7 @@ function MeRow({ icon, iconBg = color.primaryTint, title, sub, right, onPress, l
 // Values from wireframe S39. The header keeps 4 at the bottom: the wireframe has 8 and Screen's content adds 4.
 const st = StyleSheet.create({
   profileBtn: { flexGrow: 1, flexBasis: 0, height: 40, borderRadius: 999, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
+  previewBtn: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.lineStrong },
   profileBtnText: { fontFamily: font.bodyBold, fontSize: 14, color: color.primary },
   rowLine: { borderBottomWidth: 1, borderBottomColor: color.divider },
   header: { paddingTop: 18, paddingHorizontal: 20, paddingBottom: 4 },

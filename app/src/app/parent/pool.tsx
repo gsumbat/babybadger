@@ -11,7 +11,8 @@ import { dayKey } from '@/lib/calendar-logic';
 import { credentialState, sitterBundle } from '@/lib/credentials';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
-import { bookLabel, poolData, poolRow, slotOf, statusFor, timeText, tonightWindow, windowLabel, type PoolGroup, type TimeWindow } from '@/lib/pool';
+import { poolData, poolRow, slotOf, statusFor, timeText, tonightWindow, windowLabel, type PoolGroup, type TimeWindow } from '@/lib/pool';
+import { askLabel } from '@/lib/pool-requests';
 import { requirementStatus } from '@/lib/requirements';
 import { useSession } from '@/lib/session';
 import { cardShadow, color, font } from '@/theme';
@@ -24,9 +25,10 @@ import { cardShadow, color, font } from '@/theme';
 // day. Filter chips show only when the pool has 2+ sitters and the filter can match:
 // Meets requirements (family has requirements; lib/requirements), Drives (a verified, unexpired driver's license),
 // one chip per other language a sitter speaks (sitter_languages; P42 draws Spanish). None are on at first.
-// Left out until built: Find new (P48, "Coming soon"), asking several sitters at once (P45 "Ask
-// both free sitters"): the main button books instead: "Book Maya" with one free sitter, "Book a free sitter" (the first)
-// with several, "Book a shift" with none; it opens the booking screen with the sitter, day and times filled in.
+// Left out until built: Find new (P48, "Coming soon"). The main button asks the free sitters at once (P45): "Ask Maya"
+// with one free sitter, "Ask both free sitters" with two, "Ask 3 free sitters" with more (only those the filters
+// show). With nobody free it stays "Book a shift" (booking by hand, sitter, day and times filled in); one sitter can
+// also be booked directly from her profile (P11 "Book a shift").
 export default function Pool() {
   const params = useLocalSearchParams<{ start?: string; end?: string }>();
   const { family } = useSession();
@@ -83,12 +85,13 @@ export default function Pool() {
   const kidNames = namesLabel((data?.kids ?? []).map((k) => k.name));
   const count = data?.active.length ?? 0;
 
+  const ask = askLabel(free.map((r) => firstName(r.name)));
   function book() {
-    const first = free[0];
-    router.push({
-      pathname: '/parent/shift/new',
-      params: { ...(first ? { sitter: first.id } : {}), day: dayKey(win.start), start: timeText(win.start), end: timeText(win.end) },
-    });
+    if (ask) {
+      router.push({ pathname: '/parent/pool-ask', params: { start: win.start.toISOString(), end: win.end.toISOString(), pick: free.map((r) => r.id).join(',') } });
+      return;
+    }
+    router.push({ pathname: '/parent/shift/new', params: { day: dayKey(win.start), start: timeText(win.start), end: timeText(win.end) } });
   }
 
   const section = (g: PoolGroup, title: string, first: boolean) => {
@@ -155,7 +158,7 @@ export default function Pool() {
               <Text style={st.weekText}>Week</Text>
             </Pressable>
             <Pressable accessibilityRole="button" onPress={book} style={st.bookBtn}>
-              <Text style={st.bookText}>{bookLabel(free.map((r) => firstName(r.name)))}</Text>
+              <Text style={st.bookText}>{ask ?? 'Book a shift'}</Text>
             </Pressable>
           </View>
         ) : undefined

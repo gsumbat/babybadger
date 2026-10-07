@@ -2,11 +2,12 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 
-import { CIcon, CredTile, credTileKey, SitterAvatar } from '@/components/credentials';
+import { CIcon, SitterAvatar } from '@/components/credentials';
+import { CredGrid, SpeaksBlock } from '@/components/sitterProfile';
 import { Text } from '@/components/Text';
 import { Button, ErrorText, Loading, Pill, Screen } from '@/components/ui';
 import { formatHours, hoursOf } from '@/lib/calendar-logic';
-import { certificates, credentialState, levelLabel, monthDay, monthYear, shortExpiry, shortName, sitterBundle, sortLanguages, toDay, type Credential, sitterAge } from '@/lib/credentials';
+import { familyCredentials, monthDay, monthYear, shortName, sitterAge, sitterBundle, toDay } from '@/lib/credentials';
 import { api, useQuery } from '@/lib/data';
 import { dayOf } from '@/lib/format';
 import { requirementStatus } from '@/lib/requirements';
@@ -47,11 +48,7 @@ export default function SitterProfile() {
   const last = [...done].sort((a, b) => b.starts_at.localeCompare(a.starts_at))[0];
   const rate = (data.link as { rate?: number | null } | undefined)?.rate;
   const stats = [`${done.length} ${done.length === 1 ? 'shift' : 'shifts'}`, `${formatHours(hoursOf(done))} hrs`, rate != null ? `$${Number(rate).toFixed(Number(rate) % 1 ? 2 : 0)} / hr` : ''].filter(Boolean).join(' · ');
-  const shown = data.bundle.creds.filter((c) => c.verified_at && credentialState(c) !== 'expired');
-  // Background check first, then the certificates (P11 order: CPR + First Aid, Background, Infant CPR, Driver).
-  const ordered = [...certificates(shown).slice(0, 1), ...shown.filter((c) => c.kind === 'background_check'), ...certificates(shown).slice(1)];
-  const pairs: Credential[][] = [];
-  for (let i = 0; i < ordered.length; i += 2) pairs.push(ordered.slice(i, i + 2));
+  const ordered = familyCredentials(data.bundle.creds);
   const req = data.req;
   const soon = req.expiring[0];
 
@@ -87,7 +84,7 @@ export default function SitterProfile() {
         <>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <Button label="Message" kind="tonal" onPress={() => router.push('/parent/messages')} style={st.half} />
-            <Button label="Book a shift" onPress={() => router.push('/parent/shift/new')} style={st.half} />
+            <Button label="Book a shift" onPress={() => router.push({ pathname: '/parent/shift/new', params: { sitter: id } })} style={st.half} />
           </View>
           <Pressable accessibilityRole="button" onPress={confirmRemove} disabled={busy} style={st.removeRow}>
             <Text style={st.remove}>Remove {first} from your family</Text>
@@ -128,30 +125,8 @@ export default function SitterProfile() {
           <Text style={st.cardTitle}>Credentials</Text>
           <Text style={st.checked}>Checked by BabyBadger</Text>
         </View>
-        {pairs.length ? (
-          <View style={{ gap: 12 }}>
-            {pairs.map((pair, i) => (
-              <View key={i} style={{ flexDirection: 'row', gap: 10 }}>
-                {pair.map((c) => (
-                  <Badge key={c.id} c={c} />
-                ))}
-                {pair.length === 1 ? <View style={{ flex: 1 }} /> : null}
-              </View>
-            ))}
-          </View>
-        ) : (
-          <Text style={st.none}>No verified credentials yet.</Text>
-        )}
-        {data.bundle.langs.length ? (
-          <View style={{ gap: 6 }}>
-            <Text style={st.label}>SPEAKS</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-              {sortLanguages(data.bundle.langs).map((l) => (
-                <Pill key={l.language} label={`${l.language} · ${levelLabel(l.level).toLowerCase()}`} kind="muted" />
-              ))}
-            </View>
-          </View>
-        ) : null}
+        <CredGrid creds={ordered} />
+        <SpeaksBlock langs={data.bundle.langs} />
       </View>
 
       <View style={st.list}>
@@ -172,42 +147,6 @@ export default function SitterProfile() {
   );
 }
 
-const SHORT: Record<string, string> = { first_aid: 'CPR + First Aid', background: 'Background', drivers_license: 'Driver' };
-
-/** One P11 credential: tile, short name with a green check (amber clock when it runs out within 30 days), date line. */
-function Badge({ c }: { c: Credential }) {
-  const key = credTileKey(c);
-  const soon = credentialState(c) === 'expiring';
-  const sub =
-    c.kind === 'background_check'
-      ? c.verified_at
-        ? `Checked ${monthYear(toDay(new Date(c.verified_at)))}`
-        : ''
-      : soon && c.expires_on
-        ? `Expires ${monthDay(c.expires_on)}`
-        : c.expires_on
-          ? `Until ${shortExpiry(c.expires_on)}`
-          : (c.issuer ?? '');
-  return (
-    <View style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-      <CredTile which={key} box={36} />
-      <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Text style={st.badgeName} numberOfLines={1}>
-            {SHORT[key] ?? c.title}
-          </Text>
-          {soon ? <CIcon name="clock" size={16} tint={color.warn} /> : <CIcon name="check" size={16} tint={color.ok} />}
-        </View>
-        {sub ? (
-          <Text style={[st.badgeSub, soon && { fontFamily: font.bodySemi, color: color.warnInk }]} numberOfLines={1}>
-            {sub}
-          </Text>
-        ) : null}
-      </View>
-    </View>
-  );
-}
-
 // Values from wireframe P11.
 const st = StyleSheet.create({
   meta: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
@@ -217,10 +156,6 @@ const st = StyleSheet.create({
   card: { gap: 14, padding: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   cardTitle: { fontFamily: font.displayBold, fontSize: 18, color: color.ink, flexShrink: 1 },
   checked: { fontFamily: font.body, fontSize: 12, color: color.ink2, flexShrink: 1 },
-  none: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
-  badgeName: { fontFamily: font.bodyBold, fontSize: 14, color: color.ink, flexShrink: 1 },
-  badgeSub: { fontFamily: font.body, fontSize: 12, color: color.ink2 },
-  label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6 },
   list: { paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 48 },
   line: { borderBottomWidth: 1, borderBottomColor: color.divider },

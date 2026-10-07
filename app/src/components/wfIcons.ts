@@ -39,6 +39,8 @@ export const WF_ICONS: Record<string, string> = {
   settings: '<circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4.5 21c0-4.2 3.3-7 7.5-7s7.5 2.8 7.5 7"/>',
   x: '<path d="M6 6l12 12M18 6L6 18"/>',
+  zap: '<path d="M13 3L5 13.5h6L10 21l8-10.5h-6z"/>', // P45 First to accept
+  send: '<path d="M4 12l16-8-6 16-2.5-6.5z"/><path d="M11.5 13.5L20 4"/>', // P45 Send to N sitters
   upload: '<path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
 };
 

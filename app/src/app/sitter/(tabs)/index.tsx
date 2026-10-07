@@ -3,12 +3,15 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
+import { RequestRow } from '@/components/poolRequest';
 import { RunningLateSheet } from '@/components/timing';
 import { ErrorText, HomeHeader, Icon, type IconName, initialsOf, Screen } from '@/components/ui';
 import { api, useQuery, useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
 import { familyPossessive, sitterRulesState } from '@/lib/house-rules';
 import { startSharing } from '@/lib/location-sharing';
+import { availabilityApi } from '@/lib/availability';
+import { calendarFit, requestWindow, requestsApi, sitterRowSub, sitterRowTitle, timeLeft } from '@/lib/pool-requests';
 import { useSession } from '@/lib/session';
 import { clockInState, formatClock } from '@/lib/shift-logic';
 import { errorText, supabase } from '@/lib/supabase';
@@ -18,7 +21,7 @@ import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframes S3 (shift today), S3b (no shift today) and S3d (nothing booked), translated from their HTML
-// (app/src/wireframes/S3*.tsx). "Running late?" opens S21 before clock-in. Left out until built: Needs-you items other than consent, earnings and
+// (app/src/wireframes/S3*.tsx). "Running late?" opens S21 before clock-in. Needs you lists pool requests waiting for her answer (S3's "Lee family asks for Sat 6 – 10 PM" row, opens S33 / S20). Left out until built: Needs-you items other than consent, rules and requests, earnings and
 // payout and most tools. Clock in checks the home zone first (S22 when she isn't there yet). Availability and Time off (tools, S3d's "Set your availability") open S11.
 // Times follow the wireframe: "3:00 – 7:00 PM" on the today card, "7:30 – 10 PM" elsewhere.
 export default function SitterHome() {
@@ -42,6 +45,12 @@ export default function SitterHome() {
     return states.filter((x) => x.needsAgreement).map((x) => x.fid);
   }, [activeIds, uid]);
   const needsRules = sitterLinks.filter((l) => rulesDue?.includes(l.family_id));
+  // Pool requests waiting for her answer (S33 / S20). Nothing before migration 25 runs.
+  const { data: requests } = useQuery(async () => {
+    const list = await requestsApi.waitingForMe(uid).catch(() => []);
+    return { list, off: list.length ? await availabilityApi.myTimeOff(uid).catch(() => []) : [] };
+  }, [uid]);
+  const asks = requests?.list ?? [];
   const active = shifts?.find((s) => s.status === 'active');
   const upcoming = (shifts ?? []).filter((s) => s.status === 'scheduled' && new Date(s.ends_at).getTime() > now);
   const next = upcoming[0];
@@ -144,13 +153,23 @@ export default function SitterHome() {
         </>
       )}
 
-      {needsConsent.length + needsRules.length > 0 && (
+      {asks.length + needsConsent.length + needsRules.length > 0 && (
         <>
           <View style={st.labelRow}>
             <Text style={st.label}>NEEDS YOU</Text>
-            <Text style={st.labelCount}>{needsConsent.length + needsRules.length}</Text>
+            <Text style={st.labelCount}>{asks.length + needsConsent.length + needsRules.length}</Text>
           </View>
           <View style={st.listCard}>
+            {asks.map((r, i) => (
+              <RequestRow
+                key={`req-${r.id}`}
+                title={sitterRowTitle(famName(r.family_id), requestWindow(r))}
+                sub={sitterRowSub(calendarFit(requestWindow(r), requests?.off ?? [], shifts ?? []), timeLeft(r.expires_at, today, true))}
+                last={i === asks.length - 1 && !needsRules.length && !needsConsent.length}
+                sitter
+                onPress={() => router.push({ pathname: '/sitter/request/[id]', params: { id: r.id } })}
+              />
+            ))}
             {needsRules.map((l, i) => (
               <Pressable key={`rules-${l.family_id}`} accessibilityRole="button" onPress={() => router.push(`/sitter/rules/${l.family_id}`)} style={[st.needRow, (i < needsRules.length - 1 || needsConsent.length > 0) && st.line]}>
                 <View style={[st.needIcon, { backgroundColor: color.warnTint }]}>

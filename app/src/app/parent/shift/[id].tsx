@@ -100,8 +100,12 @@ export default function ParentShift() {
           </View>
           <Text style={st.summary}>{tasks.length ? tasks.map((t) => (t.done_at ? t.title : `${t.title} (not done)`)).join(' · ') : 'No tasks were set for this shift.'}</Text>
         </View>
-        <View style={[st.card, { gap: 8 }]}>
-          <Text style={st.cardTitle}>Logs</Text>
+        {/* P5's Logs card opens the full log (P77, ended: P77d). */}
+        <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/parent/log/[shiftId]', params: { shiftId: shift.id } })} style={[st.card, { gap: 8 }]}>
+          <View style={st.cardHead}>
+            <Text style={st.cardTitle}>Logs</Text>
+            {logs.length ? <Text style={st.seeAll}>See all {logs.length} ›</Text> : null}
+          </View>
           {logs.length === 0 ? <Text style={st.summary}>Nothing logged.</Text> : null}
           {[...logs].reverse().map((l) => {
             const d = describeLog(l);
@@ -112,7 +116,7 @@ export default function ParentShift() {
               </View>
             );
           })}
-        </View>
+        </Pressable>
         <View style={st.card}>
           <Text style={st.cardTitle}>Notes</Text>
           <Text style={st.summary}>{shift.note || `${name} didn’t leave a note.`}</Text>
@@ -147,7 +151,7 @@ export default function ParentShift() {
         </View>
         <SafetyBox kids={kids} />
         {taskCard}
-        <Card>
+        <Card onPress={() => router.push({ pathname: '/parent/log/[shiftId]', params: { shiftId: shift.id } })}>
           <Text style={st.cardTitle}>Today’s log</Text>
           <LogTimeline logs={logs} kids={kids} />
         </Card>
@@ -205,5 +209,6 @@ const st = StyleSheet.create({
   logText: { flexShrink: 1, fontFamily: font.body, fontSize: 14, color: color.ink },
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink },
+  seeAll: { fontFamily: font.bodyBold, fontSize: 13, color: color.primary },
   kidRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60 },
 });

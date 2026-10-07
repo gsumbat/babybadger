@@ -6,6 +6,7 @@ import { SvgXml } from 'react-native-svg';
 import { KidDot, kidSub } from '@/components/bits';
 import { LockedMap, PaymentIssueBanner } from '@/components/billing';
 import { LiveMap } from '@/components/LiveMap';
+import { ParentRequestsNeedYou } from '@/components/poolRequest';
 import { AskToStaySheet, WALK_ICON } from '@/components/timing';
 import { ActionGrid, dayPart, ErrorText, HomeHeader, Icon, type IconName, initialsOf, Screen } from '@/components/ui';
 import { takePlansIntro, usePlan } from '@/lib/billing';
@@ -26,7 +27,7 @@ import { isOpenTrip, useShiftTrips } from '@/lib/trips';
 
 // Wireframes P4 (live), P4a (setup), P4e (setup skipped), P4b (idle), P4c (starting soon), P4d (ended), translated
 // from their HTML (app/src/wireframes/P4*.tsx). Left out until built: Message / Call / Ask for photo, kids' devices and
-// places, Needs you (invoices, requests), Approve hours, "On my way". P4c shows the sitter's late notice (S21) where it
+// places, Needs you invoices (open pool requests show there, P46), Approve hours, "On my way". P4c shows the sitter's late notice (S21) where it
 // draws "On my way". While a trip is open, P4's "On shift" pill reads "On a trip" (P8's pill) and opens P8. P4 has an "Ask Maya to stay longer" link under the live card (S25 request; not drawn yet).
 
 // Optional steps (house rules, the care plan) count toward "n of 5 done" but don't keep the setup checklist open on their own.
@@ -135,6 +136,9 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
       )}
       {state?.kind === 'idle' && state.next && <NextShift shift={state.next} sitter={sitterName(state.next.sitter_id)} />}
       {!setup && !full && data && data.kids.length > 0 && (state?.kind === 'idle' || state?.kind === 'live') && <Kids kids={data.kids} add={!explore} />}
+
+      {/* P4b "Needs you": open pool requests (P46). Invoices aren't built. */}
+      {!setup && !full && <ParentRequestsNeedYou familyId={fid} />}
 
       {/* P4a has no grid. Tiles not built yet are left out: Find a sitter, Kids & devices, Ask my pool, Pay sitter. P4b's Requirements tile opens P7a. */}
       {explore ? (
@@ -382,12 +386,13 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
             <Text style={{ fontFamily: font.body, fontSize: 15, color: color.ink, flexShrink: 1 }}>{last.title}</Text>
           </View>
         ) : null}
-        <View style={st.logRow}>
+        {/* P4's "Today's log" row opens the full log (P77). */}
+        <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/parent/log/[shiftId]', params: { shiftId: shift.id } })} style={st.logRow}>
           <Text style={{ fontFamily: font.body, fontSize: 14, color: color.ink, flexShrink: 1 }}>
             <Text style={{ fontFamily: font.bodyBold }}>Today’s log</Text> · {bundle.logs.length ? [...new Set(bundle.logs.map((l) => describeLog(l).title.toLowerCase()))].slice(0, 4).join(', ') : 'nothing yet'}
           </Text>
           <Icon name="chevron-right" size={18} tint={color.ink2} />
-        </View>
+        </Pressable>
       </Pressable>
     </>
   );

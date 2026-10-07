@@ -10,6 +10,7 @@ import { addDays, dayKey, fromKey, sameDay, weekOf, weekTitle } from '@/lib/cale
 import { useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { cellKind, daySummary, poolData, SLOTS, slotTitle, slotWindow, statusFor, weekStart, type CellKind, type DaySlot } from '@/lib/pool';
+import { askable } from '@/lib/pool-requests';
 import { useSession } from '@/lib/session';
 import { cardShadow, color, font } from '@/theme';
 
@@ -20,7 +21,8 @@ import { cardShadow, color, font } from '@/theme';
 // that day or none set), Away (hatched: a day off). Tapping a day or a cell selects the day; the card under the grid
 // ("Saturday evening · 2 free · 1 until 9:00 PM · 2 not free") opens P42 for it, as does tapping the selected day again.
 // A sitter's name opens P11. Past days (and a slot that's over today) are dimmed and can't be picked.
-// Left out until built: "Ask for Saturday evening" (P45 asking the pool); the tab bar (pushed screen, like P42).
+// "Ask for Saturday evening" opens P45 for the selected day's window (only when someone in the pool is free or partly
+// free then). Left out: the tab bar (pushed screen, like P42).
 export default function PoolWeek() {
   const params = useLocalSearchParams<{ week?: string; day?: string; slot?: string }>();
   const { family } = useSession();
@@ -59,10 +61,18 @@ export default function PoolWeek() {
     setPicked(day);
   }
   const canGoBack = +monday > +weekOf(now)[0];
+  const canAsk = !!selWin && !!data && active.some((s) => askable(statusFor(data, s.sitter_id, selWin)));
 
   return (
     <Screen
       gap={12}
+      footer={
+        canAsk && selWin ? (
+          <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/parent/pool-ask', params: { start: selWin.start.toISOString(), end: selWin.end.toISOString() } })} style={st.askBtn}>
+            <Text style={st.askText}>Ask for {slotTitle(days[sel], slot)}</Text>
+          </Pressable>
+        ) : undefined
+      }
       header={
         <View style={st.header}>
           <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/parent/sitters'))} style={st.back}>
@@ -225,4 +235,6 @@ const st = StyleSheet.create({
   cardTitle: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink },
   sub: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
   note: { fontFamily: font.body, fontSize: 13, lineHeight: 19, color: color.ink2 },
+  askBtn: { height: 52, borderRadius: 999, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' },
+  askText: { fontFamily: font.displayBold, fontSize: 17, color: '#FFFFFF' },
 });

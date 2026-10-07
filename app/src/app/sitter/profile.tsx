@@ -11,7 +11,7 @@ import { cardShadow, color, font } from '@/theme';
 
 // Wireframe S13 My profile, from app/src/wireframes/S13.tsx. Opened from Me (S39) "My profile · N%".
 // "Edit details and photo" opens S40; CREDENTIALS "Manage" opens S14; each certificate opens S41, the background
-// check S17, languages S16. Left out until built: "Preview" (S19 What families see). The ABOUT rows (Ages, Can drive
+// check S17, languages S16; "Preview" opens S19 What families see. The ABOUT rows (Ages, Can drive
 // kids, Rate) show only when set: no screen edits them yet. Not drawn: the background check row before the provider
 // has started one ("Not started"), and no ABOUT card when nothing is set.
 export default function Profile() {
@@ -33,7 +33,17 @@ export default function Profile() {
   ].filter(([, v]) => v);
 
   return (
-    <Screen back title="My profile" gap={14}>
+    <Screen
+      back
+      title="My profile"
+      gap={14}
+      right={
+        <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/sitter/family-view', params: { from: 'profile' } })} hitSlop={8} style={{ flexShrink: 1 }}>
+          <Text style={credStyles.link} numberOfLines={1}>
+            Preview
+          </Text>
+        </Pressable>
+      }>
       <ErrorText>{data.error}</ErrorText>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <SitterAvatar name={name} photoPath={p?.photo_path} size={72} fontSize={31} />

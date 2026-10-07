@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 
 import { photoUrl } from '@/lib/data';
 import { timeOf } from '@/lib/format';
@@ -20,7 +21,10 @@ export const LOG_ICON: Record<LogKind, { icon: IconName; bg: string; fg: string 
   incident: { icon: 'alert-triangle', bg: color.badTint, fg: color.bad },
 };
 
-export function LogTimeline({ logs, kids, compact }: { logs: LogEntry[]; kids: Kid[]; compact?: boolean }) {
+const HEART = '<svg viewBox="0 0 24 24" fill="#8A5A7A" stroke="#8A5A7A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/></svg>';
+
+/** `loved`: log ids a parent loved (P77 "Love it", migration 26); those entries get P77's heart after the title. */
+export function LogTimeline({ logs, kids, compact, loved }: { logs: LogEntry[]; kids: Kid[]; compact?: boolean; loved?: Set<string> }) {
   if (!logs.length) return <T variant="muted">Nothing logged yet.</T>;
   const kidNames = (ids: string[]) =>
     ids.length === 0 || (kids.length > 1 && ids.length === kids.length) ? (kids.length > 1 ? 'Both' : '') : ids.map((id) => kids.find((k) => k.id === id)?.name).filter(Boolean).join(', ');
@@ -57,11 +61,14 @@ export function LogTimeline({ logs, kids, compact }: { logs: LogEntry[]; kids: K
             </View>
             <View style={{ flex: 1, gap: 2 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
-                <T variant="strong">
-                  {d.title}
-                  {who ? ` · ${who}` : ''}
-                  {l.urgent ? ' · needs attention' : ''}
-                </T>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
+                  <T variant="strong" style={{ flexShrink: 1 }}>
+                    {d.title}
+                    {who ? ` · ${who}` : ''}
+                    {l.urgent ? ' · needs attention' : ''}
+                  </T>
+                  {loved?.has(l.id) ? <SvgXml accessibilityLabel="Loved" xml={HEART} width={14} height={14} style={{ flexShrink: 0 }} /> : null}
+                </View>
                 <T variant="small">{timeOf(l.happened_at)}</T>
               </View>
               {d.detail ? <T variant="muted">{d.detail}</T> : null}

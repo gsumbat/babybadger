@@ -1764,4 +1764,373 @@ do $$ declare f uuid := (select v::uuid from ctx where k = 'fam'); n int := (sel
   if (select count(*) from net.sent) <> n + 1 then raise exception 'FAIL reminder sent while off'; end if;
 end $$;
 
+-- 25. Ask your pool (migration 25, P45–P47 / S33 / S34 / S20). Tia Lane (parent), Uma Ray and Vi Long (asked),
+-- Wes Hill (a signed sitter of the family who wasn't asked), the stranger. Only the family's parents send requests,
+-- only to signed sitters; a sitter reads only her own row (never who else was asked); first to accept is booked and
+-- the others are told; with "first to accept" off the parent picks; offers book only the offered part; accepting
+-- can clear her time off; cancelled and expired requests can't be taken; Block booking still applies.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a2501', 'tia-parent@example.com'),
+  ('00000000-0000-0000-0000-0000000a2502', 'uma-sitter@example.com'),
+  ('00000000-0000-0000-0000-0000000a2503', 'vi-sitter@example.com'),
+  ('00000000-0000-0000-0000-0000000a2504', 'wes-sitter@example.com');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2501');
+insert into ctx values ('fam25', (select public.create_family('The Lane family', 'Tia Lane')::text));
+insert into kids (family_id, name) select v::uuid, 'Ivy' from ctx where k = 'fam25';
+select public.register_push_token('ExponentPushToken[tia-phone]', 'ios');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2502');
+select public.register_push_token('ExponentPushToken[uma-phone]', 'ios');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2503');
+select public.register_push_token('ExponentPushToken[vi-phone]', 'ios');
+reset role;
+update profiles set full_name = 'Uma Ray' where id = '00000000-0000-0000-0000-0000000a2502';
+update profiles set full_name = 'Vi Long' where id = '00000000-0000-0000-0000-0000000a2503';
+update profiles set full_name = 'Wes Hill' where id = '00000000-0000-0000-0000-0000000a2504';
+insert into family_sitters (family_id, sitter_id, status)
+  select v::uuid, s::uuid, 'active' from ctx, unnest(array['00000000-0000-0000-0000-0000000a2502', '00000000-0000-0000-0000-0000000a2503',
+    '00000000-0000-0000-0000-0000000a2504']) s where k = 'fam25';
+insert into ctx select 'n25', count(*)::text from net.sent;
+set role authenticated;
+
+-- Bad requests are refused; a stranger can't send one
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2501');
+do $$ declare f uuid := (select v::uuid from ctx where k = 'fam25'); begin
+  begin
+    perform public.create_shift_request(f, now() + interval '1 day', now() + interval '1 day 4 hours', array['00000000-0000-0000-0000-00000000000c'::uuid]);
+    raise exception 'FAIL asked someone who isn''t her sitter';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  begin
+    perform public.create_shift_request(f, now() + interval '1 day', now() + interval '1 day 4 hours', array['00000000-0000-0000-0000-0000000a2502'::uuid], '{}', '', true, 5);
+    raise exception 'FAIL odd expiry accepted';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  begin
+    perform public.create_shift_request(f, now() - interval '1 hour', now() + interval '3 hours', array['00000000-0000-0000-0000-0000000a2502'::uuid]);
+    raise exception 'FAIL request for a time that started';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  begin
+    perform public.create_shift_request(f, now() + interval '1 day', now() + interval '1 day 4 hours', '{}');
+    raise exception 'FAIL request with nobody to ask';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+do $$ begin
+  perform public.create_shift_request((select v::uuid from ctx where k = 'fam25'), now() + interval '1 day', now() + interval '1 day 4 hours',
+    array['00000000-0000-0000-0000-0000000a2502'::uuid]);
+  raise exception 'FAIL stranger sent a request';
+exception when insufficient_privilege then null; end $$;
+
+-- Tia asks Uma and Vi, first to accept gets it, expires in 12 hours; both phones get "New shift request"
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2501');
+insert into ctx select 'req25', public.create_shift_request(v::uuid, now() + interval '2 days', now() + interval '2 days 4 hours',
+  array['00000000-0000-0000-0000-0000000a2502', '00000000-0000-0000-0000-0000000a2503']::uuid[], '{}', 'Pizza in the fridge', true, 12)::text
+  from ctx where k = 'fam25';
+do $$ begin
+  if (select count(*) from shift_request_sitters where request_id = (select v::uuid from ctx where k = 'req25')) <> 2 then raise exception 'FAIL parent sees the asked sitters'; end if;
+  if (select cardinality(kid_ids) from shift_requests where id = (select v::uuid from ctx where k = 'req25')) <> 1 then raise exception 'FAIL no kids means every kid'; end if;
+  if (select expires_at from shift_requests where id = (select v::uuid from ctx where k = 'req25')) > now() + interval '12 hours 1 minute' then raise exception 'FAIL expiry'; end if;
+  begin
+    update shift_requests set status = 'filled';
+    raise exception 'FAIL parent wrote a request directly';
+  exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+do $$ begin
+  if not exists (select 1 from net.sent where id > (select v::bigint from ctx where k = 'n25')
+      and body @> '[{"to": "ExponentPushToken[uma-phone]", "title": "New shift request"}]' and body @> '[{"to": "ExponentPushToken[vi-phone]"}]') then
+    raise exception 'FAIL sitters not pushed about the request'; end if;
+  if exists (select 1 from net.sent, jsonb_array_elements(body) m where id > (select v::bigint from ctx where k = 'n25') and m->>'to' = 'ExponentPushToken[tia-phone]') then
+    raise exception 'FAIL parent pushed about her own request'; end if;
+end $$;
+set role authenticated;
+
+-- Wes (not asked) and the stranger see nothing; Uma sees the request and only her own row, can't write directly
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2504');
+do $$ begin
+  if (select count(*) from shift_requests) + (select count(*) from shift_request_sitters) <> 0 then raise exception 'FAIL unasked sitter sees the request'; end if;
+  perform public.accept_shift_request((select v::uuid from ctx where k = 'req25'));
+  raise exception 'FAIL unasked sitter accepted';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+do $$ begin
+  if (select count(*) from shift_requests) + (select count(*) from shift_request_sitters) <> 0 then raise exception 'FAIL stranger sees requests'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2502');
+select public.mark_shift_request_seen((select v::uuid from ctx where k = 'req25'));
+do $$ begin
+  if (select note from shift_requests) <> 'Pizza in the fridge' then raise exception 'FAIL sitter cannot read the request'; end if;
+  if (select count(*) from shift_request_sitters) <> 1 then raise exception 'FAIL sitter sees who else was asked'; end if;
+  if (select status from shift_request_sitters) <> 'seen' or (select seen_at from shift_request_sitters) is null then raise exception 'FAIL not marked seen'; end if;
+  begin
+    insert into shift_request_sitters (request_id, sitter_id) select v::uuid, '00000000-0000-0000-0000-0000000a2504' from ctx where k = 'req25';
+    raise exception 'FAIL sitter added someone to a request';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.cancel_shift_request((select v::uuid from ctx where k = 'req25'));
+    raise exception 'FAIL sitter cancelled the request';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+end $$;
+
+-- Vi offers part of it (S20); an offer outside the window is refused
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2503');
+do $$ declare r shift_requests; begin
+  select * into r from shift_requests;
+  begin
+    perform public.offer_shift_request(r.id, r.starts_at - interval '1 hour', r.starts_at + interval '1 hour');
+    raise exception 'FAIL offer outside the window';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  if public.offer_shift_request(r.id, r.starts_at, r.starts_at + interval '1 hour')->>'result' <> 'offered' then raise exception 'FAIL offer'; end if;
+end $$;
+-- Uma accepts first: she's booked with the kid, Vi is told it's filled, Tia is told Uma took it
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2502');
+do $$ declare res jsonb; begin
+  res := public.accept_shift_request((select v::uuid from ctx where k = 'req25'));
+  if res->>'result' <> 'booked' or res->>'shift_id' is null then raise exception 'FAIL first accept: %', res; end if;
+  if (select count(*) from shifts where id = (res->>'shift_id')::uuid and status = 'scheduled' and sitter_id = auth.uid()) <> 1 then raise exception 'FAIL shift not hers'; end if;
+  if (select count(*) from shift_kids where shift_id = (res->>'shift_id')::uuid) <> 1 then raise exception 'FAIL kids not on the shift'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2503');
+do $$ begin
+  if (select status from shift_request_sitters) <> 'filled' then raise exception 'FAIL other sitter not told'; end if;
+  if public.accept_shift_request((select v::uuid from ctx where k = 'req25'))->>'result' <> 'filled' then raise exception 'FAIL second accept went through'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2501');
+do $$ begin
+  if (select status || '/' || filled_by from shift_requests where id = (select v::uuid from ctx where k = 'req25')) <> 'filled/00000000-0000-0000-0000-0000000a2502' then
+    raise exception 'FAIL request not filled'; end if;
+  if (select count(*) from shifts where family_id = (select v::uuid from ctx where k = 'fam25')) <> 1 then raise exception 'FAIL expected one shift'; end if;
+end $$;
+reset role;
+do $$ begin
+  if not exists (select 1 from net.sent where body @> '[{"to": "ExponentPushToken[vi-phone]", "title": "This shift was filled"}]') then raise exception 'FAIL filled push'; end if;
+  if not exists (select 1 from net.sent where body @> '[{"to": "ExponentPushToken[tia-phone]", "title": "Uma took the shift"}]') then raise exception 'FAIL took push'; end if;
+  if exists (select 1 from net.sent where body @> '[{"to": "ExponentPushToken[uma-phone]", "title": "This shift was filled"}]') then raise exception 'FAIL winner told it was filled'; end if;
+end $$;
+set role authenticated;
+
+-- "First to accept" off: Uma's yes only tells Tia; Tia can't book Vi (no answer), books Uma; Vi is told
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2501');
+insert into ctx select 'req25b', public.create_shift_request(v::uuid, now() + interval '3 days', now() + interval '3 days 3 hours',
+  array['00000000-0000-0000-0000-0000000a2502', '00000000-0000-0000-0000-0000000a2503']::uuid[], '{}', '', false, 2)::text from ctx where k = 'fam25';
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2502');
+do $$ begin
+  if public.accept_shift_request((select v::uuid from ctx where k = 'req25b'))->>'result' <> 'accepted' then raise exception 'FAIL accept without first-to-accept'; end if;
+  if (select count(*) from shifts) <> 1 then raise exception 'FAIL booked before the parent picked'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2501');
+do $$ begin
+  begin
+    perform public.book_shift_request((select v::uuid from ctx where k = 'req25b'), '00000000-0000-0000-0000-0000000a2503');
+    raise exception 'FAIL booked a sitter who didn''t answer';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  perform public.book_shift_request((select v::uuid from ctx where k = 'req25b'), '00000000-0000-0000-0000-0000000a2502');
+  if (select status from shift_requests where id = (select v::uuid from ctx where k = 'req25b')) <> 'filled' then raise exception 'FAIL pick not filled'; end if;
+  if (select status from shift_request_sitters where request_id = (select v::uuid from ctx where k = 'req25b') and sitter_id = '00000000-0000-0000-0000-0000000a2503') <> 'filled' then
+    raise exception 'FAIL other sitter not told after the pick'; end if;
+end $$;
+
+-- An offer: Tia accepts Vi's offer, which books only the offered hour; "Look elsewhere" passes on another
+insert into ctx select 'req25c', public.create_shift_request(v::uuid, now() + interval '4 days', now() + interval '4 days 5 hours',
+  array['00000000-0000-0000-0000-0000000a2503']::uuid[])::text from ctx where k = 'fam25';
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2503');
+select public.offer_shift_request(v::uuid, (select starts_at from shift_requests where id = v::uuid), (select starts_at + interval '1 hour' from shift_requests where id = v::uuid))
+  from ctx where k = 'req25c';
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2501');
+do $$ declare sid uuid; begin
+  sid := public.book_shift_request((select v::uuid from ctx where k = 'req25c'), '00000000-0000-0000-0000-0000000a2503');
+  if (select ends_at - starts_at from shifts where id = sid) <> interval '1 hour' then raise exception 'FAIL offer booked the whole window'; end if;
+end $$;
+
+-- Time off: Vi gives up one day of a three-day time off to take a shift (S20 "Accept all and cancel my time off")
+insert into ctx select 'req25d', public.create_shift_request(v::uuid, (current_date + 10)::timestamptz + interval '18 hours', (current_date + 10)::timestamptz + interval '22 hours',
+  array['00000000-0000-0000-0000-0000000a2503']::uuid[])::text from ctx where k = 'fam25';
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2503');
+insert into sitter_time_off (sitter_id, starts, ends, note) values (auth.uid(), current_date + 9, current_date + 11, 'Trip');
+do $$ begin
+  if public.accept_shift_request((select v::uuid from ctx where k = 'req25d'), current_date + 10, current_date + 10)->>'result' <> 'booked' then raise exception 'FAIL accept with time off'; end if;
+  if (select string_agg(starts || '..' || ends, ',' order by starts) from sitter_time_off) <> (current_date + 9) || '..' || (current_date + 9) || ',' || (current_date + 11) || '..' || (current_date + 11) then
+    raise exception 'FAIL time off not split: %', (select string_agg(starts || '..' || ends, ',' order by starts) from sitter_time_off); end if;
+end $$;
+
+-- Cancelled and expired requests can't be taken; expiry pushes the parent
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2501');
+insert into ctx select 'req25e', public.create_shift_request(v::uuid, now() + interval '5 days', now() + interval '5 days 2 hours',
+  array['00000000-0000-0000-0000-0000000a2502']::uuid[])::text from ctx where k = 'fam25';
+select public.cancel_shift_request(v::uuid) from ctx where k = 'req25e';
+insert into ctx select 'req25f', public.create_shift_request(v::uuid, now() + interval '6 days', now() + interval '6 days 2 hours',
+  array['00000000-0000-0000-0000-0000000a2502']::uuid[])::text from ctx where k = 'fam25';
+reset role;
+update shift_requests set expires_at = now() - interval '1 minute' where id = (select v::uuid from ctx where k = 'req25f');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2502');
+do $$ begin
+  if public.accept_shift_request((select v::uuid from ctx where k = 'req25e'))->>'result' <> 'cancelled' then raise exception 'FAIL took a cancelled request'; end if;
+  if public.accept_shift_request((select v::uuid from ctx where k = 'req25f'))->>'result' <> 'expired' then raise exception 'FAIL took an expired request'; end if;
+  if (select status from shift_requests where id = (select v::uuid from ctx where k = 'req25f')) <> 'expired' then raise exception 'FAIL not marked expired'; end if;
+end $$;
+reset role;
+do $$ begin
+  if (select count(*) from net.sent where body @> '[{"to": "ExponentPushToken[tia-phone]", "title": "Your shift request expired"}]') <> 1 then raise exception 'FAIL expiry push'; end if;
+end $$;
+
+-- Block booking (migration 20): a sitter missing a must-have can't take the shift
+update families set requirement_mode = 'block' where id = (select v::uuid from ctx where k = 'fam25');
+insert into family_requirements (family_id, key, title, level) select v::uuid, 'non_smoker', 'Non-smoker', 'must' from ctx where k = 'fam25';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2501');
+insert into ctx select 'req25g', public.create_shift_request(v::uuid, now() + interval '7 days', now() + interval '7 days 2 hours',
+  array['00000000-0000-0000-0000-0000000a2502']::uuid[])::text from ctx where k = 'fam25';
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2502');
+do $$ begin
+  perform public.accept_shift_request((select v::uuid from ctx where k = 'req25g'));
+  raise exception 'FAIL blocked sitter took the shift';
+exception when others then if sqlerrm not like '%must-have%' then raise exception 'FAIL block: %', sqlerrm; end if; end $$;
+do $$ begin
+  if (select status from shift_requests where id = (select v::uuid from ctx where k = 'req25g')) <> 'open' then raise exception 'FAIL blocked accept changed the request'; end if;
+end $$;
+reset role;
+
+-- 26. Shift log reactions and photo requests (migration 26, P77). Lia Hart (parent), Kit Hart (second parent),
+-- Bo Vance (sitter), the stranger: parents love photo entries (not other logs) and remove only their own heart;
+-- the sitter reads the hearts but can't add one; "Ask for a photo" only from the family's parents, on a live shift,
+-- once per 10 minutes; nobody writes photo_requests directly; pushes go to the sitter.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a2601', 'lia-parent@example.com'),
+  ('00000000-0000-0000-0000-0000000a2602', 'bo-sitter@example.com'),
+  ('00000000-0000-0000-0000-0000000a2603', 'kit-parent@example.com');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2601');
+insert into ctx values ('fam26', (select public.create_family('The Hart family', 'Lia Hart')::text));
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2602');
+select public.register_push_token('ExponentPushToken[bo-phone]', 'ios');
+reset role;
+update profiles set full_name = 'Bo Vance' where id = '00000000-0000-0000-0000-0000000a2602';
+update profiles set full_name = 'Kit Hart' where id = '00000000-0000-0000-0000-0000000a2603';
+insert into family_parents (family_id, user_id) select v::uuid, '00000000-0000-0000-0000-0000000a2603' from ctx where k = 'fam26';
+insert into family_sitters (family_id, sitter_id, status) select v::uuid, '00000000-0000-0000-0000-0000000a2602', 'active' from ctx where k = 'fam26';
+insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by)
+  select v::uuid, '00000000-0000-0000-0000-0000000a2602', now() - interval '1 hour', now() + interval '3 hours', '00000000-0000-0000-0000-0000000a2601' from ctx where k = 'fam26';
+insert into ctx select 'shift26', id::text from shifts where family_id = (select v::uuid from ctx where k = 'fam26');
+set role authenticated;
+-- Ask for a photo before the shift is live: refused
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2601');
+do $$ begin
+  perform public.ask_for_photo((select v::uuid from ctx where k = 'shift26'));
+  raise exception 'FAIL asked for a photo before clock-in';
+exception when others then if sqlerrm not like '%isn''t live%' then raise exception 'FAIL before clock-in: %', sqlerrm; end if; end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2602');
+select public.clock_in((select v::uuid from ctx where k = 'shift26'));
+insert into logs (shift_id, author_id, kind, data, photo_path)
+  select v::uuid, auth.uid(), 'photo', '{"caption":"Snack break on the bench"}', v || '/p1.jpg' from ctx where k = 'shift26';
+insert into logs (shift_id, author_id, kind, data) select v::uuid, auth.uid(), 'food', '{"meal":"snack"}' from ctx where k = 'shift26';
+insert into ctx select 'photo26', id::text from logs where kind = 'photo' and shift_id = (select v::uuid from ctx where k = 'shift26');
+insert into ctx select 'food26', id::text from logs where kind = 'food' and shift_id = (select v::uuid from ctx where k = 'shift26');
+-- The sitter can't love her own photo
+do $$ begin
+  insert into log_reactions (log_id, parent_id) select v::uuid, auth.uid() from ctx where k = 'photo26';
+  raise exception 'FAIL sitter added a heart';
+exception when insufficient_privilege then null; end $$;
+reset role;
+delete from net.sent;
+set role authenticated;
+-- Lia loves the photo (push to Bo), can't love the snack or love as Kit
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2601');
+insert into log_reactions (log_id, parent_id) select v::uuid, auth.uid() from ctx where k = 'photo26';
+do $$ begin
+  if (select shift_id::text from log_reactions) <> (select v from ctx where k = 'shift26') then raise exception 'FAIL reaction shift_id not filled'; end if;
+  begin
+    insert into log_reactions (log_id, parent_id) select v::uuid, auth.uid() from ctx where k = 'food26';
+    raise exception 'FAIL loved a food entry';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into log_reactions (log_id, parent_id) select v::uuid, '00000000-0000-0000-0000-0000000a2603' from ctx where k = 'photo26';
+    raise exception 'FAIL loved as another parent';
+  exception when insufficient_privilege then null; end;
+end $$;
+-- Kit (second parent) sees Lia's heart, adds his own, can't remove hers
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2603');
+insert into log_reactions (log_id, parent_id) select v::uuid, auth.uid() from ctx where k = 'photo26';
+do $$ declare n int; begin
+  if (select count(*) from log_reactions) <> 2 then raise exception 'FAIL second parent cannot see the hearts'; end if;
+  delete from log_reactions where parent_id = '00000000-0000-0000-0000-0000000a2601';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL removed another parent''s heart'; end if;
+end $$;
+delete from log_reactions where parent_id = auth.uid();
+-- The sitter reads the heart; the stranger and the other family's parent see nothing and can't love or ask
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2602');
+do $$ begin
+  if (select count(*) from log_reactions) <> 1 then raise exception 'FAIL sitter cannot see the heart'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+do $$ begin
+  if (select count(*) from log_reactions) <> 0 then raise exception 'FAIL stranger sees hearts'; end if;
+  begin
+    insert into log_reactions (log_id, parent_id) select v::uuid, auth.uid() from ctx where k = 'photo26';
+    raise exception 'FAIL stranger loved a photo';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.ask_for_photo((select v::uuid from ctx where k = 'shift26'));
+    raise exception 'FAIL stranger asked for a photo';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+end $$;
+-- Ask for a photo: the sitter can't ask herself; Lia asks once, again within 10 minutes is refused (also for Kit)
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2602');
+do $$ begin
+  perform public.ask_for_photo((select v::uuid from ctx where k = 'shift26'));
+  raise exception 'FAIL sitter asked for a photo';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2601');
+select public.ask_for_photo((select v::uuid from ctx where k = 'shift26'));
+do $$ begin
+  begin
+    perform public.ask_for_photo((select v::uuid from ctx where k = 'shift26'));
+    raise exception 'FAIL asked twice within 10 minutes';
+  exception when others then if sqlerrm not like 'You asked % min ago%' then raise exception 'FAIL rate limit: %', sqlerrm; end if; end;
+  begin
+    insert into photo_requests (shift_id, parent_id) select v::uuid, auth.uid() from ctx where k = 'shift26';
+    raise exception 'FAIL wrote photo_requests directly';
+  exception when insufficient_privilege then null; end;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2603');
+do $$ begin
+  perform public.ask_for_photo((select v::uuid from ctx where k = 'shift26'));
+  raise exception 'FAIL second parent asked within 10 minutes';
+exception when others then if sqlerrm like 'FAIL%' then raise; end if; end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2602');
+do $$ begin
+  if (select count(*) from photo_requests) <> 1 then raise exception 'FAIL sitter cannot see the request'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+do $$ begin
+  if (select count(*) from photo_requests) <> 0 then raise exception 'FAIL stranger sees photo requests'; end if;
+end $$;
+reset role;
+-- Pushes: Lia's heart, Kit's heart and Lia's ask, all to Bo's phone only
+do $$ begin
+  if (select count(*) from net.sent) <> 3 then raise exception 'FAIL expected 3 pushes to the sitter, got %', (select count(*) from net.sent); end if;
+  if exists (select 1 from net.sent, jsonb_array_elements(body) m where m->>'to' <> 'ExponentPushToken[bo-phone]') then raise exception 'FAIL push went to someone else'; end if;
+  if not exists (select 1 from net.sent, jsonb_array_elements(body) m where m->>'title' = 'Lia loved your photo' and m->>'body' = 'Snack break on the bench') then
+    raise exception 'FAIL love push text'; end if;
+  if not exists (select 1 from net.sent, jsonb_array_elements(body) m where m->>'title' = 'Lia asked for a photo update') then raise exception 'FAIL ask push text'; end if;
+end $$;
+-- Ten minutes later she can ask again; after clock-out nobody can
+update photo_requests set created_at = now() - interval '11 minutes';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2601');
+select public.ask_for_photo((select v::uuid from ctx where k = 'shift26'));
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2602');
+select public.clock_out((select v::uuid from ctx where k = 'shift26'), '');
+reset role;
+update photo_requests set created_at = now() - interval '1 hour';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2601');
+do $$ begin
+  perform public.ask_for_photo((select v::uuid from ctx where k = 'shift26'));
+  raise exception 'FAIL asked for a photo after clock-out';
+exception when others then if sqlerrm not like '%isn''t live%' then raise exception 'FAIL after clock-out: %', sqlerrm; end if; end $$;
+reset role;
+
 select 'ALL RLS SCENARIOS PASSED' as result;
