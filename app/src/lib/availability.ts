@@ -100,6 +100,11 @@ export const availabilityApi = {
   async addTimeOff(sitterId: string, range: DateRange) {
     return must(await supabase.from('sitter_time_off').insert({ sitter_id: sitterId, starts: range.starts, ends: range.ends }).select().single()) as TimeOff;
   },
+  /** Parents: weekly hours of the family's active sitters (P54 / P42 who is free; RLS sitter_availability_parent_read). */
+  async hoursOf(sitterIds: string[]) {
+    if (!sitterIds.length) return [] as Availability[];
+    return must(await supabase.from('sitter_availability').select('sitter_id, weekday, starts, ends').in('sitter_id', sitterIds)) as Availability[];
+  },
   /** Parents: days off of the family's active sitters (P6c "Maya away"). */
   async familyTimeOff(familyId: string) {
     return must(await supabase.rpc('family_sitter_time_off', { p_family: familyId })) as SitterAway[];

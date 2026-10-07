@@ -1,8 +1,9 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar, Banner, Button, Chip, ErrorText, Field, Label, Screen, T } from '@/components/ui';
+import { dayKey } from '@/lib/calendar-logic';
 import { shiftTaskLines } from '@/lib/care-plan';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
@@ -37,11 +38,14 @@ export default function NewShift() {
     return { sitters, kids, care, pending, places };
   }, [fid]);
 
+  // Optional prefill (from P42 Sitter pool): ?sitter=<id>&day=YYYY-MM-DD&start=6:00 PM&end=10:00 PM. Without them the
+  // screen starts as before: first sitter who agreed to the house rules, today, 3:00 – 7:00 PM.
+  const prefill = useLocalSearchParams<{ sitter?: string; day?: string; start?: string; end?: string }>();
   const days = useMemo(() => nextDays(7), []);
-  const [sitterId, setSitterId] = useState<string>();
-  const [day, setDay] = useState(0);
-  const [start, setStart] = useState('3:00 PM');
-  const [end, setEnd] = useState('7:00 PM');
+  const [sitterId, setSitterId] = useState<string | undefined>(prefill.sitter || undefined);
+  const [day, setDay] = useState(() => Math.max(0, days.findIndex((d) => dayKey(d) === prefill.day)));
+  const [start, setStart] = useState(prefill.start || '3:00 PM');
+  const [end, setEnd] = useState(prefill.end || '7:00 PM');
   const [kidIds, setKidIds] = useState<string[]>([]);
   const [placeId, setPlaceId] = useState<string>();
   // Until the parent types in it, the tasks box follows the care plan items that fall inside the shift.
@@ -52,7 +56,8 @@ export default function NewShift() {
   const startAt = parseTimeOnDay(start, days[day]);
   let endAt = parseTimeOnDay(end, days[day]);
   if (startAt && endAt && endAt <= startAt) endAt = new Date(+endAt + 24 * 3600_000); // overnight
-  const chosenSitter = sitterId ?? (data?.sitters.find((s) => !data.pending.includes(s.sitter_id)) ?? data?.sitters[0])?.sitter_id;
+  const picked = sitterId && data?.sitters.some((s) => s.sitter_id === sitterId) ? sitterId : undefined;
+  const chosenSitter = picked ?? (data?.sitters.find((s) => !data.pending.includes(s.sitter_id)) ?? data?.sitters[0])?.sitter_id;
   const notAgreed = !!chosenSitter && !!data?.pending.includes(chosenSitter);
   // Only the kids this sitter's invite covers (P23; kid_ids null = every kid). Migration 11 adds the column.
   const sitterKidIds = (data?.sitters.find((s) => s.sitter_id === chosenSitter) as { kid_ids?: string[] | null } | undefined)?.kid_ids;
