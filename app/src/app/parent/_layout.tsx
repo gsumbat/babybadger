@@ -15,6 +15,8 @@ export default function ParentLayout() {
       <Stack.Screen name="kid/routine" />
       <Stack.Screen name="care/index" />
       <Stack.Screen name="care/item" options={{ presentation: 'modal' }} />
+      {/* P28–P32 open from the invite (itself a modal), so they're a modal too. */}
+      <Stack.Screen name="requirements/setup" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }

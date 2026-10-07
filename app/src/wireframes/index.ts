@@ -8,12 +8,14 @@ import WF_P0b from './P0b';
 import WF_P1 from './P1';
 import WF_P10 from './P10';
 import WF_P10b from './P10b';
+import WF_P11 from './P11';
 import WF_P12 from './P12';
 import WF_P12b from './P12b';
 import WF_P18 from './P18';
 import WF_P18e from './P18e';
 import WF_P19 from './P19';
 import WF_P19e from './P19e';
+import WF_P2 from './P2';
 import WF_P20 from './P20';
 import WF_P20a from './P20a';
 import WF_P20b from './P20b';
@@ -22,11 +24,19 @@ import WF_P20d from './P20d';
 import WF_P20e from './P20e';
 import WF_P20f from './P20f';
 import WF_P20g from './P20g';
+import WF_P21 from './P21';
+import WF_P22 from './P22';
 import WF_P23 from './P23';
 import WF_P24 from './P24';
 import WF_P25 from './P25';
 import WF_P26 from './P26';
+import WF_P27 from './P27';
+import WF_P28 from './P28';
+import WF_P29 from './P29';
 import WF_P3 from './P3';
+import WF_P30 from './P30';
+import WF_P31 from './P31';
+import WF_P32 from './P32';
 import WF_P3b from './P3b';
 import WF_P4 from './P4';
 import WF_P4a from './P4a';
@@ -60,6 +70,8 @@ import WF_P74b from './P74b';
 import WF_P75 from './P75';
 import WF_P76 from './P76';
 import WF_P76b from './P76b';
+import WF_P77 from './P77';
+import WF_P7a from './P7a';
 import WF_P8 from './P8';
 import WF_P8b from './P8b';
 import WF_P9 from './P9';
@@ -68,6 +80,14 @@ import WF_S1 from './S1';
 import WF_S10 from './S10';
 import WF_S11 from './S11';
 import WF_S11b from './S11b';
+import WF_S12 from './S12';
+import WF_S13 from './S13';
+import WF_S14 from './S14';
+import WF_S15 from './S15';
+import WF_S16 from './S16';
+import WF_S17 from './S17';
+import WF_S18 from './S18';
+import WF_S19 from './S19';
 import WF_S2 from './S2';
 import WF_S21 from './S21';
 import WF_S22 from './S22';
@@ -76,6 +96,8 @@ import WF_S22c from './S22c';
 import WF_S22d from './S22d';
 import WF_S24 from './S24';
 import WF_S25 from './S25';
+import WF_S26 from './S26';
+import WF_S27 from './S27';
 import WF_S2a from './S2a';
 import WF_S3 from './S3';
 import WF_S37 from './S37';
@@ -85,6 +107,8 @@ import WF_S3b from './S3b';
 import WF_S3d from './S3d';
 import WF_S3e from './S3e';
 import WF_S4 from './S4';
+import WF_S40 from './S40';
+import WF_S41 from './S41';
 import WF_S42 from './S42';
 import WF_S43 from './S43';
 import WF_S44 from './S44';
@@ -97,6 +121,7 @@ import WF_S51 from './S51';
 import WF_S6 from './S6';
 import WF_S6a from './S6a';
 import WF_S6c from './S6c';
+import WF_S7 from './S7';
 import WF_S8 from './S8';
 import WF_S8b from './S8b';
 import WF_S9 from './S9';
@@ -109,12 +134,14 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P1: WF_P1,
   P10: WF_P10,
   P10b: WF_P10b,
+  P11: WF_P11,
   P12: WF_P12,
   P12b: WF_P12b,
   P18: WF_P18,
   P18e: WF_P18e,
   P19: WF_P19,
   P19e: WF_P19e,
+  P2: WF_P2,
   P20: WF_P20,
   P20a: WF_P20a,
   P20b: WF_P20b,
@@ -123,11 +150,19 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P20e: WF_P20e,
   P20f: WF_P20f,
   P20g: WF_P20g,
+  P21: WF_P21,
+  P22: WF_P22,
   P23: WF_P23,
   P24: WF_P24,
   P25: WF_P25,
   P26: WF_P26,
+  P27: WF_P27,
+  P28: WF_P28,
+  P29: WF_P29,
   P3: WF_P3,
+  P30: WF_P30,
+  P31: WF_P31,
+  P32: WF_P32,
   P3b: WF_P3b,
   P4: WF_P4,
   P4a: WF_P4a,
@@ -161,6 +196,8 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P75: WF_P75,
   P76: WF_P76,
   P76b: WF_P76b,
+  P77: WF_P77,
+  P7a: WF_P7a,
   P8: WF_P8,
   P8b: WF_P8b,
   P9: WF_P9,
@@ -169,6 +206,14 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   S10: WF_S10,
   S11: WF_S11,
   S11b: WF_S11b,
+  S12: WF_S12,
+  S13: WF_S13,
+  S14: WF_S14,
+  S15: WF_S15,
+  S16: WF_S16,
+  S17: WF_S17,
+  S18: WF_S18,
+  S19: WF_S19,
   S2: WF_S2,
   S21: WF_S21,
   S22: WF_S22,
@@ -177,6 +222,8 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   S22d: WF_S22d,
   S24: WF_S24,
   S25: WF_S25,
+  S26: WF_S26,
+  S27: WF_S27,
   S2a: WF_S2a,
   S3: WF_S3,
   S37: WF_S37,
@@ -186,6 +233,8 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   S3d: WF_S3d,
   S3e: WF_S3e,
   S4: WF_S4,
+  S40: WF_S40,
+  S41: WF_S41,
   S42: WF_S42,
   S43: WF_S43,
   S44: WF_S44,
@@ -198,6 +247,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   S6: WF_S6,
   S6a: WF_S6a,
   S6c: WF_S6c,
+  S7: WF_S7,
   S8: WF_S8,
   S8b: WF_S8b,
   S9: WF_S9,

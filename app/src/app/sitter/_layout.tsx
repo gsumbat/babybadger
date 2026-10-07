@@ -14,6 +14,8 @@ export default function SitterLayout() {
       {/* S8 Start a trip: a sheet over the shift, like the logs. */}
       <Stack.Screen name="trip/[shiftId]" options={{ presentation: 'formSheet', sheetAllowedDetents: [0.92], sheetGrabberVisible: true, sheetCornerRadius: 28 }} />
       <Stack.Screen name="clockin/[shiftId]" />
+      {/* S26 Meet the new child: a sheet the "Tell Maya about Mia" push opens. */}
+      <Stack.Screen name="kid/[id]" options={{ presentation: 'formSheet', sheetAllowedDetents: 'fitToContents', sheetGrabberVisible: true, sheetCornerRadius: 24 }} />
       <Stack.Screen name="join" options={{ presentation: 'modal' }} />
     </Stack>
   );

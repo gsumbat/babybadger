@@ -8,8 +8,7 @@ import { Text } from '@/components/Text';
 import { ageLabel } from '@/lib/kid-profile';
 
 /** Wireframe S1 Family invite (app/src/wireframes/S1.tsx): who invited her, which kids, the rate and what the family
- * sees, before she accepts (then S2 consent). Shown by JoinCode after a good code. Left out until built: the family
- * requirements step after it (S27). */
+ * sees, before she accepts (then S27 family requirements, S42 and S2 consent). Shown by JoinCode after a good code. */
 export function InviteReview({ invite, onAccept, onDecline, busy, err }: { invite: InvitePreview; onAccept: () => void; onDecline: () => void; busy?: boolean; err?: string }) {
   return (
     <Screen

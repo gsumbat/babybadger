@@ -11,8 +11,8 @@ import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe P54, translated from its HTML (app/src/wireframes/P54.tsx); P54b when there are no sitters and no
-// open invites yet. An invite in progress, or a sitter who still has to sign, opens P25 (parent/invite/[id]); active
-// sitters stay as they are until P11 Sitter profile is built.
+// open invites yet. An invite in progress, or a sitter who still has to sign, opens P25 (parent/invite/[id]); an active
+// sitter opens P11 Sitter profile (parent/sitter/[id]).
 // Left out until built: "When do you need someone?", availability, Find a new sitter (P54 and P54b), meet requests,
 // saved sitters.
 export default function Sitters() {
@@ -71,7 +71,7 @@ export default function Sitters() {
           <Text style={st.label}>YOUR POOL · {sitters.length}</Text>
           <View style={st.pool}>
             {sitters.map((s, i) => (
-              <Pressable key={s.sitter_id} accessibilityRole="button" disabled={s.status === 'active'} onPress={() => openSitter(s.sitter_id)} style={st.poolItem}>
+              <Pressable key={s.sitter_id} accessibilityRole="button" onPress={() => (s.status === 'active' ? router.push({ pathname: '/parent/sitter/[id]', params: { id: s.sitter_id } }) : openSitter(s.sitter_id))} style={st.poolItem}>
                 <View>
                   <View style={[st.poolAvatar, { backgroundColor: AVATAR[i % AVATAR.length] }]}>
                     <Text style={st.poolLetter}>{(s.profile?.full_name || '?')[0].toUpperCase()}</Text>

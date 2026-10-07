@@ -6,7 +6,7 @@ import type { Role } from './types';
 export function useHomeRoute() {
   const { session, profile, family, sitterLinks } = useSession();
   if (!session) return '/sign-in' as const;
-  if (profile?.role === 'parent' && family) return '/parent' as const;
+  if (profile?.role === 'parent' && family) return familySetupPending(family.id) ? ('/parent/setup' as const) : ('/parent' as const);
   if (profile?.role === 'sitter' && sitterLinks.length) return '/sitter' as const;
   return '/onboarding' as const;
 }
@@ -36,5 +36,26 @@ export function peekSignupRole(): Role | null {
     return isRole(v) ? v : null;
   } catch {
     return null;
+  }
+}
+
+// P2 "Who are we looking after?": shown once, right after a new parent creates the family (onboarding sets this to
+// the new family's id). Existing parents never have it, so they go straight to Home. Cleared when P2 moves on.
+const FAMILY_SETUP = 'bb.familySetup';
+
+export function markFamilySetup(familyId: string | null) {
+  try {
+    if (familyId) kv.set(FAMILY_SETUP, familyId);
+    else kv.remove(FAMILY_SETUP);
+  } catch {
+    // Storage unavailable: the parent lands on Home's setup checklist (P4a) instead.
+  }
+}
+
+export function familySetupPending(familyId: string): boolean {
+  try {
+    return kv.get(FAMILY_SETUP) === familyId;
+  } catch {
+    return false;
   }
 }

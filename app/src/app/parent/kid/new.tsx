@@ -2,23 +2,35 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { ChildAdded, ChildSitters, type AddedSummary } from '@/components/addChild';
 import { Button, ErrorText, Field, Icon, Loading, Screen } from '@/components/ui';
-import { api } from '@/lib/data';
+import { api, useQuery } from '@/lib/data';
+import { setupApi } from '@/lib/family-setup';
 import { ageInMonths, ageLabel, isoToUS, KID_COLORS, maskUSDate, parseUSDate, suggestedFoods } from '@/lib/kid-profile';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { cardShadow, color, font, radius } from '@/theme';
 import { Text, TextInput } from '@/components/Text';
 
-// Wireframes P18 (who) and P19 (keeping them safe). Routine (P20) and sitter access (P21) come with house rules.
+// Wireframes P18 (who), P19 (keeping them safe), P21 (who looks after them) and P22 (all set). P19 saves the child;
+// P21 then sets which sitters see them (it's skipped when the family has no sitters yet) and P22 sums up. The
+// wireframes count P20 Routine as step 3 of 4; the routine isn't part of this flow (it opens from P55 / P7), so the
+// counter reads "n of 3" (or "n of 2" without sitters).
 // With ?id=<kid> the same two screens edit that child (opened from P55: Edit -> step 1, Care and safety -> step 2).
 export default function NewKid() {
   const { family } = useSession();
   const params = useLocalSearchParams<{ id?: string; step?: string }>();
   const editId = params.id;
   const startStep: 1 | 2 = params.step === '2' ? 2 : 1;
-  const [step, setStep] = useState<1 | 2>(startStep);
+  const [step, setStep] = useState<1 | 2 | 3 | 'done'>(startStep);
   const [loaded, setLoaded] = useState(!editId);
+  // The new child's id once P19 saved it (going back from P21 and on again updates the same row).
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [summary, setSummary] = useState<AddedSummary | null>(null);
+  // Sitters decide whether P21 is a step at all. Before migration 11 runs there are no kid lists; P21 still shows.
+  const { data: sitters } = useQuery(() => (editId ? Promise.resolve([]) : setupApi.sitters(family!.id).catch(() => [])), [family!.id, editId]);
+  const hasSitters = !!sitters?.length;
+  const total = hasSitters ? 3 : 2;
 
   const [name, setName] = useState('');
   const [tint, setTint] = useState<string>(KID_COLORS[0]);
@@ -102,12 +114,24 @@ export default function NewKid() {
       pediatrician: pediatrician.trim(),
       comfort_item: comfort.trim(),
     };
-    const { error } = editId
-      ? await supabase.from('kids').update(fields).eq('id', editId)
-      : await supabase.from('kids').insert({ ...fields, family_id: family!.id, notes: '' });
+    if (editId) {
+      const { error } = await supabase.from('kids').update(fields).eq('id', editId);
+      setBusy(false);
+      if (error) return setErr(errorText(error));
+      return router.back();
+    }
+    const { data: row, error } = savedId
+      ? await supabase.from('kids').update(fields).eq('id', savedId).select('id').single()
+      : await supabase.from('kids').insert({ ...fields, family_id: family!.id, notes: '' }).select('id').single();
     setBusy(false);
     if (error) return setErr(errorText(error));
-    router.back();
+    const id = (row as { id: string }).id;
+    setSavedId(id);
+    if (hasSitters) setStep(3);
+    else {
+      setSummary({ kidId: id, told: [], sees: [], shifts: 0 });
+      setStep('done');
+    }
   }
 
   const cancel = () => router.back();
@@ -127,24 +151,42 @@ export default function NewKid() {
     </View>
   );
 
-  const header = (n: 1 | 2) => (
+  const header = (n: 1 | 2 | 3) => (
     <View style={st.header}>
       <View style={st.backRow}>
-        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={n === 1 || startStep === 2 ? cancel : () => setStep(1)} style={st.back}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={n === 1 || startStep === 2 ? cancel : () => setStep(n === 3 ? 2 : 1)} style={st.back}>
           <Icon name="chevron-left" size={22} tint={color.ink} strokeWidth={2} />
         </Pressable>
         <Text style={st.stepText} numberOfLines={1}>
-          Add a child · {n} of 2
+          Add a child · {n} of {total}
         </Text>
         <Pressable accessibilityRole="button" onPress={cancel} hitSlop={10}>
           <Text style={st.cancel}>Cancel</Text>
         </Pressable>
       </View>
       <View style={st.progress}>
-        <View style={[st.progressFill, { width: n === 1 ? '50%' : '100%' }]} />
+        <View style={[st.progressFill, { width: `${(n / total) * 100}%` }]} />
       </View>
     </View>
   );
+
+  // P22: the child is in; Done closes the flow (P13 Kids and devices isn't built).
+  if (step === 'done' && summary) return <ChildAdded name={first} summary={summary} />;
+
+  // P21: which sitters see the new child, tell them, add them to booked shifts.
+  if (step === 3 && savedId)
+    return (
+      <ChildSitters
+        header={header(3)}
+        kidId={savedId}
+        name={first}
+        sitters={sitters ?? []}
+        onDone={(s) => {
+          setSummary(s);
+          setStep('done');
+        }}
+      />
+    );
 
   if (step === 1)
     return (
@@ -209,7 +251,7 @@ export default function NewKid() {
     );
 
   return (
-    <Screen header={editId ? editHeader(`Keeping ${kid} safe`) : header(2)} footer={<Button label={editId ? 'Save' : `Add ${first}`} onPress={save} busy={busy} disabled={!first} />}>
+    <Screen header={editId ? editHeader(`Keeping ${kid} safe`) : header(2)} footer={<Button label={editId ? 'Save' : hasSitters ? 'Continue' : `Add ${first}`} onPress={save} busy={busy} disabled={!first} />}>
       <View style={{ gap: 4 }}>
         {editId ? null : <Text style={st.title19}>Keeping {kid} safe</Text>}
         <Text style={st.lead}>Sitters see this on every shift. Red items show at the top.</Text>

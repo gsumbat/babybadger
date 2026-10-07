@@ -1,40 +1,44 @@
 import { router } from 'expo-router';
-import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { type ReactNode } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
-import { Icon, Screen } from '@/components/ui';
+import { CIcon, SitterAvatar, type CredPath } from '@/components/credentials';
+import { PayRow } from '@/components/payRow';
+import { Icon, Pill, Screen } from '@/components/ui';
 import { availabilityApi, availabilitySummary } from '@/lib/availability';
+import { backgroundCheck, backgroundStatus, certificates, expired, expiringSoon, languagesLine, profileLine, profileStrength, shortName, sitterBundle } from '@/lib/credentials';
 import { useQuery } from '@/lib/data';
 import { useSession } from '@/lib/session';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe S39, translated from its HTML (app/src/wireframes/S39.tsx).
-// Left out until built: My profile and What families see, Profile and credentials (personal details, certifications,
-// background check, languages), Work's Get found, Money (hours and pay, invoices and payouts), and the
-// S12 settings screen: until it exists, "Settings, privacy and help" asks to sign out.
+// "My profile · N%" opens S13; PROFILE AND CREDENTIALS rows open S40, S14, S17 and S16 (migration 19; before it runs
+// the rows just have no summary); "Settings, privacy and help" opens S12.
+// Money › Hours and pay opens S7 (components/payRow). Left out until built: What families see (S19), Work's Get
+// found, Money's Invoices and payouts (S30).
+// Not drawn: the Certifications row with nothing expiring (sub-line lists them, no pill) and the background check
+// row before it has started (no pill).
 const SETTINGS =
   '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>';
 
 export default function Me() {
-  const { profile, session, sitterLinks, signOut } = useSession();
+  const { profile, session, sitterLinks } = useSession();
   const uid = session!.user.id;
   // sitter_availability arrives with migration 12; until it's run the row just has no summary.
   const { data: hours } = useQuery(() => availabilityApi.mine(uid).catch(() => []), [uid]);
+  // Profile and credentials (migration 19); sitterBundle never throws, so the rows render before it runs.
+  const { data: me } = useQuery(() => sitterBundle(uid), [uid]);
   const active = sitterLinks.filter((l) => l.status === 'active');
   const name = profile?.full_name || 'You';
-  const short = name.split(/\s+/).length > 1 ? `${name.split(/\s+/)[0]} ${name.split(/\s+/).slice(-1)[0][0]}.` : name;
-  // Alert has no buttons on the web build, so the browser's confirm stands in there.
-  const settings = () => {
-    if (Platform.OS === 'web') {
-      if (globalThis.confirm?.('Sign out?')) signOut();
-      return;
-    }
-    Alert.alert('Settings, privacy and help', 'Each family sees your location only while you’re clocked in for their shift.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: signOut },
-    ]);
-  };
+  const short = shortName(name) || name;
+  const famLine = `${active.length} ${active.length === 1 ? 'family' : 'families'}`;
+  const certs = certificates(me?.creds ?? []);
+  const soon = expiringSoon(me?.creds ?? []).length;
+  const gone = expired(me?.creds ?? []).length;
+  const bg = backgroundStatus(backgroundCheck(me?.creds ?? []));
+  const strength = me && !me.missing ? profileStrength(me.profile, me.creds, me.langs).percent : null;
   return (
     <Screen
       gap={8}
@@ -45,16 +49,39 @@ export default function Me() {
       }>
       <View style={st.profile}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-          <View style={st.avatar}>
-            <Text style={st.avatarText}>{(name[0] || '?').toUpperCase()}</Text>
-          </View>
+          <SitterAvatar name={name} photoPath={me?.profile?.photo_path} size={60} fontSize={26} />
           <View style={{ flexGrow: 1, flexShrink: 1 }}>
             <Text style={st.name}>{short}</Text>
-            <Text style={st.sub13}>
-              {active.length} {active.length === 1 ? 'family' : 'families'}
-            </Text>
+            <Text style={st.sub13}>{[profileLine(me?.profile ?? null), famLine].filter(Boolean).join(' · ')}</Text>
           </View>
         </View>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Pressable accessibilityRole="button" onPress={() => router.push('/sitter/profile')} style={st.profileBtn}>
+            <Text style={st.profileBtnText}>{strength != null ? `My profile · ${strength}%` : 'My profile'}</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      <Text style={st.label}>PROFILE AND CREDENTIALS</Text>
+      <View style={st.card}>
+        <MeRow icon="edit" title="Personal details" sub="Name, photo, phone, area, about me" onPress={() => router.push('/sitter/details')} line />
+        <MeRow
+          icon="award"
+          iconBg={color.warnTint}
+          title="Certifications"
+          sub={soon || gone ? undefined : certs.map((c) => c.title).join(' · ') || undefined}
+          right={gone ? <Pill label={`${gone} expired`} kind="bad" /> : soon ? <Pill label={`${soon} expiring`} kind="warn" /> : undefined}
+          onPress={() => router.push('/sitter/credentials')}
+          line
+        />
+        <MeRow
+          icon="shield"
+          title="Background check"
+          right={bg === 'cleared' ? <Pill label="Cleared" kind="ok" /> : bg === 'in_progress' ? <Pill label="In progress" kind="info" /> : bg === 'expired' ? <Pill label="Expired" kind="bad" /> : undefined}
+          onPress={() => router.push('/sitter/background')}
+          line
+        />
+        <MeRow icon="globe" title="Languages" sub={languagesLine(me?.langs ?? []) || undefined} onPress={() => router.push('/sitter/languages')} />
       </View>
 
       <Text style={st.label}>WORK</Text>
@@ -75,8 +102,11 @@ export default function Me() {
         </Pressable>
       </View>
 
+      <Text style={st.label}>MONEY</Text>
+      <PayRow sitterId={uid} />
+
       <View style={st.card}>
-        <Pressable accessibilityRole="button" onPress={settings} style={st.row}>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/sitter/privacy')} style={st.row}>
           <View style={st.rowIcon}>
             <SvgXml xml={SETTINGS} width={18} height={18} style={{ flexShrink: 0 }} />
           </View>
@@ -93,13 +123,34 @@ export default function Me() {
   );
 }
 
+/** S39 list row: 32 tinted icon tile, title over an optional sub-line, then a pill or the chevron. */
+function MeRow({ icon, iconBg = color.primaryTint, title, sub, right, onPress, line }: { icon: CredPath; iconBg?: string; title: string; sub?: string; right?: ReactNode; onPress: () => void; line?: boolean }) {
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={[st.row, line && st.rowLine]}>
+      <View style={[st.rowIcon, { backgroundColor: iconBg }]}>
+        <CIcon name={icon} size={18} tint={iconBg === color.warnTint ? color.warnInk : color.primary} />
+      </View>
+      <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
+        <Text style={st.rowTitle}>{title}</Text>
+        {sub ? (
+          <Text style={st.sub12} numberOfLines={1}>
+            {sub}
+          </Text>
+        ) : null}
+      </View>
+      {right ? <View style={{ alignSelf: 'flex-start' }}>{right}</View> : <Icon name="chevron-right" size={18} tint={color.ink2} />}
+    </Pressable>
+  );
+}
+
 // Values from wireframe S39. The header keeps 4 at the bottom: the wireframe has 8 and Screen's content adds 4.
 const st = StyleSheet.create({
+  profileBtn: { flexGrow: 1, flexBasis: 0, height: 40, borderRadius: 999, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
+  profileBtnText: { fontFamily: font.bodyBold, fontSize: 14, color: color.primary },
+  rowLine: { borderBottomWidth: 1, borderBottomColor: color.divider },
   header: { paddingTop: 18, paddingHorizontal: 20, paddingBottom: 4 },
   title: { fontFamily: font.display, fontSize: 26, color: color.ink },
   profile: { gap: 10, paddingVertical: 14, paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
-  avatar: { width: 60, height: 60, borderRadius: 30, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: font.display, fontSize: 26, color: '#FFFFFF' },
   name: { fontFamily: font.display, fontSize: 20, color: color.ink, marginVertical: -4.02 },
   sub13: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
   sub12: { fontFamily: font.body, fontSize: 12, color: color.ink2 },

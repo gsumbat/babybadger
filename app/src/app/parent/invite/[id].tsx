@@ -9,6 +9,7 @@ import { ErrorText, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { dayOf, firstName, inviteMessage, timeOf } from '@/lib/format';
 import { inviteApi, stepsDone, type InviteRow, type InviteStep } from '@/lib/invites';
+import { familyRequirements, requirementStatus, type ReqSummary } from '@/lib/requirements';
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
 import type { Kid } from '@/lib/types';
@@ -31,7 +32,9 @@ export default function InviteStatus() {
     const sitter = invite.accepted_by ? await inviteApi.sitterOf(fid, invite.accepted_by) : null;
     const signed = sitter?.link?.status === 'active';
     const kids = signed ? await api.kids(fid) : [];
-    return { invite, sitter, signed, kids };
+    // Requirements (migration 20): P25's Credentials step shows when the family has any; P26 says how she stands.
+    const [reqs, req] = await Promise.all([familyRequirements(fid), invite.accepted_by ? requirementStatus(fid, invite.accepted_by) : Promise.resolve(null)]);
+    return { invite, sitter, signed, kids, hasReqs: reqs.length > 0, req };
   }, [id, fid]);
 
   useEffect(() => {
@@ -42,28 +45,29 @@ export default function InviteStatus() {
 
   if (!data) return error ? <Screen title="Invite" back><ErrorText>{error}</ErrorText></Screen> : <Loading />;
   const name = firstName(data.sitter?.profile?.full_name || data.invite.sitter_name);
-  if (data.signed) return <Accepted name={name} signedAt={data.sitter?.signedAt ?? data.invite.accepted_at} kidIds={data.sitter?.link?.kid_ids ?? null} kids={data.kids} />;
-  return <Pending invite={data.invite} name={name} familyName={family!.name} />;
+  if (data.signed) return <Accepted name={name} signedAt={data.sitter?.signedAt ?? data.invite.accepted_at} kidIds={data.sitter?.link?.kid_ids ?? null} kids={data.kids} req={data.req} />;
+  return <Pending invite={data.invite} name={name} familyName={family!.name} hasReqs={data.hasReqs} />;
 }
 
 // ---------------------------------------------------------------- P25
-// Left out until built: the Credentials step (sitter requirements, P28–P32), "See it from Maya’s side · Open her
-// text" (no text is sent from the app), the Reminder row (no reminders are sent). "Copy link" copies the invite
+// The Credentials step shows when the family has sitter requirements (P28–P32). Left out until built: "See it from
+// Maya’s side · Open her text" (no text is sent from the app), the Reminder row (no reminders are sent). "Copy link" copies the invite
 // text, as on P24.
-function Pending({ invite, name, familyName }: { invite: InviteRow; name: string; familyName: string }) {
+function Pending({ invite, name, familyName, hasReqs }: { invite: InviteRow; name: string; familyName: string; hasReqs: boolean }) {
   const [copied, setCopied] = useState(false);
   const [err, setErr] = useState('');
   const accepted = !!invite.accepted_at;
   const declined = !!invite.declined_at;
   const done = stepsDone(invite, false);
   const msg = inviteMessage(familyName, invite.code);
-  const steps: { key: InviteStep; title: string; sub: string }[] = [
+  const steps: { key: InviteStep | 'credentials'; title: string; sub: string }[] = [
     { key: 'sent', title: 'Invite sent', sub: `${dayOf(invite.created_at)} ${timeOf(invite.created_at)}` },
     { key: 'opened', title: 'Opened', sub: invite.opened_at ? `${name} entered the code · ${timeOf(invite.opened_at)}` : `${name} enters the code` },
     { key: 'reviewing', title: 'Reviewing what you’ll see', sub: 'She agrees to location sharing and signs the notice' },
+    ...(hasReqs ? [{ key: 'credentials' as const, title: 'Credentials', sub: 'Missing ones are flagged for her to add' }] : []),
     { key: 'ready', title: 'Ready to book', sub: 'You can send her a first shift' },
   ];
-  const current = steps.find((s) => !done.includes(s.key))?.key;
+  const current = steps.find((s) => !(done as string[]).includes(s.key))?.key;
 
   async function cancel() {
     try {
@@ -127,7 +131,7 @@ function Pending({ invite, name, familyName }: { invite: InviteRow; name: string
       }>
       <View style={st.timeline}>
         {steps.map((s, i) => {
-          const isDone = done.includes(s.key);
+          const isDone = (done as string[]).includes(s.key);
           const isNow = s.key === current;
           const last = i === steps.length - 1;
           return (
@@ -168,8 +172,9 @@ function Pending({ invite, name, familyName }: { invite: InviteRow; name: string
 }
 
 // ---------------------------------------------------------------- P26
-// Left out until built: the Requirements row (P28–P32) and "See her profile" (P11).
-function Accepted({ name, signedAt, kidIds, kids }: { name: string; signedAt: string | null; kidIds: string[] | null; kids: Kid[] }) {
+// The Requirements row shows when the family has must-haves ("All 4 met"; not drawn: "2 missing" in amber).
+// Left out until built: "See her profile" (P11).
+function Accepted({ name, signedAt, kidIds, kids, req }: { name: string; signedAt: string | null; kidIds: string[] | null; kids: Kid[]; req: ReqSummary | null }) {
   const lookAfter = kids.filter((k) => !kidIds || kidIds.includes(k.id)).map((k) => k.name);
   const when = signedAt ? `Accepted ${dayOf(signedAt).replace(/^(Today|Tomorrow)$/, (d) => d.toLowerCase())} at ${timeOf(signedAt)}` : '';
   const signedPill = (
@@ -199,10 +204,19 @@ function Accepted({ name, signedAt, kidIds, kids }: { name: string; signedAt: st
             <Text style={st.factKey}>Location consent</Text>
             {signedPill}
           </View>
-          <View style={[st.fact, !!lookAfter.length && st.line]}>
+          <View style={[st.fact, (!!lookAfter.length || !!req?.total) && st.line]}>
             <Text style={st.factKey}>Monitoring notice</Text>
             {signedPill}
           </View>
+          {req?.total ? (
+            <View style={[st.fact, !!lookAfter.length && st.line]}>
+              <Text style={st.factKey}>Requirements</Text>
+              <View style={[st.pill, { backgroundColor: req.allMet ? color.okTint : color.warnTint }]}>
+                <View style={[st.pillDot, { backgroundColor: req.allMet ? color.ok : color.warn }]} />
+                <Text style={[st.pillText, { color: req.allMet ? color.okInk : color.warnInk }]}>{req.allMet ? `All ${req.total} met` : `${req.missing.length} missing`}</Text>
+              </View>
+            </View>
+          ) : null}
           {lookAfter.length ? (
             <View style={st.fact}>
               <Text style={st.factKey}>Can look after</Text>

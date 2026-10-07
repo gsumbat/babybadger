@@ -36,7 +36,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
     const uid = s.user.id;
     const [{ data: prof }, { data: parentOf }, { data: links }] = await Promise.all([
-      supabase.from('profiles').select('id, full_name, role, alert_logs').eq('id', uid).maybeSingle(),
+      // alert_arrivals arrives with migration 21; until it's run the select without it is used.
+      supabase
+        .from('profiles')
+        .select('id, full_name, role, alert_logs, alert_arrivals')
+        .eq('id', uid)
+        .maybeSingle()
+        .then((r) => (r.error ? supabase.from('profiles').select('id, full_name, role, alert_logs').eq('id', uid).maybeSingle() : r)),
       supabase.from('family_parents').select('family:families(id, name)').eq('user_id', uid).limit(1),
       supabase.from('family_sitters').select('family_id, sitter_id, status, joined_at, family:families(id, name)').eq('sitter_id', uid).neq('status', 'removed'),
     ]);

@@ -14,7 +14,8 @@ import { Text, TextInput } from '@/components/Text';
 // Invite codes are 6 digits (create_invite in the core migration). The six boxes are drawn under one real number
 // field so typing, pasting and deleting work like any input. "Your name" only shows when the profile has no name yet:
 // accept_invite keeps an existing name, so the field would do nothing otherwise.
-// "See my invite" opens S1 (components/InviteReview.tsx) with what the family shares; accepting it goes on to S2.
+// "See my invite" opens S1 (components/InviteReview.tsx) with what the family shares; accepting it goes on to S27
+// (the family's requirements), then S42 / S2.
 const LENGTH = 6;
 
 /** Wireframe S51: join a family with the parent's invite code. Used by the Join screen and by sitter sign-up. */
@@ -47,7 +48,8 @@ export function JoinCode({ onBack }: { onBack?: () => void }) {
     setBusy(false);
     if (error) return setErr(errorText(error));
     await refresh();
-    router.replace(`/sitter/consent/${data as string}`);
+    // S1 -> S27 family requirements (skipped when the family has none) -> S42 house rules -> S2 notice.
+    router.replace(`/sitter/requirements/${data as string}?next=consent`);
   }
 
   async function decline() {

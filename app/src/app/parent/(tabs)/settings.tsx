@@ -14,18 +14,21 @@ import { color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe P12b (settings · account; supersedes P12): grouped settings rows, account, sign out.
-// Homes and places opens P56. Left out until built: Arrivals and departures, Off-plan and help alerts, Subscription;
-// Kids and devices has no detail screen yet (P13), so its row doesn't open anything.
+// Sitters opens P27, Homes and places P56, House rules P74. Rows whose screens aren't built show their value and
+// don't open anything: Kids and devices (P13), Consent records, Subscription (P39; no plan stored yet, so it reads
+// "Coming soon"). Alerts: "Arrivals and departures" is profiles.alert_arrivals (migration 21; trip alerts skip a
+// parent who turned it off), "Food and tasks" is alert_logs, "Off-plan and help alerts" is always on (a label).
 export default function Settings() {
   const { family, profile, session, signOut, refresh } = useSession();
   const [logAlerts, setLogAlerts] = useState(profile?.alert_logs ?? true);
+  const [arrivals, setArrivals] = useState(profile?.alert_arrivals ?? true);
   const [saveErr, setSaveErr] = useState('');
-  async function toggleLogAlerts(on: boolean) {
-    setLogAlerts(on);
+  async function savePref(field: 'alert_logs' | 'alert_arrivals', on: boolean, set: (v: boolean) => void) {
+    set(on);
     setSaveErr('');
-    const { error: e } = await supabase.from('profiles').update({ alert_logs: on }).eq('id', profile!.id);
+    const { error: e } = await supabase.from('profiles').update({ [field]: on }).eq('id', profile!.id);
     if (e) {
-      setLogAlerts(!on);
+      set(!on);
       setSaveErr('Couldn’t save. Try again.');
     } else void refresh();
   }
@@ -60,21 +63,32 @@ export default function Settings() {
       <Card style={st.card}>
         <SetRow label="Parents" value={parents} />
         <SetRow label="Kids and devices" value={kids || 'None yet'} />
-        <SetRow label="Sitters" value={sitters || 'None yet'} onPress={() => router.navigate('/parent/sitters')} />
+        <SetRow label="Sitters" value={sitters || 'None yet'} onPress={() => router.push('/parent/sitter-list')} />
         <SetRow label="Homes and places" value={placesCountLabel(data?.places ?? [])} onPress={() => router.push('/parent/places')} />
         <SetRow label="House rules" value={rulesLabel(data?.rules.length ?? 0)} onPress={() => router.push('/parent/rules')} last />
       </Card>
 
       <Text style={[st.section, { marginTop: 2 }]}>ALERTS</Text>
       <Card style={st.card}>
-        <ToggleRow label="Food and tasks" sub="Each entry the sitter logs" value={logAlerts} onChange={toggleLogAlerts} last />
+        <ToggleRow label="Arrivals and departures" sub="Trips to saved places" value={arrivals} onChange={(on) => savePref('alert_arrivals', on, setArrivals)} />
+        <ToggleRow label="Food and tasks" sub="Each entry the sitter logs" value={logAlerts} onChange={(on) => savePref('alert_logs', on, setLogAlerts)} />
+        <View style={st.alwaysRow}>
+          <View style={{ flexShrink: 1 }}>
+            <Text style={st.rowLabel}>Off-plan and help alerts</Text>
+            <Text style={st.rowSub}>Always on for safety</Text>
+          </View>
+          <View style={st.always}>
+            <Text style={st.alwaysText}>Always</Text>
+          </View>
+        </View>
       </Card>
       <ErrorText>{saveErr}</ErrorText>
 
       <Text style={[st.section, { marginTop: 2 }]}>PRIVACY</Text>
       <Card style={st.card}>
         <SetRow label="Consent records" value={`${signed} signed`} />
-        <SetRow label="Keep location history" value="[RETENTION]" last />
+        <SetRow label="Keep location history" value="[RETENTION]" />
+        <SetRow label="Subscription" value="Coming soon" last />
       </Card>
 
       <Text style={[st.section, { marginTop: 2 }]}>ACCOUNT</Text>
@@ -99,4 +113,10 @@ const st = StyleSheet.create({
   signOut: { height: 54, marginTop: 8, borderRadius: 999, borderWidth: 1.5, borderColor: color.lineStrong, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   signOutText: { fontFamily: font.displayBold, fontSize: 17, color: color.badInk, includeFontPadding: false },
   note: { fontFamily: font.body, fontSize: 13, color: color.ink2, textAlign: 'center' },
+  // P12b "Off-plan and help alerts": label row with a grey "Always" pill instead of a switch.
+  alwaysRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 56, gap: 8 },
+  rowLabel: { fontFamily: font.body, fontSize: 15, color: color.ink },
+  rowSub: { fontFamily: font.body, fontSize: 13, color: '#5F6D74' },
+  always: { height: 26, paddingHorizontal: 10, borderRadius: 999, backgroundColor: color.muted, justifyContent: 'center' },
+  alwaysText: { fontFamily: font.bodyBold, fontSize: 12, color: color.ink2 },
 });

@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { SvgXml } from 'react-native-svg';
 
 import { ErrorText, Icon, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
@@ -18,7 +19,7 @@ const TABS: { value: Tab; label: string }[] = [
 ];
 
 // Wireframe P7 Care plan, from app/src/wireframes/P7.tsx. Tasks = whole-family items (not food); Meals = meals and
-// bottles (family and kids); Routines = one row per kid -> P20. Left out until built: the Requirements pill, the
+// bottles (family and kids); Routines = one row per kid -> P20. The Requirements pill opens P7a. Left out until built: the
 // "Weekday after school" template row with its Templates link, and the "Trip" tags. Row titles carry the type's
 // extras ("Bottle · 4 oz formula", "Tylenol · 5 ml").
 export default function CarePlan() {
@@ -46,6 +47,10 @@ export default function CarePlan() {
               <Icon name="chevron-left" size={22} tint={color.ink} strokeWidth={2} />
             </Pressable>
             <Text style={st.title}>Care plan</Text>
+            <Pressable accessibilityRole="button" onPress={() => router.push('/parent/requirements')} style={st.reqPill}>
+              <SvgXml xml={SHIELD} width={16} height={16} style={{ flexShrink: 0 }} />
+              <Text style={st.reqPillText}>Requirements</Text>
+            </Pressable>
           </View>
           <View style={st.seg}>
             {TABS.map((t) => {
@@ -134,10 +139,15 @@ function Routines({ kids, items }: { kids: Kid[]; items: CareItem[] }) {
 }
 
 // P7 values. Header: 20 top, 12 bottom, 14 between the title row and the segmented control.
+// P7's Requirements pill icon (plain shield, stroke 2).
+const SHIELD = `<svg viewBox="0 0 24 24" fill="none" stroke="${color.primary}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>`;
+
 const st = StyleSheet.create({
   head: { gap: 14, paddingTop: 20, paddingHorizontal: 20, paddingBottom: 8 }, // + Screen's 4 content top = 12
   back: { width: 44, height: 44, flexShrink: 0, borderRadius: 22, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   title: { fontFamily: font.display, fontSize: 24, color: color.ink, flexGrow: 1, flexShrink: 1 },
+  reqPill: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 12, borderRadius: 999, backgroundColor: color.primaryTint },
+  reqPillText: { fontFamily: font.bodyBold, fontSize: 14, color: color.primary },
   seg: { flexDirection: 'row', gap: 4, padding: 4, backgroundColor: color.muted, borderRadius: 12 },
   segItem: { flex: 1, minWidth: 0, height: 38, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   segText: { fontFamily: font.bodyMedium, fontSize: 15, color: color.ink2 },

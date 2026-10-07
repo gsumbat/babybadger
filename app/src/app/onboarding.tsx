@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { JoinCode } from '@/components/JoinCode';
 import { Button, ErrorText, Field, Screen } from '@/components/ui';
-import { peekSignupRole, rememberSignupRole } from '@/lib/home-route';
+import { markFamilySetup, peekSignupRole, rememberSignupRole } from '@/lib/home-route';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 
@@ -24,9 +24,11 @@ export default function Onboarding() {
   async function createFamily() {
     setBusy(true);
     setErr('');
-    const { error } = await supabase.rpc('create_family', { p_family_name: familyName.trim(), p_your_name: name.trim() });
+    const { data, error } = await supabase.rpc('create_family', { p_family_name: familyName.trim(), p_your_name: name.trim() });
     setBusy(false);
     if (error) return setErr(errorText(error));
+    // The new family goes through P2 (kids and home) first; the app's index route sends it there.
+    markFamilySetup(data as string);
     await refresh();
   }
 

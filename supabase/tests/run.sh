@@ -33,4 +33,7 @@ $P -d t -f migrations/20261006000015_incidents_alerts.sql
 $P -d t -f migrations/20261006000016_places.sql
 $P -d t -f migrations/20261006000017_trips.sql
 $P -d t -f migrations/20261006000018_trip_names.sql
+$P -d t -f migrations/20261006000019_sitter_credentials.sql
+$P -d t -f migrations/20261006000020_family_requirements.sql
+$P -d t -f migrations/20261006000021_family_setup.sql
 $P -d t -f tests/rls_scenarios.sql

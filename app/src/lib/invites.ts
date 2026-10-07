@@ -57,7 +57,7 @@ export function kidIdsFor(selected: string[], allKidIds: string[]): string[] | n
   return allKidIds.every((id) => selected.includes(id)) ? null : allKidIds.filter((id) => selected.includes(id));
 }
 
-/** P25 steps, in order. Credentials (P25's 4th step) waits for sitter requirements (P28–P32). */
+/** P25 steps, in order. The Credentials step (sitter requirements) is added by the screen when the family has any. */
 export type InviteStep = 'sent' | 'opened' | 'reviewing' | 'ready';
 
 /** How far the invite has got: the steps that are done. Signed = family_sitters.status 'active'. */

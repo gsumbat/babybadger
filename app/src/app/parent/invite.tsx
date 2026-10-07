@@ -22,7 +22,9 @@ type Step = 'name' | 'access' | 'review';
 
 export default function Invite() {
   const { from } = useLocalSearchParams<{ from?: string }>();
-  const fromSetup = from === 'setup';
+  // ?from=onboarding: straight after P2 (first-run family setup), "Step 2 of 3". ?from=setup: Home's list, "Step 4 of 5".
+  const fromOnboarding = from === 'onboarding';
+  const fromSetup = from === 'setup' || fromOnboarding;
   const { family, profile } = useSession();
   const { data } = useQuery(async () => {
     const [kids, parents] = await Promise.all([api.kids(family!.id), api.familyParents(family!.id)]);
@@ -63,7 +65,7 @@ export default function Invite() {
     }
   }
 
-  // Wireframe P24. Left out until built: sending to a phone number from the app and requirements.
+  // Wireframe P24. Left out until built: sending to a phone number from the app.
   if (step === 'review' && invite) {
     const { code } = invite;
     const msg = inviteMessage(family!.name, code);
@@ -150,7 +152,8 @@ export default function Invite() {
     );
   }
 
-  // Wireframe P23 (app/src/wireframes/P23.tsx). Left out until built: "Set sitter requirements" (P28–P32), and the
+  // Wireframe P23 (app/src/wireframes/P23.tsx). "Set sitter requirements" opens P28–P32 (requirements are per
+  // family: the flow saves them for the family, then comes back here). Left out until built: the
   // trips sub-line ("School, soccer, park": saved places aren't built).
   if (step === 'access') {
     const parentNames = (data?.parents ?? []).map((p) => firstName(p.full_name)).join(' and ');
@@ -207,6 +210,13 @@ export default function Invite() {
             </View>
           </View>
         </View>
+        <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/requirements/setup?from=invite&drive=${canDrive ? 1 : 0}`)} style={st.reqLink}>
+          <Icon name="shield" size={22} tint={color.primaryStrong} />
+          <Text style={st.reqText}>
+            <Text style={st.reqBold}>Set sitter requirements.</Text> Choose what every sitter must have. They go with this invite.
+          </Text>
+          <Icon name="chevron-right" size={18} tint={color.primaryStrong} />
+        </Pressable>
         <ErrorText>{err}</ErrorText>
       </Screen>
     );
@@ -247,20 +257,20 @@ export default function Invite() {
     <Screen
       gap={14}
       header={
-        // P3 header: back, "Step 4 of 5" (the invite is step 4 of the P4a setup list), Skip for now, 80% progress bar. The extra bottom padding makes up the
+        // P3 header: back, "Step 4 of 5" (the invite is step 4 of the P4a setup list; "Step 2 of 3" after P2), Skip for now, 80% (67%) progress bar. The extra bottom padding makes up the
         // wireframe's 12 px above the title (Screen's content starts 4 px down).
         <View style={st.header}>
           <View style={st.backRow}>
             <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={st.back}>
               <Icon name="chevron-left" size={22} tint={color.ink} strokeWidth={2} />
             </Pressable>
-            <Text style={st.stepText}>Step 4 of 5</Text>
+            <Text style={st.stepText}>{fromOnboarding ? 'Step 2 of 3' : 'Step 4 of 5'}</Text>
             <Pressable accessibilityRole="button" onPress={() => router.back()} hitSlop={10} style={{ marginLeft: 'auto' }}>
               <Text style={st.skip}>Skip for now</Text>
             </Pressable>
           </View>
           <View style={st.progress}>
-            <View style={st.progressFill} />
+            <View style={[st.progressFill, fromOnboarding && { width: '67%' }]} />
           </View>
         </View>
       }
@@ -339,6 +349,9 @@ const st = StyleSheet.create({
   fact: { flexDirection: 'row', justifyContent: 'space-between', minHeight: 48, alignItems: 'center', gap: 12 },
   line: { borderBottomWidth: 1, borderBottomColor: color.divider },
   info: { flexDirection: 'row', gap: 12, backgroundColor: color.primaryTint, borderRadius: 16, padding: 16 },
+  reqLink: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: color.primaryTint, borderRadius: 14 },
+  reqText: { flexGrow: 1, flexShrink: 1, fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink },
+  reqBold: { fontFamily: font.bodyBold, color: color.primaryStrong },
   infoTitle: { fontFamily: font.bodyBold, fontSize: 15, color: color.primaryStrong },
   infoBody: { fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink },
 });

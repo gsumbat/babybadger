@@ -1325,4 +1325,373 @@ do $$ declare titles text[]; begin
 end $$;
 reset role;
 
+-- Sitter profile and credentials (migration 19, wireframes S13-S18, S40, S41, P11): a sitter writes only her own
+-- details, certificates and languages; she can't mark one verified or write the background check (BabyBadger
+-- and the provider do); changing a verified card's dates sends it back to review. Parents of a family she's linked
+-- to (signed, invited or removed) read them; other parents and strangers see nothing.
+-- Nia runs the Moss family; Ola is signed, Pip invited (not signed); Quin runs another family.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a1901', 'nia-parent@example.com'),
+  ('00000000-0000-0000-0000-0000000a1902', 'ola-sitter@example.com'),
+  ('00000000-0000-0000-0000-0000000a1903', 'stranger19@example.com'),
+  ('00000000-0000-0000-0000-0000000a1904', 'pip-sitter@example.com'),
+  ('00000000-0000-0000-0000-0000000a1905', 'quin-parent@example.com');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1901');
+insert into ctx values ('cfam', (select public.create_family('The Moss family', 'Nia Moss')::text));
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1905');
+insert into ctx values ('cfam2', (select public.create_family('The Quin family', 'Quin Ray')::text));
+reset role;
+insert into family_sitters (family_id, sitter_id, status) select v::uuid, '00000000-0000-0000-0000-0000000a1902', 'active' from ctx where k = 'cfam';
+insert into family_sitters (family_id, sitter_id, status) select v::uuid, '00000000-0000-0000-0000-0000000a1904', 'needs_consent' from ctx where k = 'cfam';
+set role authenticated;
+
+-- Ola fills in her details, two certificates and her languages
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1902');
+insert into sitter_profiles (sitter_id, phone, home_area, bio, years_experience) values (auth.uid(), '(813) 555-0192', 'Seminole Heights, Tampa', 'Bilingual sitter.', 6);
+insert into sitter_credentials (sitter_id, kind, title, issuer, issued_on, expires_on, file_path)
+  values (auth.uid(), 'first_aid', 'CPR and First Aid', 'American Red Cross', current_date - 200, current_date + 400, auth.uid() || '/cards/a.jpg'),
+         (auth.uid(), 'cpr_infant', 'Infant CPR', 'American Heart Assoc.', current_date - 700, current_date + 21, null);
+insert into sitter_languages (sitter_id, language, level) values (auth.uid(), 'English', 'native'), (auth.uid(), 'Spanish', 'fluent');
+do $$ begin
+  if (select count(*) from sitter_credentials) <> 2 then raise exception 'FAIL sitter cannot read her credentials'; end if;
+  if exists (select 1 from sitter_credentials where verified_at is not null) then raise exception 'FAIL new credential starts verified'; end if;
+  begin
+    insert into sitter_credentials (sitter_id, kind, title, verified_at) values (auth.uid(), 'water_safety', 'Water safety', now());
+    raise exception 'FAIL sitter marked her own certificate verified';
+  exception when insufficient_privilege then null; end;
+  begin
+    update sitter_credentials set verified_at = now();
+    raise exception 'FAIL sitter verified a certificate';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into sitter_credentials (sitter_id, kind, title) values (auth.uid(), 'background_check', 'Background check');
+    raise exception 'FAIL sitter wrote her own background check';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into sitter_credentials (sitter_id, kind, title) values ('00000000-0000-0000-0000-0000000a1904', 'first_aid', 'CPR');
+    raise exception 'FAIL sitter added another sitter''s certificate';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into sitter_languages (sitter_id, language, level) values (auth.uid(), 'French', 'perfect');
+    raise exception 'FAIL bad language level accepted';
+  exception when check_violation then null; end;
+  begin
+    insert into sitter_credentials (sitter_id, kind, title) values (auth.uid(), 'pilot', 'Pilot');
+    raise exception 'FAIL unknown credential kind accepted';
+  exception when check_violation then null; end;
+end $$;
+
+-- BabyBadger verifies both and records a cleared background check
+reset role;
+update sitter_credentials set verified_at = now() where sitter_id = '00000000-0000-0000-0000-0000000a1902';
+insert into sitter_credentials (sitter_id, kind, title, issued_on, expires_on, verified_at)
+  values ('00000000-0000-0000-0000-0000000a1902', 'background_check', 'Background check', current_date - 40, current_date + 325, now());
+set role authenticated;
+
+-- Ola renames one (stays verified), uploads a renewed card for the other (back to review); the background check is
+-- read-only for her
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1902');
+update sitter_credentials set title = 'CPR + First Aid' where kind = 'first_aid';
+update sitter_credentials set expires_on = current_date + 730, file_path = auth.uid() || '/cards/b.jpg' where kind = 'cpr_infant';
+do $$ declare n int; begin
+  if (select verified_at from sitter_credentials where kind = 'first_aid') is null then raise exception 'FAIL a rename cleared verification'; end if;
+  if (select verified_at from sitter_credentials where kind = 'cpr_infant') is not null then raise exception 'FAIL a renewed card stayed verified'; end if;
+  if (select count(*) from sitter_credentials where kind = 'background_check') <> 1 then raise exception 'FAIL sitter cannot see her background check'; end if;
+  update sitter_credentials set expires_on = current_date + 999 where kind = 'background_check';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL sitter changed her background check'; end if;
+  delete from sitter_credentials where kind = 'background_check';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL sitter deleted her background check'; end if;
+end $$;
+
+-- Pip (invited) adds a language; she can't see Ola's anything
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1904');
+insert into sitter_languages (sitter_id, language, level) values (auth.uid(), 'Portuguese', 'basic');
+do $$ begin
+  if (select count(*) from sitter_profiles) <> 0 or (select count(*) from sitter_credentials) <> 0
+     or (select count(*) from sitter_languages) <> 1 then raise exception 'FAIL sitter sees another sitter''s profile'; end if;
+end $$;
+
+-- Nia reads Ola's and Pip's (invited) profile; can't write or verify them
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1901');
+do $$ declare n int; begin
+  if not public.sitter_can_be_seen_by('00000000-0000-0000-0000-0000000a1902') then raise exception 'FAIL parent cannot see her sitter'; end if;
+  if (select phone from sitter_profiles where sitter_id = '00000000-0000-0000-0000-0000000a1902') <> '(813) 555-0192' then raise exception 'FAIL parent cannot read sitter details'; end if;
+  if (select count(*) from sitter_credentials) <> 3 then raise exception 'FAIL parent cannot read sitter credentials'; end if;
+  if (select count(*) from sitter_languages) <> 3 then raise exception 'FAIL parent cannot read sitter languages (signed + invited)'; end if;
+  update sitter_profiles set bio = 'hacked';
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL parent edited a sitter profile'; end if;
+  delete from sitter_credentials;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL parent deleted a sitter credential'; end if;
+  begin
+    insert into sitter_languages (sitter_id, language) values ('00000000-0000-0000-0000-0000000a1902', 'Klingon');
+    raise exception 'FAIL parent added a sitter language';
+  exception when insufficient_privilege then null; end;
+end $$;
+
+-- Another family's parent and a stranger: nothing
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1905');
+do $$ begin
+  if public.sitter_can_be_seen_by('00000000-0000-0000-0000-0000000a1902') then raise exception 'FAIL other parent can see the sitter'; end if;
+  if (select count(*) from sitter_profiles) + (select count(*) from sitter_credentials) + (select count(*) from sitter_languages) <> 0 then
+    raise exception 'FAIL other family''s parent sees sitter profiles'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1903');
+do $$ begin
+  if (select count(*) from sitter_profiles) + (select count(*) from sitter_credentials) + (select count(*) from sitter_languages) <> 0 then
+    raise exception 'FAIL stranger sees sitter profiles'; end if;
+end $$;
+
+-- Removed from the family, Ola stays readable to Nia (her history); deleting her account removes everything
+reset role;
+update family_sitters set status = 'removed' where sitter_id = '00000000-0000-0000-0000-0000000a1902';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a1901');
+do $$ begin
+  if (select count(*) from sitter_credentials) <> 3 then raise exception 'FAIL parent lost a removed sitter''s credentials'; end if;
+end $$;
+reset role;
+
+-- Family setup / add a child (migration 21, wireframes P21, P12, S26): only a parent of the family turns a kid on or
+-- off for a sitter (null = every kid stays null until one is turned off); the sitter then sees exactly those kids.
+-- "Tell Sue about Mo" reaches only signed sitters who can see him. P12 "Arrivals and departures" off: trip
+-- arrival alerts skip that parent; off-plan alerts still reach her.
+-- Rae runs the Fox family with Lu and Kai; Sue is signed.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a2101', 'rae-parent@example.com'),
+  ('00000000-0000-0000-0000-0000000a2102', 'sue-sitter@example.com'),
+  ('00000000-0000-0000-0000-0000000a2103', 'stranger21@example.com');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2101');
+insert into ctx values ('ffam', (select public.create_family('The Fox family', 'Rae Fox')::text));
+insert into kids (family_id, name) select v::uuid, 'Lu' from ctx where k = 'ffam';
+insert into kids (family_id, name) select v::uuid, 'Kai' from ctx where k = 'ffam';
+insert into ctx select 'flu', id::text from kids where name = 'Lu' and family_id = (select v::uuid from ctx where k = 'ffam');
+insert into ctx select 'fkai', id::text from kids where name = 'Kai' and family_id = (select v::uuid from ctx where k = 'ffam');
+select public.register_push_token('ExponentPushToken[rae-phone]', 'ios');
+insert into ctx values ('fcode', (select public.create_invite((select v::uuid from ctx where k = 'ffam'), 'Sue')));
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2102');
+select public.accept_invite((select v from ctx where k = 'fcode'), 'Sue Park');
+select public.sign_consent((select v::uuid from ctx where k = 'ffam'), 'Sue Park', 'notice-1.0', 'terms-1.0');
+select public.register_push_token('ExponentPushToken[sue-phone]', 'ios');
+do $$ begin
+  if (select count(*) from kids where family_id = (select v::uuid from ctx where k = 'ffam')) <> 2 then raise exception 'FAIL sitter with every kid sees % kids', (select count(*) from kids); end if;
+  begin
+    perform public.set_sitter_kid((select v::uuid from ctx where k = 'fkai'), auth.uid(), false);
+    raise exception 'FAIL sitter changed her own kids';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2103');
+do $$ begin
+  begin
+    perform public.set_sitter_kid((select v::uuid from ctx where k = 'fkai'), '00000000-0000-0000-0000-0000000a2102', false);
+    raise exception 'FAIL stranger changed a sitter''s kids';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  begin
+    perform public.tell_sitters_about_kid((select v::uuid from ctx where k = 'fkai'), array['00000000-0000-0000-0000-0000000a2102'::uuid]);
+    raise exception 'FAIL stranger pushed a sitter';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+end $$;
+-- Rae turns Kai off for Sue, then a new kid joins: Sue sees only Lu (an explicit list doesn't grow by itself)
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2101');
+select public.set_sitter_kid((select v::uuid from ctx where k = 'fkai'), '00000000-0000-0000-0000-0000000a2102', false);
+insert into kids (family_id, name) select v::uuid, 'Mo' from ctx where k = 'ffam';
+insert into ctx select 'fmo', id::text from kids where name = 'Mo' and family_id = (select v::uuid from ctx where k = 'ffam');
+do $$ begin
+  if (select kid_ids from family_sitters where sitter_id = '00000000-0000-0000-0000-0000000a2102') <> array[(select v::uuid from ctx where k = 'flu')] then
+    raise exception 'FAIL kid off: %', (select kid_ids from family_sitters where sitter_id = '00000000-0000-0000-0000-0000000a2102'); end if;
+  if public.tell_sitters_about_kid((select v::uuid from ctx where k = 'fmo'), array['00000000-0000-0000-0000-0000000a2102'::uuid]) <> 0 then
+    raise exception 'FAIL told a sitter about a kid she can''t see'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2102');
+do $$ begin
+  if (select string_agg(name, ',' order by name) from kids where family_id = (select v::uuid from ctx where k = 'ffam')) <> 'Lu' then
+    raise exception 'FAIL sitter sees %', (select string_agg(name, ',') from kids); end if;
+end $$;
+-- Rae turns Mo on (P21): Sue sees Lu and Mo; Kai back on = every kid again (null). Telling Sue about Mo sends one push.
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2101');
+select public.set_sitter_kid((select v::uuid from ctx where k = 'fmo'), '00000000-0000-0000-0000-0000000a2102', true);
+reset role;
+delete from net.sent;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2101');
+do $$ begin
+  if public.tell_sitters_about_kid((select v::uuid from ctx where k = 'fmo'), array['00000000-0000-0000-0000-0000000a2102'::uuid, '00000000-0000-0000-0000-0000000a2103'::uuid]) <> 1 then
+    raise exception 'FAIL tell count'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2102');
+do $$ begin
+  if (select count(*) from kids where family_id = (select v::uuid from ctx where k = 'ffam')) <> 2 then raise exception 'FAIL sitter doesn''t see the kid turned on'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2101');
+select public.set_sitter_kid((select v::uuid from ctx where k = 'fkai'), '00000000-0000-0000-0000-0000000a2102', true);
+do $$ begin
+  if (select kid_ids from family_sitters where sitter_id = '00000000-0000-0000-0000-0000000a2102') is not null then raise exception 'FAIL every kid on is not null'; end if;
+end $$;
+reset role;
+do $$ begin
+  if (select count(*) from net.sent) <> 1 or (select body->0->>'to' from net.sent) <> 'ExponentPushToken[sue-phone]'
+     or (select body->0->>'title' from net.sent) <> 'Meet Mo' or (select body->0->'data'->>'url' from net.sent) not like '/sitter/kid/%' then
+    raise exception 'FAIL tell push: %', (select json_agg(body) from net.sent); end if;
+end $$;
+-- P12 arrivals off: Rae's phone gets the off-plan alert but not the arrival
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2101');
+update profiles set alert_arrivals = false where id = auth.uid();
+insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by)
+  select v::uuid, '00000000-0000-0000-0000-0000000a2102', now() + interval '1 day', now() + interval '1 day 3 hours', auth.uid() from ctx where k = 'ffam';
+reset role;
+delete from net.sent;
+insert into alerts (family_id, shift_id, kind, title, body)
+  select f.v::uuid, s.id, 'trip_arrived', 'Sue and Lu arrived at the park', '' from ctx f, shifts s where f.k = 'ffam' and s.family_id = f.v::uuid;
+insert into alerts (family_id, shift_id, kind, title, body)
+  select f.v::uuid, s.id, 'off_plan', 'Off-plan location', '' from ctx f, shifts s where f.k = 'ffam' and s.family_id = f.v::uuid;
+do $$ declare titles text[]; begin
+  select array_agg(x->>'title' order by s.id) into titles from net.sent s, jsonb_array_elements(s.body) x;
+  if titles is distinct from array['Off-plan location'] then raise exception 'FAIL arrivals switch: %', titles; end if;
+end $$;
+reset role;
+
+-- 20. Sitter requirements (migration 20, P7a / P28–P32 / S27). Rae Reed (parent), Nia Shaw (sitter, invited),
+-- Otto (stranger). Parents write the list; the invited sitter reads it and answers self-confirmed ones; status comes
+-- from her credentials and languages; a parent marks a document reviewed; "Block booking" stops booking until every
+-- must-have is met; new wording asks her to confirm again.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a20a1', 'rae-reed@example.com'),
+  ('00000000-0000-0000-0000-0000000a20b1', 'nia@example.com'),
+  ('00000000-0000-0000-0000-0000000a20c1', 'otto@example.com');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a20a1');
+insert into ctx values ('rfam', (select public.create_family('The Reed family', 'Rae Reed')::text));
+insert into kids (family_id, name) select v::uuid, 'Remy' from ctx where k = 'rfam';
+insert into ctx values ('rcode', (select public.create_invite((select v::uuid from ctx where k = 'rfam'), 'Nia')));
+insert into family_requirements (family_id, key, title, details, level, position)
+  select v::uuid, x.key, x.title, x.details::jsonb, x.level, x.pos from ctx,
+    (values ('background_check', 'Background check', '{"within_months": 12}', 'must', 0),
+            ('cpr_infant', 'Infant CPR', '{}', 'must', 1),
+            ('language:Spanish', 'Speaks Spanish', '{"language": "Spanish"}', 'prefer', 2),
+            ('non_smoker', 'Non-smoker', '{"proof": "self"}', 'must', 3),
+            ('custom', 'Comfortable with dogs', '{"why": "Biscuit", "proof": "document"}', 'must', 4)) x(key, title, details, level, pos)
+  where k = 'rfam';
+do $$ begin
+  begin
+    insert into family_requirements (family_id, key, title) select v::uuid, 'non_smoker', 'Again' from ctx where k = 'rfam';
+    raise exception 'FAIL same catalogue requirement twice';
+  exception when unique_violation then null; end;
+  begin
+    insert into family_requirements (family_id, key, title, level) select v::uuid, 'custom', 'x', 'off' from ctx where k = 'rfam';
+    raise exception 'FAIL bad level accepted';
+  exception when check_violation then null; end;
+end $$;
+insert into ctx select 'rdoc', id::text from family_requirements where key = 'custom' and family_id = (select v::uuid from ctx where k = 'rfam');
+insert into ctx select 'rsmoke', id::text from family_requirements where key = 'non_smoker' and family_id = (select v::uuid from ctx where k = 'rfam');
+
+-- Stranger: nothing
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a20c1');
+do $$ begin
+  if (select count(*) from family_requirements) <> 0 then raise exception 'FAIL stranger sees requirements'; end if;
+  if (select count(*) from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), '00000000-0000-0000-0000-0000000a20b1')) <> 0 then
+    raise exception 'FAIL stranger reads status'; end if;
+  begin
+    insert into family_requirements (family_id, key, title) select v::uuid, 'custom', 'x' from ctx where k = 'rfam';
+    raise exception 'FAIL stranger wrote a requirement';
+  exception when insufficient_privilege then null; end;
+end $$;
+
+-- Nia: before she accepts she sees nothing; after accepting (before signing) she reads the list (S27)
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a20b1');
+do $$ begin
+  if (select count(*) from family_requirements) <> 0 then raise exception 'FAIL invitee sees requirements before accepting'; end if;
+end $$;
+select public.accept_invite((select v from ctx where k = 'rcode'), 'Nia Shaw');
+do $$ declare s text; begin
+  if (select count(*) from family_requirements) <> 5 then raise exception 'FAIL invited sitter cannot read requirements'; end if;
+  select string_agg(reason, ',' order by fr.position) into s
+    from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), auth.uid()) st
+    join family_requirements fr on fr.id = st.requirement_id;
+  if s <> 'missing,missing,missing,unconfirmed,unreviewed' then raise exception 'FAIL first status: %', s; end if;
+  if (select count(*) from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), '00000000-0000-0000-0000-0000000a20c1')) <> 0 then
+    raise exception 'FAIL sitter reads someone else''s status'; end if;
+  begin
+    update family_requirements set level = 'prefer';
+    if exists (select 1 from family_requirements where level = 'prefer' and key = 'background_check') then raise exception 'FAIL sitter changed a requirement'; end if;
+  end;
+  begin
+    insert into family_requirement_checks (requirement_id, sitter_id, answer) select v::uuid, auth.uid(), true from ctx where k = 'rdoc';
+    raise exception 'FAIL sitter approved her own document';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into family_requirement_checks (requirement_id, sitter_id, answer) select v::uuid, '00000000-0000-0000-0000-0000000a20c1', true from ctx where k = 'rsmoke';
+    raise exception 'FAIL sitter answered for someone else';
+  exception when insufficient_privilege then null; end;
+end $$;
+-- She answers Yes to non-smoker; checked_by is hers whatever she sends
+insert into family_requirement_checks (requirement_id, sitter_id, answer, checked_by)
+  select v::uuid, auth.uid(), true, '00000000-0000-0000-0000-0000000a20a1' from ctx where k = 'rsmoke';
+do $$ begin
+  if (select checked_by from family_requirement_checks) <> auth.uid() then raise exception 'FAIL checked_by not stamped'; end if;
+end $$;
+-- Her credentials and languages (written directly: migration 19's own rules are tested there)
+reset role;
+insert into sitter_credentials (sitter_id, kind, title, issued_on, expires_on) values
+  ('00000000-0000-0000-0000-0000000a20b1', 'background_check', 'Background check', current_date - 30, null),
+  ('00000000-0000-0000-0000-0000000a20b1', 'cpr_infant', 'Infant CPR', current_date - 700, current_date - 5),
+  ('00000000-0000-0000-0000-0000000a20b1', 'cpr_infant', 'Infant CPR', current_date - 300, current_date + 10);
+insert into sitter_languages (sitter_id, language, level) values ('00000000-0000-0000-0000-0000000a20b1', 'Spanish', 'conversational');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a20b1');
+do $$ declare s text; e date; begin
+  select string_agg(st.reason, ',' order by fr.position) into s
+    from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), auth.uid()) st
+    join family_requirements fr on fr.id = st.requirement_id;
+  if s <> 'valid,expiring,speaks,confirmed,unreviewed' then raise exception 'FAIL status with credentials: %', s; end if;
+  select st.expires_on into e from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), auth.uid()) st
+    join family_requirements fr on fr.id = st.requirement_id where fr.key = 'cpr_infant';
+  if e <> current_date + 10 then raise exception 'FAIL expiring date: %', e; end if;
+end $$;
+
+-- Rae: reads the same status; with Block booking she can't book Nia until the document is reviewed
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a20b1');
+select public.sign_consent((select v::uuid from ctx where k = 'rfam'), 'Nia Shaw', 'notice-1.0', 'terms-1.0');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a20a1');
+update families set requirement_mode = 'block' where id = (select v::uuid from ctx where k = 'rfam');
+do $$ begin
+  if (select count(*) filter (where met) from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), '00000000-0000-0000-0000-0000000a20b1')) <> 4 then
+    raise exception 'FAIL parent sees a different status'; end if;
+  if (select count(*) from family_requirement_checks) <> 1 then raise exception 'FAIL parent cannot read answers'; end if;
+  begin
+    insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by)
+      select v::uuid, '00000000-0000-0000-0000-0000000a20b1', now() + interval '1 day', now() + interval '1 day 3 hours', auth.uid() from ctx where k = 'rfam';
+    raise exception 'FAIL booked a sitter missing a must-have';
+  exception when others then if sqlerrm like 'FAIL%' then raise; end if; end;
+  begin
+    update families set requirement_mode = 'never' where id = (select v::uuid from ctx where k = 'rfam');
+    raise exception 'FAIL bad requirement mode';
+  exception when check_violation then null; end;
+  begin
+    insert into family_requirement_checks (requirement_id, sitter_id, answer) select v::uuid, '00000000-0000-0000-0000-0000000a20b1', true from ctx where k = 'rsmoke';
+    raise exception 'FAIL parent answered a self-confirmed requirement';
+  exception when insufficient_privilege then null; end;
+end $$;
+insert into family_requirement_checks (requirement_id, sitter_id, answer) select v::uuid, '00000000-0000-0000-0000-0000000a20b1', true from ctx where k = 'rdoc';
+insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by)
+  select v::uuid, '00000000-0000-0000-0000-0000000a20b1', now() + interval '1 day', now() + interval '1 day 3 hours', auth.uid() from ctx where k = 'rfam';
+-- New wording on a self-confirmed requirement clears her answer; the stamp keeps family and key
+update family_requirements set title = 'Non-smoker, no vaping', key = 'custom' where id = (select v::uuid from ctx where k = 'rsmoke');
+do $$ begin
+  if (select key from family_requirements where id = (select v::uuid from ctx where k = 'rsmoke')) <> 'non_smoker' then raise exception 'FAIL key changed'; end if;
+  if exists (select 1 from family_requirement_checks where requirement_id = (select v::uuid from ctx where k = 'rsmoke')) then
+    raise exception 'FAIL answer kept after the wording changed'; end if;
+  if (select reason from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), '00000000-0000-0000-0000-0000000a20b1')
+      where requirement_id = (select v::uuid from ctx where k = 'rsmoke')) <> 'unconfirmed' then raise exception 'FAIL not asked again'; end if;
+end $$;
+reset role;
+
 select 'ALL RLS SCENARIOS PASSED' as result;

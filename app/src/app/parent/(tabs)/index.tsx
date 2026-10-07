@@ -101,7 +101,7 @@ export default function ParentHome() {
       {state?.kind === 'idle' && state.next && <NextShift shift={state.next} sitter={sitterName(state.next.sitter_id)} />}
       {!setup && data && data.kids.length > 0 && state?.kind === 'idle' && <Kids kids={data.kids} add={!explore} />}
 
-      {/* P4a has no grid. Tiles not built yet are left out: Find a sitter, Kids & devices, Ask my pool, Pay sitter, Requirements. */}
+      {/* P4a has no grid. Tiles not built yet are left out: Find a sitter, Kids & devices, Ask my pool, Pay sitter. P4b's Requirements tile opens P7a. */}
       {explore ? (
         // P4e: "Invite a sitter", "House rules" and "Care plan" are built; Kids & devices is left out.
         <>
@@ -125,7 +125,12 @@ export default function ParentHome() {
           <ActionGrid
             items={[
               { icon: 'plus', label: 'Book a shift', onPress: () => router.push('/parent/shift/new') },
-              ...(state.kind === 'idle' ? [{ icon: 'message-square' as const, label: 'Message', onPress: () => router.navigate('/parent/messages') }] : []),
+              ...(state.kind === 'idle'
+                ? [
+                    { icon: 'message-square' as const, label: 'Message', onPress: () => router.navigate('/parent/messages') },
+                    { icon: 'shield' as const, label: 'Requirements', onPress: () => router.push('/parent/requirements') },
+                  ]
+                : []),
             ]}
             height={state.kind === 'idle' ? 76 : 70}
           />
