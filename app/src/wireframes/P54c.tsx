@@ -30,12 +30,12 @@ export default function WF_P54c() {
           <Text style={{ fontFamily: font.display, fontSize: 19, color: "#1B2328", marginVertical: -4.22 }}>When do you need someone?</Text>
           <View style={{ flexDirection: "row", gap: 6, overflow: "hidden", flexShrink: 1, minHeight: 0 }}>
             <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> P42-Pool.dc.html */}
-              <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Tonight</Text>
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Today</Text>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> P42-Pool.dc.html */}
-              <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Sat evening</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> P43-PoolWeek.dc.html */}
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>This week</Text>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> P42-Pool.dc.html */}
+            <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> P54d-PickTime.dc.html */}
               <SvgXml xml={SVG[1]} width={16} height={16} />
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Pick a time</Text>
             </View>
@@ -56,7 +56,7 @@ export default function WF_P54c() {
               </View>
             </View>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>Maya</Text>
-            <Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 11, color: "#4B5960" }}>Free tonight</Text>
+            <Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 11, color: "#4B5960" }}>Free today</Text>
           </View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingTop: 16, paddingRight: 16, paddingBottom: 16, paddingLeft: 16, backgroundColor: "#DCE7F1", borderRadius: 24 }}>{/* -> P48-Find.dc.html */}

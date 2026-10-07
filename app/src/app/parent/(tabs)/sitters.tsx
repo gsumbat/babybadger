@@ -3,21 +3,22 @@ import { useMemo, useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { shortName } from '@/components/addChild';
-import { findComingSoon, openPool, PickTimeSheet } from '@/components/pool';
+import { findComingSoon, openPool, openPoolWeek, PickTimeSheet } from '@/components/pool';
 import { Button, ErrorText, Icon, Screen } from '@/components/ui';
 import { useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { inviteApi, type InviteRow } from '@/lib/invites';
-import { poolData, statusFor, tabLabel, tonightWindow, weekendChip, type DotKind } from '@/lib/pool';
+import { poolData, statusFor, tabLabel, tonightWindow, type DotKind } from '@/lib/pool';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe P54, translated from its HTML (app/src/wireframes/P54.tsx); P54b when there are no sitters and no
-// open invites yet. "When do you need someone?" opens P42 Sitter pool for tonight (6 – 10 PM, or from the next half
-// hour), the coming Saturday evening ("Sun evening" on a Saturday) or a picked time (sheet, canvas P54d). The line under
-// each pool avatar is real for tonight (lib/pool-logic): On shift, Free tonight, Until 9 PM, Busy (booked with this
+// open invites yet. "When do you need someone?": Today opens P42 Sitter pool for today (6 – 10 PM, or from the next
+// half hour), This week opens P43 Who's free for this week, Pick a time opens the sheet (canvas P54d / P54f / P54g: Today /
+// Week / Month) and then P42. The line under each pool avatar is real for today's window (lib/pool-logic): On shift,
+// Free today, Until 9 PM, Busy (booked with this
 // family), Away (a day off), Not free / No hours (her S11 hours), Needs to sign. An active sitter opens P11; one who
 // still has to sign opens P25. IN PROGRESS: waiting invites open P25; expired ("Resend") and declined ones open P27,
 // where they're resent or removed.
@@ -35,7 +36,6 @@ export default function Sitters() {
   // Windows follow the time of the last load (the tab reloads each time it's shown).
   const loadedAt = data?.now;
   const tonight = useMemo(() => tonightWindow(loadedAt ?? new Date()), [loadedAt]);
-  const weekend = useMemo(() => weekendChip(loadedAt ?? new Date()), [loadedAt]);
   const now = loadedAt ?? new Date();
 
   const openInvite = (id: string) => router.push({ pathname: '/parent/invite/[id]', params: { id } });
@@ -103,10 +103,10 @@ export default function Sitters() {
             <Text style={st.whenTitle}>When do you need someone?</Text>
             <View style={st.chips}>
               <Pressable accessibilityRole="button" onPress={() => openPool(tonight)} style={st.chip}>
-                <Text style={st.chipText}>Tonight</Text>
+                <Text style={st.chipText}>Today</Text>
               </Pressable>
-              <Pressable accessibilityRole="button" onPress={() => openPool(weekend.window)} style={st.chip}>
-                <Text style={st.chipText}>{weekend.label}</Text>
+              <Pressable accessibilityRole="button" onPress={() => openPoolWeek(new Date())} style={st.chip}>
+                <Text style={st.chipText}>This week</Text>
               </Pressable>
               <Pressable accessibilityRole="button" onPress={() => setPicking(true)} style={st.chip}>
                 <Icon name="calendar" size={16} tint={color.ink} />
@@ -124,7 +124,7 @@ export default function Sitters() {
           </View>
           <View style={st.pool}>
             {sitters.map((s, i) => {
-              const { label, dot } = tabLabel(data ? statusFor(data, s.sitter_id, tonight, { onShiftNow: true }) : { state: 'no_hours' }, tonight);
+              const { label, dot } = tabLabel(data ? statusFor(data, s.sitter_id, tonight, { onShiftNow: true }) : { state: 'no_hours' }, tonight, now);
               return (
                 <Pressable key={s.sitter_id} accessibilityRole="button" onPress={() => (s.status === 'active' ? router.push({ pathname: '/parent/sitter/[id]', params: { id: s.sitter_id } }) : openSitter(s.sitter_id))} style={st.poolItem}>
                   <View>
@@ -190,7 +190,6 @@ export default function Sitters() {
 
       <PickTimeSheet
         visible={picking}
-        initial={tonight}
         onClose={() => setPicking(false)}
         onPick={(w) => {
           setPicking(false);

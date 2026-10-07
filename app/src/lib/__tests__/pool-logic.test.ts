@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { bookLabel, nextHalfHour, poolRow, poolStatus, tabLabel, tonightWindow, weekendChip, windowFrom, windowLabel, type PoolInput } from '../pool-logic';
+import { bookLabel, cellKind, daySummary, isPastDay, nextHalfHour, pickerCanGoBack, pickerMove, poolRow, poolStatus, slotOf, slotTitle, slotWindow, tabLabel, tonightWindow, weekStart, windowFrom, windowLabel, type PoolInput, type PoolStatus } from '../pool-logic';
 
 const at = (y: number, m: number, d: number, h = 0, min = 0) => new Date(y, m - 1, d, h, min);
 // Tue Oct 6 2026 at 2 PM.
@@ -23,12 +23,6 @@ describe('time windows', () => {
     const w = tonightWindow(at(2026, 10, 6, 21, 40));
     expect(w.start).toEqual(at(2026, 10, 6, 22));
     expect(w.end).toEqual(at(2026, 10, 7, 0));
-  });
-  it('the weekend chip is the coming Saturday, or Sunday on a Saturday', () => {
-    expect(weekendChip(NOW)).toEqual({ label: 'Sat evening', window: { start: at(2026, 10, 10, 18), end: at(2026, 10, 10, 22) } });
-    expect(weekendChip(at(2026, 10, 10, 9)).label).toBe('Sun evening');
-    expect(weekendChip(at(2026, 10, 10, 9)).window.start).toEqual(at(2026, 10, 11, 18));
-    expect(weekendChip(at(2026, 10, 11, 9)).window.start).toEqual(at(2026, 10, 17, 18));
   });
   it('reads a picked day and times, past midnight too', () => {
     expect(windowFrom('2026-10-10', '6:00 PM', '10:00 PM')).toEqual({ start: at(2026, 10, 10, 18), end: at(2026, 10, 10, 22) });
@@ -53,7 +47,8 @@ describe('pool status', () => {
   });
   it('free when her hours cover the window', () => {
     expect(poolStatus(base, tonight)).toEqual({ state: 'free' });
-    expect(tabLabel(poolStatus(base, tonight), tonight)).toEqual({ label: 'Free tonight', dot: 'free' });
+    expect(tabLabel(poolStatus(base, tonight), tonight, NOW)).toEqual({ label: 'Free today', dot: 'free' });
+    expect(tabLabel({ state: 'free' }, tonightWindow(at(2026, 10, 6, 23, 40)), at(2026, 10, 6, 23, 40)).label).toBe('Free');
   });
   it('partly free', () => {
     const p = { ...base, hours: [{ weekday: 2, starts: '15:00:00', ends: '21:00:00' }] };
@@ -93,5 +88,53 @@ describe('pool status', () => {
     expect(bookLabel(['Maya'])).toBe('Book Maya');
     expect(bookLabel(['Maya', 'Priya'])).toBe('Book a free sitter');
     expect(bookLabel([])).toBe('Book a shift');
+  });
+});
+
+describe('P43 week', () => {
+  it('slots and their windows', () => {
+    const sat = at(2026, 10, 10);
+    expect(slotWindow(sat, 'evening', NOW)).toEqual({ start: at(2026, 10, 10, 18), end: at(2026, 10, 10, 22) });
+    expect(slotWindow(sat, 'morning', NOW)).toEqual({ start: at(2026, 10, 10, 8), end: at(2026, 10, 10, 12) });
+    expect(slotWindow(sat, 'afternoon', NOW)).toEqual({ start: at(2026, 10, 10, 12), end: at(2026, 10, 10, 17) });
+    // Today at 2 PM: the afternoon runs from now, the morning is over, yesterday is past.
+    expect(slotWindow(at(2026, 10, 6), 'afternoon', NOW)?.start).toEqual(at(2026, 10, 6, 14));
+    expect(slotWindow(at(2026, 10, 6), 'morning', NOW)).toBeNull();
+    expect(slotWindow(at(2026, 10, 5), 'evening', NOW)).toBeNull();
+    expect(slotOf({ start: at(2026, 10, 10, 9), end: at(2026, 10, 10, 11) })).toBe('morning');
+    expect(slotOf({ start: at(2026, 10, 10, 15), end: at(2026, 10, 10, 17) })).toBe('afternoon');
+    expect(slotOf(tonightWindow(NOW))).toBe('evening');
+    expect(slotTitle(at(2026, 10, 10), 'evening')).toBe('Saturday evening');
+  });
+  it('week param is the Monday of that week', () => {
+    expect(weekStart('2026-10-10', NOW)).toEqual(at(2026, 10, 5));
+    expect(weekStart(undefined, NOW)).toEqual(at(2026, 10, 5));
+    expect(weekStart('soon', NOW)).toEqual(at(2026, 10, 5));
+    expect(isPastDay(at(2026, 10, 5, 23), NOW)).toBe(true);
+    expect(isPastDay(at(2026, 10, 6), NOW)).toBe(false);
+  });
+  it('cells and the day line', () => {
+    const w = { start: at(2026, 10, 10, 18), end: at(2026, 10, 10, 22) };
+    const part: PoolStatus = { state: 'partly', freeFrom: w.start, freeTo: at(2026, 10, 10, 21) };
+    expect([cellKind({ state: 'free' }), cellKind(part), cellKind({ state: 'busy' }), cellKind({ state: 'off' }), cellKind({ state: 'no_hours' }), cellKind({ state: 'away' })]).toEqual(['free', 'part', 'busy', 'busy', 'busy', 'away']);
+    expect(daySummary([{ state: 'free' }, { state: 'free' }, part, { state: 'busy' }, { state: 'away', awayUntil: '2026-10-14' }], w)).toBe('2 free · 1 until 9:00 PM · 2 not free');
+    expect(daySummary([part, part], w)).toBe('2 partly free');
+    expect(daySummary([{ state: 'off' }], w)).toBe('1 not free');
+  });
+});
+
+describe('Pick a time sheet', () => {
+  it('moves by week and month, never before today', () => {
+    expect(pickerMove(at(2026, 10, 6), 'week', 1, NOW)).toEqual(at(2026, 10, 13));
+    expect(pickerMove(at(2026, 10, 15), 'week', -1, NOW)).toEqual(at(2026, 10, 8));
+    expect(pickerMove(at(2026, 10, 10), 'week', -1, NOW)).toEqual(at(2026, 10, 6));
+    expect(pickerMove(at(2026, 10, 31), 'month', 1, NOW)).toEqual(at(2026, 11, 30));
+    expect(pickerMove(at(2026, 11, 3), 'month', -1, NOW)).toEqual(at(2026, 10, 6));
+  });
+  it('can go back only after this week / month', () => {
+    expect(pickerCanGoBack(at(2026, 10, 11), 'week', NOW)).toBe(false);
+    expect(pickerCanGoBack(at(2026, 10, 12), 'week', NOW)).toBe(true);
+    expect(pickerCanGoBack(at(2026, 10, 30), 'month', NOW)).toBe(false);
+    expect(pickerCanGoBack(at(2026, 11, 1), 'month', NOW)).toBe(true);
   });
 });

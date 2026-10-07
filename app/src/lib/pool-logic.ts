@@ -1,7 +1,7 @@
 // Who in the family's pool is free for a time window (wireframes P54 Sitters tab and P42 Sitter pool).
 // Pure functions, unit-tested. Parents only see their own family's shifts, the sitter's weekly hours
 // (sitter_availability) and her days off (family_sitter_time_off, no reason), so "Busy" means booked with this family.
-import { addDays, dayKey, fromKey, startOfDay, type DateRange } from './calendar-logic';
+import { addDays, dayKey, fromKey, sameDay, startOfDay, weekOf, type DateRange } from './calendar-logic';
 import type { Shift } from './types';
 
 export type TimeWindow = { start: Date; end: Date };
@@ -36,7 +36,7 @@ export function nextHalfHour(now: Date): Date {
   return d;
 }
 
-/** P54 "Tonight": 6 – 10 PM today. After 6 PM it starts at the next half hour; it always runs at least 2 hours
+/** P54 "Today": 6 – 10 PM today. After 6 PM it starts at the next half hour; it always runs at least 2 hours
  * (late at night it runs past midnight). */
 export function tonightWindow(now = new Date()): TimeWindow {
   const six = at(now, 18);
@@ -46,13 +46,44 @@ export function tonightWindow(now = new Date()): TimeWindow {
   return { start, end };
 }
 
-/** P54's second quick chip: the coming Saturday 6 – 10 PM ("Sat evening"); on a Saturday it's Sunday ("Sun evening"). */
-export function weekendChip(now = new Date()): { label: string; window: TimeWindow } {
-  const today = now.getDay();
-  const ahead = today === 6 ? 1 : 6 - today;
-  const day = addDays(startOfDay(now), ahead);
-  return { label: today === 6 ? 'Sun evening' : 'Sat evening', window: { start: at(day, 18), end: at(day, 22) } };
+/** P43's switch: Mornings / Afternoons / Evenings, as hours of the day. Evenings match P54's "Today" (6 – 10 PM). */
+export type DaySlot = 'morning' | 'afternoon' | 'evening';
+export const SLOTS: Record<DaySlot, { label: string; from: number; to: number }> = {
+  morning: { label: 'Mornings', from: 8, to: 12 },
+  afternoon: { label: 'Afternoons', from: 12, to: 17 },
+  evening: { label: 'Evenings', from: 18, to: 22 },
+};
+
+/** Which P43 slot a window falls in (by its start). */
+export function slotOf(w: TimeWindow): DaySlot {
+  const h = w.start.getHours();
+  return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening';
 }
+
+/** A P43 cell's window: the slot's hours on that day. Today, a slot that has started runs from the next half hour;
+ * a slot that is over (and any past day) is null. */
+export function slotWindow(day: Date, slot: DaySlot, now = new Date()): TimeWindow | null {
+  const { from, to } = SLOTS[slot];
+  if (isPastDay(day, now)) return null;
+  let start = at(day, from);
+  const end = at(day, to);
+  if (+now > +start) start = nextHalfHour(now);
+  return +start < +end ? { start, end } : null;
+}
+
+/** P43 card title: "Saturday evening". */
+export function slotTitle(day: Date, slot: DaySlot): string {
+  return `${day.toLocaleDateString('en-US', { weekday: 'long' })} ${slot}`;
+}
+
+/** P43 ?week=YYYY-MM-DD: the Monday of that week (this week when missing or unreadable). */
+export function weekStart(param: string | undefined, now = new Date()): Date {
+  const d = param ? fromKey(param) : now;
+  return weekOf(isNaN(+d) ? now : d)[0];
+}
+
+/** A day before today (P43 cells, past days in the "Pick a time" sheet). */
+export const isPastDay = (d: Date, now = new Date()) => +startOfDay(d) < +startOfDay(now);
 
 /** Day + "6:00 PM" + "10:00 PM" -> window; an end at or before the start runs past midnight. Null if unreadable. */
 export function windowFrom(dayKeyStr: string, startText: string, endText: string): TimeWindow | null {
@@ -142,15 +173,16 @@ export function poolStatus(p: PoolInput, w: TimeWindow, opts: { onShiftNow?: boo
 /** P54 avatar dot. */
 export type DotKind = 'ok' | 'free' | 'grey' | 'warn';
 
-/** P54: the line under a pool avatar and its dot, for tonight. */
-export function tabLabel(s: PoolStatus, w: TimeWindow): { label: string; dot: DotKind } {
+/** P54: the line under a pool avatar and its dot, for today's window ("Free today"; just "Free" once it runs past
+ * midnight). */
+export function tabLabel(s: PoolStatus, w: TimeWindow, now = new Date()): { label: string; dot: DotKind } {
   switch (s.state) {
     case 'needs_sign':
       return { label: 'Needs to sign', dot: 'warn' };
     case 'on_shift':
       return { label: 'On shift', dot: 'ok' };
     case 'free':
-      return { label: 'Free tonight', dot: 'free' };
+      return { label: sameDay(w.start, now) ? 'Free today' : 'Free', dot: 'free' };
     case 'partly':
       return { label: partPill(s, w), dot: 'free' };
     case 'busy':
@@ -206,4 +238,44 @@ export function poolRow(s: PoolStatus, w: TimeWindow, shiftsDone: number, now = 
 export function bookLabel(freeNames: string[]): string {
   if (freeNames.length === 1) return `Book ${freeNames[0]}`;
   return freeNames.length > 1 ? 'Book a free sitter' : 'Book a shift';
+}
+
+/** P43 cell: Free (check), Part of it (½), Busy (dash: booked, no hours that day or none set), Away (hatched). */
+export type CellKind = 'free' | 'part' | 'busy' | 'away';
+export function cellKind(s: PoolStatus): CellKind {
+  if (s.state === 'free' || s.state === 'on_shift') return 'free';
+  if (s.state === 'partly') return 'part';
+  return s.state === 'away' ? 'away' : 'busy';
+}
+
+/** P43 card line: "2 free · 1 until 9:00 PM · 2 not free" (one partly free sitter is spelled out, several are counted). */
+export function daySummary(statuses: PoolStatus[], w: TimeWindow): string {
+  const free = statuses.filter((s) => cellKind(s) === 'free').length;
+  const part = statuses.filter((s) => s.state === 'partly');
+  const notFree = statuses.length - free - part.length;
+  const out: string[] = [];
+  if (free) out.push(`${free} free`);
+  if (part.length === 1) out.push(`1 ${poolRow(part[0], w, 0).sub.replace(/^Free /, '')}`);
+  else if (part.length) out.push(`${part.length} partly free`);
+  if (notFree) out.push(`${notFree} not free`);
+  return out.join(' · ');
+}
+
+/** "Pick a time" sheet (P54d / P54f / P54g): the week shown moves by whole weeks and the month by whole months, never
+ * before today. Returns the day to select. */
+export function pickerMove(day: Date, unit: 'week' | 'month', n: number, now = new Date()): Date {
+  let d: Date;
+  if (unit === 'week') d = addDays(day, 7 * n);
+  else {
+    d = new Date(day.getFullYear(), day.getMonth() + n, 1);
+    const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(day.getDate(), last));
+  }
+  return isPastDay(d, now) ? startOfDay(now) : d;
+}
+
+/** Can the sheet go back from this week / month? Not when today is in it. */
+export function pickerCanGoBack(day: Date, unit: 'week' | 'month', now = new Date()): boolean {
+  if (unit === 'week') return +weekOf(day)[0] > +weekOf(now)[0];
+  return day.getFullYear() * 12 + day.getMonth() > now.getFullYear() * 12 + now.getMonth();
 }

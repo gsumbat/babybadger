@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { shortName } from '@/components/addChild';
-import { findComingSoon, PickTimeSheet } from '@/components/pool';
+import { findComingSoon, openPoolWeek, PickTimeSheet } from '@/components/pool';
 import { Text } from '@/components/Text';
 import { ErrorText, Icon, Screen } from '@/components/ui';
 import { namesLabel } from '@/lib/availability';
@@ -11,7 +11,7 @@ import { dayKey } from '@/lib/calendar-logic';
 import { credentialState, sitterBundle } from '@/lib/credentials';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
-import { bookLabel, poolData, poolRow, statusFor, timeText, tonightWindow, windowLabel, type PoolGroup, type TimeWindow } from '@/lib/pool';
+import { bookLabel, poolData, poolRow, slotOf, statusFor, timeText, tonightWindow, windowLabel, type PoolGroup, type TimeWindow } from '@/lib/pool';
 import { requirementStatus } from '@/lib/requirements';
 import { useSession } from '@/lib/session';
 import { cardShadow, color, font } from '@/theme';
@@ -20,10 +20,11 @@ import { cardShadow, color, font } from '@/theme';
 // (?start=ISO&end=ISO; tonight when missing). The family's active sitters, grouped by lib/pool-logic: FREE THE WHOLE
 // TIME (her S11 hours cover it, no day off, not booked with this family then), PARTLY FREE ("Free until 9:00 PM"), NOT
 // FREE (dimmed: Booked / Away until … / not free that evening / no hours set). Rows open P11. Change opens the
-// "Pick a time" sheet (canvas P54d). Filter chips show only when the pool has 2+ sitters and the filter can match:
+// "Pick a time" sheet (canvas P54d / P54f / P54g). Week opens P43 Who's free for the window's week, day and part of the
+// day. Filter chips show only when the pool has 2+ sitters and the filter can match:
 // Meets requirements (family has requirements; lib/requirements), Drives (a verified, unexpired driver's license),
 // one chip per other language a sitter speaks (sitter_languages; P42 draws Spanish). None are on at first.
-// Left out until built: Find new (P48, "Coming soon"), Week (P43, hidden), asking several sitters at once (P45 "Ask
+// Left out until built: Find new (P48, "Coming soon"), asking several sitters at once (P45 "Ask
 // both free sitters"): the main button books instead: "Book Maya" with one free sitter, "Book a free sitter" (the first)
 // with several, "Book a shift" with none; it opens the booking screen with the sitter, day and times filled in.
 export default function Pool() {
@@ -148,9 +149,15 @@ export default function Pool() {
       }
       footer={
         data && count ? (
-          <Pressable accessibilityRole="button" onPress={book} style={st.bookBtn}>
-            <Text style={st.bookText}>{bookLabel(free.map((r) => firstName(r.name)))}</Text>
-          </Pressable>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Pressable accessibilityRole="button" onPress={() => openPoolWeek(win.start, slotOf(win))} style={st.weekBtn}>
+              <Icon name="grid" size={20} />
+              <Text style={st.weekText}>Week</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={book} style={st.bookBtn}>
+              <Text style={st.bookText}>{bookLabel(free.map((r) => firstName(r.name)))}</Text>
+            </Pressable>
+          </View>
         ) : undefined
       }>
       <ErrorText>{error}</ErrorText>
@@ -241,6 +248,8 @@ const st = StyleSheet.create({
   pill: { flexShrink: 0, height: 26, paddingHorizontal: 10, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 6 },
   pillDot: { width: 7, height: 7, borderRadius: 4 },
   pillText: { fontFamily: font.bodyBold, fontSize: 12 },
-  bookBtn: { height: 50, borderRadius: 999, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' },
+  weekBtn: { height: 50, paddingHorizontal: 18, borderRadius: 999, backgroundColor: color.primaryTint, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  weekText: { fontFamily: font.displayBold, fontSize: 17, color: color.primary },
+  bookBtn: { flexGrow: 1, flexBasis: 0, height: 50, borderRadius: 999, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' },
   bookText: { fontFamily: font.displayBold, fontSize: 17, color: '#FFFFFF' },
 });

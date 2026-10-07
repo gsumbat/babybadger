@@ -46,28 +46,52 @@ export function CalendarHeader({ right, view, onView, title, sub, onPrev, onNext
         <Text style={st.title}>Calendar</Text>
         {right}
       </View>
-      <View style={st.switch}>
-        {(['day', 'week', 'month'] as const).map((v) => {
-          const on = v === view;
-          return (
-            <Pressable key={v} accessibilityRole="button" accessibilityState={{ selected: on }} onPress={() => onView(v)} style={[st.switchItem, on && { backgroundColor: '#FFFFFF' }]}>
-              <Text style={on ? st.switchOn : st.switchOff}>{v === 'day' ? 'Day' : v === 'week' ? 'Week' : 'Month'}</Text>
-            </Pressable>
-          );
-        })}
+      <ViewSwitch
+        options={[
+          { key: 'day', label: 'Day' },
+          { key: 'week', label: 'Week' },
+          { key: 'month', label: 'Month' },
+        ]}
+        value={view}
+        onChange={onView}
+      />
+      <DateNav title={title} sub={sub} unit={unit} onPrev={onPrev} onNext={onNext} />
+    </View>
+  );
+}
+
+/** The calendar's segmented switch (P6a–c "Day / Week / Month"; P54d "Today / Week / Month"). */
+export function ViewSwitch<K extends string>({ options, value, onChange }: { options: { key: K; label: string }[]; value: K; onChange: (k: K) => void }) {
+  return (
+    <View style={st.switch}>
+      {options.map((o) => {
+        const on = o.key === value;
+        return (
+          <Pressable key={o.key} accessibilityRole="button" accessibilityState={{ selected: on }} onPress={() => onChange(o.key)} style={[st.switchItem, on && { backgroundColor: '#FFFFFF' }]}>
+            <Text style={on ? st.switchOn : st.switchOff}>{o.label}</Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/** The calendar's date nav: ‹ title / sub ›. Without onPrev / onNext the arrow is dimmed (or, with neither, left out). */
+export function DateNav({ title, sub, onPrev, onNext, unit }: { title: string; sub: string; onPrev?: () => void; onNext?: () => void; unit: string }) {
+  const arrows = !!(onPrev || onNext);
+  const arrow = (dir: 'left' | 'right', fn?: () => void) => (
+    <Pressable accessibilityRole="button" accessibilityLabel={`${dir === 'left' ? 'Previous' : 'Next'} ${unit}`} accessibilityState={{ disabled: !fn }} disabled={!fn} onPress={fn} style={[st.arrow, !fn && { opacity: 0.4 }]}>
+      <Icon name={dir === 'left' ? 'chevron-left' : 'chevron-right'} size={18} tint={color.ink} strokeWidth={2.2} />
+    </Pressable>
+  );
+  return (
+    <View style={[st.nav, !arrows && { minHeight: 40 }]}>
+      {arrows ? arrow('left', onPrev) : null}
+      <View style={{ flexGrow: 1, flexShrink: 1, alignItems: 'center' }}>
+        <Text style={st.range}>{title}</Text>
+        <Text style={st.rangeSub}>{sub}</Text>
       </View>
-      <View style={st.nav}>
-        <Pressable accessibilityRole="button" accessibilityLabel={`Previous ${unit}`} onPress={onPrev} style={st.arrow}>
-          <Icon name="chevron-left" size={18} tint={color.ink} strokeWidth={2.2} />
-        </Pressable>
-        <View style={{ flexGrow: 1, flexShrink: 1, alignItems: 'center' }}>
-          <Text style={st.range}>{title}</Text>
-          <Text style={st.rangeSub}>{sub}</Text>
-        </View>
-        <Pressable accessibilityRole="button" accessibilityLabel={`Next ${unit}`} onPress={onNext} style={st.arrow}>
-          <Icon name="chevron-right" size={18} tint={color.ink} strokeWidth={2.2} />
-        </Pressable>
-      </View>
+      {arrows ? arrow('right', onNext) : null}
     </View>
   );
 }
@@ -143,19 +167,7 @@ export function WeekCalendar({
 
   return (
     <>
-      <View style={st.strip}>
-        {days.map((d) => {
-          const on = sameDay(d, day);
-          const has = live.some((s) => sameDay(new Date(s.starts_at), d));
-          return (
-            <Pressable key={d.toISOString()} accessibilityRole="button" accessibilityState={{ selected: on }} onPress={() => onSelect(d)} style={[st.cell, on && { backgroundColor: color.primary }]}>
-              <Text style={[st.dow, on && { color: '#FFFFFF' }]}>{d.toLocaleDateString('en-US', { weekday: 'short' })}</Text>
-              <Text style={[st.num, on && { color: '#FFFFFF' }]}>{d.getDate()}</Text>
-              <View style={[st.dot, { backgroundColor: has ? (on ? '#FFFFFF' : color.primary) : 'transparent' }]} />
-            </Pressable>
-          );
-        })}
-      </View>
+      <WeekStrip day={day} onSelect={onSelect} has={(d) => live.some((s) => sameDay(new Date(s.starts_at), d))} />
 
       {days.map((d) => {
         const list = shiftsOn(live, d);
@@ -208,6 +220,36 @@ export function WeekCalendar({
     </>
   );
 }
+
+/** P6b / S6 day strip: the Monday-to-Sunday week around `day`. `disabled` days are dimmed and can't be picked (P54f). */
+export function WeekStrip({ day, onSelect, has, disabled }: { day: Date; onSelect: (d: Date) => void; has?: (d: Date) => boolean; disabled?: (d: Date) => boolean }) {
+  return (
+    <View style={st.strip}>
+      {weekOf(day).map((d) => {
+        const on = sameDay(d, day);
+        const off = !!disabled?.(d);
+        const dot = has?.(d);
+        return (
+          <Pressable
+            key={d.toISOString()}
+            accessibilityRole="button"
+            accessibilityState={{ selected: on, disabled: off }}
+            accessibilityLabel={d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+            disabled={off}
+            onPress={() => onSelect(d)}
+            style={[st.cell, on && { backgroundColor: color.primary }]}>
+            <Text style={[st.dow, on && { color: '#FFFFFF' }, off && { color: DISABLED }]}>{d.toLocaleDateString('en-US', { weekday: 'short' })}</Text>
+            <Text style={[st.num, on && { color: '#FFFFFF' }, off && { color: DISABLED }]}>{d.getDate()}</Text>
+            <View style={[st.dot, { backgroundColor: dot ? (on ? '#FFFFFF' : color.primary) : 'transparent' }]} />
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+/** Past days in the "Pick a time" sheet (P54f / P54g). */
+const DISABLED = '#B4BEC2';
 
 // ---------------------------------------------------------------- day (P6a / S6a)
 
@@ -348,6 +390,7 @@ export function MonthCalendar({
   off,
   dots,
   onOpenDay,
+  disabled,
 }: {
   variant: 'parent' | 'sitter';
   day: Date;
@@ -359,6 +402,8 @@ export function MonthCalendar({
   dots: (list: Shift[]) => string[];
   /** Tapping a day opens it in Day (P6 / S6 logic notes). */
   onOpenDay: (d: Date) => void;
+  /** Days that can't be picked (past days in the "Pick a time" sheet, P54g): dimmed, no tap. */
+  disabled?: (d: Date) => boolean;
 }) {
   const weeks = monthGrid(day);
   const sitter = variant === 'sitter';
@@ -381,10 +426,16 @@ export function MonthCalendar({
               const isToday = sameDay(d, today);
               const isOff = inMonth && inRanges(d, off);
               const colors = dots(shiftsOn(shifts, d)).slice(0, 3);
+              if (inMonth && disabled?.(d))
+                return (
+                  <View key={d.toISOString()} accessibilityState={{ disabled: true }} style={[sitter ? st.mCellS : st.mCellP, { borderWidth: 0 }]}>
+                    <Text style={[st.mNum, { color: DISABLED }]}>{d.getDate()}</Text>
+                  </View>
+                );
               if (!inMonth)
                 return (
                   <View key={d.toISOString()} style={[sitter ? st.mCellS : st.mCellP, { borderWidth: 0 }]}>
-                    <Text style={[st.mNum, { color: sitter ? '#B4BEC2' : '#7F8C91' }]}>{d.getDate()}</Text>
+                    <Text style={[st.mNum, { color: sitter || disabled?.(d) ? '#B4BEC2' : '#7F8C91' }]}>{d.getDate()}</Text>
                     {!sitter && colors.length ? <View style={[st.mDotP, { backgroundColor: '#9AA8AE' }]} /> : null}
                   </View>
                 );

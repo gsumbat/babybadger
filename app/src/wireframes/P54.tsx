@@ -21,7 +21,7 @@ export default function WF_P54() {
     <View style={{ flex: 1, backgroundColor: "#F3F5F8", flexDirection: "column", overflow: "hidden" }}>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 20, paddingRight: 20, paddingBottom: 8, paddingLeft: 20 }}>
         <Text style={{ fontFamily: font.display, fontSize: 26, color: "#1B2328", flexShrink: 1 }}>Sitters</Text>
-        <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 4, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1 }}>{/* -> P23-InviteAccess.dc.html */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1 }}>{/* -> P23-InviteAccess.dc.html */}
           <SvgXml xml={SVG[0]} width={16} height={16} />
           <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#47698A" }}>Invite</Text>
         </View>
@@ -30,13 +30,13 @@ export default function WF_P54() {
         <View style={{ flexDirection: "column", gap: 12, paddingTop: 16, paddingRight: 16, paddingBottom: 16, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <Text style={{ fontFamily: font.display, fontSize: 19, color: "#1B2328", marginVertical: -4.22 }}>When do you need someone?</Text>
           <View style={{ flexDirection: "row", gap: 6, overflow: "hidden", flexShrink: 1, minHeight: 0 }}>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> P42-Pool.dc.html */}
-              <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Tonight</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> P42-Pool.dc.html */}
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Today</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> P42-Pool.dc.html */}
-              <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Sat evening</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> P43-PoolWeek.dc.html */}
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>This week</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> P42-Pool.dc.html */}
+            <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> P54d-PickTime.dc.html */}
               <SvgXml xml={SVG[1]} width={16} height={16} />
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Pick a time</Text>
             </View>
@@ -68,7 +68,7 @@ export default function WF_P54() {
               </View>
             </View>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>Priya</Text>
-            <Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 11, color: "#4B5960" }}>Free tonight</Text>
+            <Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 11, color: "#4B5960" }}>Free today</Text>
           </View>
           <View style={{ flexDirection: "column", alignItems: "center", gap: 4, width: 60, flexShrink: 0 }}>{/* -> P11-SitterProfile.dc.html */}
             <View style={{ flexDirection: "column" }}>
@@ -79,7 +79,7 @@ export default function WF_P54() {
               </View>
             </View>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>Jordan</Text>
-            <Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 11, color: "#4B5960" }}>Free tonight</Text>
+            <Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 11, color: "#4B5960" }}>Free today</Text>
           </View>
           <View style={{ flexDirection: "column", alignItems: "center", gap: 4, width: 60, flexShrink: 0 }}>{/* -> P11-SitterProfile.dc.html */}
             <View style={{ flexDirection: "column" }}>
@@ -124,7 +124,7 @@ export default function WF_P54() {
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Video meet with Elena</Text>
               <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Tue, Oct 6 · 7:00 PM · waiting on her</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#DCE7F1", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#DCE7F1", borderRadius: 999 }}>
               <View style={{ width: 7, height: 7, backgroundColor: "#47698A", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
               </View>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E" }}>Requested</Text>
@@ -148,7 +148,7 @@ export default function WF_P54() {
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Invite to Dana W.</Text>
               <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Expired Sep 29</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
               <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
               </View>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Resend</Text>
