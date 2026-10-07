@@ -321,9 +321,10 @@ export type Action = { icon: IconName; label: string; onPress?: () => void; dot?
 /** "What do you need?" / "Tools" grid: 4 tinted tiles per row. */
 /** Tiles are 70 tall (P4, P4c, P4d) or 76 (P4b, P4e). Icons sit at the same height in every tile so a row lines up;
  * a two-line label grows downward. */
-export function ActionGrid({ items, height = 70 }: { items: Action[]; height?: number }) {
+export function ActionGrid({ items, height = 70, columns = 4 }: { items: Action[]; height?: number; columns?: 3 | 4 }) {
   const { width } = useWindowDimensions();
-  const w = Math.floor((Math.min(width, 520) - space.xl * 2 - 24) / 4);
+  // 8 between tiles.
+  const w = Math.floor((Math.min(width, 520) - space.xl * 2 - 8 * (columns - 1)) / columns);
   return (
     <View style={s.grid}>
       {items.map((a) => (

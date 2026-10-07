@@ -10,7 +10,6 @@ const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="non
 const SVG = [
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #FFFFFF; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"13\" cy=\"4.5\" r=\"2\"></circle><path d=\"M10 21l2-6 3 3v3M8 12l3-4 3 2 3 1M11 8l-1 5\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M12 5v14M5 12h14\"></path></svg>",
-  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"11\" cy=\"11\" r=\"6.5\"></circle><path d=\"M16 16l4.5 4.5\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M9 6h11M9 12h11M9 18h11M4.5 6h0M4.5 12h0M4.5 18h0\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><rect x=\"7\" y=\"2.5\" width=\"10\" height=\"19\" rx=\"2.5\"></rect><path d=\"M11 18.5h2\"></path></svg>"
 ];
@@ -54,7 +53,7 @@ export default function WF_P4c() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 44, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ width: 44, flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#4B5960" }}>3:15</Text></View>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328", flexGrow: 1, flexShrink: 1 }}>Pick up Ava</Text>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#DCE7F1", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#DCE7F1", borderRadius: 999 }}>
               <View style={{ width: 7, height: 7, backgroundColor: "#47698A", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
               </View>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E" }}>Trip</Text>
@@ -63,7 +62,7 @@ export default function WF_P4c() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 44, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ width: 44, flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#4B5960" }}>4:10</Text></View>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328", flexGrow: 1, flexShrink: 1 }}>Leave for soccer</Text>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#DCE7F1", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#DCE7F1", borderRadius: 999 }}>
               <View style={{ width: 7, height: 7, backgroundColor: "#47698A", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
               </View>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E" }}>Trip</Text>
@@ -72,7 +71,7 @@ export default function WF_P4c() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 44 }}>
             <View style={{ width: 44, flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#4B5960" }}>6:00</Text></View>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328", flexGrow: 1, flexShrink: 1 }}>Dinner</Text>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#F6E3C6", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#F6E3C6", borderRadius: 999 }}>
               <View style={{ width: 7, height: 7, backgroundColor: "#B7791F", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
               </View>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#7A4E0E" }}>Food</Text>
@@ -93,24 +92,20 @@ export default function WF_P4c() {
         </View>
         <View style={{}}><Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#47698A", textAlign: "center", textDecorationLine: "underline" }}>Prototype: jump to clock-in ›</Text></View>
       </View>
-      <View style={{ flexDirection: "column", gap: 8, paddingTop: 0, paddingRight: 20, paddingBottom: 14, paddingLeft: 20 }}>
+      <View style={{ flexDirection: "column", gap: 8, marginTop: "auto", paddingTop: 0, paddingRight: 20, paddingBottom: 14, paddingLeft: 20 }}>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>WHAT DO YOU NEED?</Text>
         <View style={{ flexDirection: "column", gap: 8 }}>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 70, paddingTop: 14, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P6-Calendar.dc.html */}
+            <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 70, paddingTop: 17, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P6-Calendar.dc.html */}
               <SvgXml xml={SVG[1]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Book a shift</Text>
             </View>
-            <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 70, paddingTop: 14, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P48-Find.dc.html */}
+            <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 70, paddingTop: 17, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P7-CarePlan.dc.html */}
               <SvgXml xml={SVG[2]} width={22} height={22} />
-              <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Find a sitter</Text>
-            </View>
-            <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 70, paddingTop: 14, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P7-CarePlan.dc.html */}
-              <SvgXml xml={SVG[3]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Care plan</Text>
             </View>
-            <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 70, paddingTop: 14, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P13-KidsDevices.dc.html */}
-              <SvgXml xml={SVG[4]} width={22} height={22} />
+            <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 70, paddingTop: 17, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P13-KidsDevices.dc.html */}
+              <SvgXml xml={SVG[3]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Kids & devices</Text>
             </View>
           </View>

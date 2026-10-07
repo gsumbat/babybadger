@@ -34,19 +34,18 @@ const soon = (what: string) => () => Alert.alert(what, 'Coming soon.');
 type Tile = { icon: IconName; label: string; onPress: () => void };
 const TILES: Record<string, Tile> = {
   book: { icon: 'plus', label: 'Book a shift', onPress: () => router.push('/parent/shift/new') },
-  find: { icon: 'search', label: 'Find a sitter', onPress: soon('Find a sitter') },
-  pool: { icon: 'users', label: 'Ask my pool', onPress: soon('Ask my pool') },
   rules: { icon: 'clipboard', label: 'House rules', onPress: () => router.push('/parent/rules') },
   care: { icon: 'list', label: 'Care plan', onPress: () => router.push('/parent/care') },
   devices: { icon: 'smartphone', label: 'Kids & devices', onPress: soon('Kids & devices') },
   pay: { icon: 'credit-card', label: 'Pay sitter', onPress: soon('Pay sitter') },
   requirements: { icon: 'shield', label: 'Required', onPress: () => router.push('/parent/requirements') },
 };
-// P4b / P4k: all eight (House rules in place of Message, which is a tab); P4c (shift soon) and P4d (just ended): the four drawn there.
+// P4b / P4k: six tiles in three columns. Finding sitters and asking the pool live on the Sitters tab, messages on
+// Messages, so they aren't repeated here. P4c (shift soon) and P4d (just ended): three each.
 const TILE_SETS = {
-  full: ['book', 'find', 'pool', 'rules', 'care', 'devices', 'pay', 'requirements'],
-  soon: ['book', 'find', 'care', 'devices'],
-  ended: ['book', 'find', 'pool', 'pay'],
+  full: ['book', 'rules', 'care', 'devices', 'pay', 'requirements'],
+  soon: ['book', 'care', 'devices'],
+  ended: ['book', 'pay', 'care'],
 };
 
 /** Home tab. `full` = the live shift on its own screen (P4, opened from the P4k "Shift now" card). */
@@ -146,7 +145,7 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
         // P4b/P4k: the grid sits inside the content (gap 10); P4c/P4d: 12 below it. Label to grid: 8.
         <View style={{ gap: 8, marginTop: state.kind === 'soon' || state.kind === 'ended' ? 2 : 0 }}>
           <Text style={st.label}>WHAT DO YOU NEED?</Text>
-          <ActionGrid items={TILE_SETS[state.kind === 'soon' || state.kind === 'ended' ? state.kind : 'full'].map((k) => TILES[k])} height={state.kind === 'soon' || state.kind === 'ended' ? 70 : 76} />
+          <ActionGrid items={TILE_SETS[state.kind === 'soon' || state.kind === 'ended' ? state.kind : 'full'].map((k) => TILES[k])} height={state.kind === 'soon' || state.kind === 'ended' ? 70 : 76} columns={3} />
         </View>
       ) : null}
     </Screen>
