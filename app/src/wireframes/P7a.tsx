@@ -76,7 +76,7 @@ export default function WF_P7a() {
               <SvgXml xml={SVG[4]} width={22} height={22} />
             </View>
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
-              <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Driver's license</Text>
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Safe driver’s license</Text>
               <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Needed for trips by car</Text>
             </View>
             <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 15, flexDirection: "column" }}>
