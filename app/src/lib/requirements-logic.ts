@@ -81,7 +81,7 @@ export const CATALOGUE: CatalogueItem[] = [
 export const LIST_KEYS = ['background_check', 'age_18', 'references', 'cpr_first_aid', 'cpr_infant', 'vaccination', 'drivers_license', 'water_safety', 'pets'];
 
 /** P7a "Preferred language" chips shown before any is chosen. */
-export const LANGUAGE_SUGGESTIONS = ['Spanish', 'English'];
+export const LANGUAGE_SUGGESTIONS = ['English', 'Spanish'];
 
 /** P31 suggestion chips. */
 export const CUSTOM_SUGGESTIONS = ['Comfortable with dogs', 'Swims', 'Can cook simple meals', 'Homework help'];

@@ -77,7 +77,8 @@ export default function SitterRequirements() {
   const baby = youngestUnder1(data.kids);
   const extra = drafts.filter((d) => !LIST_KEYS.includes(d.key) && !isLanguage(d.key));
   const langs = drafts.filter((d) => isLanguage(d.key));
-  const chips = [...langs.map((d) => languageOf(d)), ...LANGUAGE_SUGGESTIONS.filter((l) => !langs.some((d) => languageOf(d).toLowerCase() === l.toLowerCase()))];
+  // English and Spanish always first, in that order; other languages the parent added follow.
+  const chips = [...LANGUAGE_SUGGESTIONS, ...langs.map((d) => languageOf(d)).filter((l) => !LANGUAGE_SUGGESTIONS.some((x) => x.toLowerCase() === l.toLowerCase()))];
 
   function toggle(key: string) {
     setDrafts((ds) => (ds!.some((d) => d.key === key) ? ds!.filter((d) => d.key !== key) : [...ds!, catalogueDraft(key)]));
