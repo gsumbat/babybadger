@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { Hatch } from '@/components/calendar';
 import { backOr, Pill, PillButton, RequestHeader } from '@/components/poolRequest';
@@ -101,7 +101,16 @@ export default function SitterRequest() {
       if (res && res.result === 'booked') return router.replace('/sitter/calendar');
       await reload();
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
+      const msg = e instanceof Error ? e.message : String(e);
+      // The family changed its house rules since she agreed: send her to them (S42) instead of a dead end.
+      if (/house rules/i.test(msg)) {
+        Alert.alert(`Agree to ${famName.replace(/^The /, 'the ')}’s house rules first`, 'They changed since you last agreed. Read them, agree, then accept the shift.', [
+          { text: 'Not now', style: 'cancel' },
+          { text: 'Read house rules', onPress: () => router.push(`/sitter/rules/${req!.family_id}`) },
+        ]);
+      } else {
+        setErr(msg.charAt(0).toUpperCase() + msg.slice(1));
+      }
     } finally {
       setBusy('');
     }
