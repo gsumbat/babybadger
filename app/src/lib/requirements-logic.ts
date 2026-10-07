@@ -69,7 +69,7 @@ export const CATALOGUE: CatalogueItem[] = [
   { key: 'cpr_first_aid', title: 'CPR and First Aid', sub: 'Current certificate', listSub: 'Current certificate', section: 'safety', icon: 'heart', details: {} },
   { key: 'cpr_infant', title: 'Infant CPR', sub: 'Suggested for kids under 5', listSub: 'Current certificate', section: 'safety', icon: 'baby', details: {} },
   { key: 'water_safety', title: 'Water safety', sub: 'Pool or beach days', listSub: 'You have a pool? Turn this on', section: 'safety', icon: 'drop', details: {} },
-  { key: 'drivers_license', title: 'Driving', listTitle: 'Safe driver’s license', sub: 'License, car seats', listSub: 'Needed for trips by car', section: 'skills', icon: 'car', details: DEFAULT_DRIVING },
+  { key: 'drivers_license', title: 'Driving', listTitle: 'Safe driver', sub: 'License, car seats', listSub: 'License and clean record · for car trips', section: 'skills', icon: 'car', details: DEFAULT_DRIVING },
   { key: 'non_smoker', title: 'Non-smoker', sub: 'Sitter confirms', listSub: 'Sitter confirms', section: 'skills', icon: 'nosmoke', details: { proof: 'self' } },
 ];
 
