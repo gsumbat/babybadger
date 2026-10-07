@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /dev-login
+Disallow: /wireframe
+Disallow: /app-shell
+Disallow: /_sitemap
+
+Sitemap: https://babybadger.app/sitemap.xml

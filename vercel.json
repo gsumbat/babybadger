@@ -2,27 +2,54 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "cd app && npm ci",
-  "buildCommand": "cd app && npx expo export -p web",
+  "buildCommand": "cd app && npx expo export -p web && node ../site/build.mjs dist",
   "outputDirectory": "app/dist",
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/i/:token", "destination": "/i/[token]" },
-    { "source": "/((?!\\.well-known/|_expo/|assets/).*)", "destination": "/index.html" }
+    {
+      "source": "/i/:token",
+      "destination": "/i/[token]"
+    },
+    {
+      "source": "/((?!\\.well-known/|_expo/|assets/|img/|privacy$|terms$|robots\\.txt$|sitemap\\.xml$|styles\\.css$|favicon\\.|apple-touch-icon\\.png$).+)",
+      "destination": "/app-shell"
+    }
   ],
   "headers": [
     {
       "source": "/.well-known/apple-app-site-association",
       "headers": [
-        { "key": "Content-Type", "value": "application/json" },
-        { "key": "Cache-Control", "value": "public, max-age=3600" }
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
       ]
     },
     {
       "source": "/.well-known/assetlinks.json",
       "headers": [
-        { "key": "Content-Type", "value": "application/json" },
-        { "key": "Cache-Control", "value": "public, max-age=3600" }
+        {
+          "key": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
+    },
+    {
+      "source": "/img/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=604800"
+        }
       ]
     }
   ]

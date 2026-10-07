@@ -41,8 +41,36 @@ and P3's email can't be saved.
    (a 6-digit code never opens a page).
 
 What `vercel.json` does besides the build:
-- `/i/<token>` serves the invite page; any other path falls back to the app (`/index.html`), except `/.well-known/…`.
+- `/` is the marketing site (see "The marketing site" below); `/privacy` and `/terms` are its legal pages.
+- `/i/<token>` serves the invite page. Any other path without a file of its own (e.g. `/parent/shift/<id>`) falls
+  back to the app's entry page (`/app-shell`), except `/.well-known/…`, `/img/…` and the site's own files.
 - The two `/.well-known` files are served as `application/json`, with no redirect (Apple requires both).
+
+## The marketing site (babybadger.app "/")
+
+Plain HTML + CSS in `site/`, copied from wireframes WEB1 (desktop) and WEB2 (mobile). No framework, no JavaScript.
+
+| What | Where |
+|---|---|
+| Pages (home, privacy, terms) | `site/pages/*.html` |
+| Shared header, footer, icons, `<head>` | `site/partials/*.html` |
+| Styles, images (AVIF + WebP + PNG), favicons, robots.txt, sitemap.xml | `site/public/` |
+| Store links, support email, company name, prices, trial length | `site/site.config.mjs` |
+| Build step | `site/build.mjs` |
+
+Vercel's build runs `npx expo export -p web` (the app, into `app/dist`) and then `node ../site/build.mjs dist`, which
+renames the app's `dist/index.html` to `dist/app-shell.html`, copies `site/public` into `dist`, and writes the
+pages (`dist/index.html` = the marketing page). App routes with their own file (`/sign-in`, `/welcome`, `/parent/…`)
+are served as before.
+
+- **Store buttons:** paste the links into `STORE_URLS` in `site/site.config.mjs` (and in `app/src/lib/invite-links.ts`).
+  Empty = "Coming soon to the App Store / Google Play", not clickable.
+- **"Coming soon" tags** on unbuilt features are plain `<span class="soon">Coming soon</span>` in
+  `site/pages/index.html` (and `site/partials/feats.html`); delete them as features ship.
+- **Privacy and Terms** are drafts with a "Draft — under legal review" banner at the top; remove the banner
+  (`draft-banner`) once a lawyer has signed off.
+- Test locally: `cd app && npx expo export -p web && node ../site/build.mjs dist`, then serve `app/dist` with the
+  rewrites above.
 
 ## 3. Connect the domain babybadger.app
 
