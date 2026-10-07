@@ -43,4 +43,5 @@ $P -d t -f migrations/20261006000025_pool_requests.sql
 $P -d t -f migrations/20261006000026_log_reactions.sql
 $P -d t -f migrations/20261006000027_no_double_booking.sql
 $P -d t -f migrations/20261006000028_invite_links.sql
+$P -d t -f migrations/20261006000029_sitter_growth.sql
 $P -d t -f tests/rls_scenarios.sql

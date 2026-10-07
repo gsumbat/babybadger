@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { KeyboardProvider, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { FamilyLinkHead } from '@/components/familyLink';
 import { InviteHead } from '@/components/inviteLink';
 import { Loading } from '@/components/ui';
 import '@/lib/location-sharing'; // registers the background location task at startup
@@ -25,7 +26,9 @@ function Routes() {
   const needsOnboarding = signedIn && !isParent && !isSitter;
   const ready = isParent || isSitter;
   // Invite link pages (S0b): their link-preview tags go in even while the app loads, so the exported HTML has them.
-  const inviteLink = usePathname().startsWith('/i/');
+  const path = usePathname();
+  const inviteLink = path.startsWith('/i/');
+  const familyLink = path.startsWith('/f/');
 
   // Once signed in to a family: the system asks to allow notifications, and tapped alerts open their screen.
   useEffect(() => {
@@ -34,7 +37,7 @@ function Routes() {
     return listenForAlertTaps();
   }, [ready]);
 
-  const head = inviteLink ? <InviteHead /> : null;
+  const head = inviteLink ? <InviteHead /> : familyLink ? <FamilyLinkHead /> : null;
   if (loading)
     return (
       <>
@@ -50,6 +53,8 @@ function Routes() {
         <Stack.Screen name="index" />
         {/* Invite link babybadger.app/i/<token> (S0b–S0d): open signed in or out, so no guard. */}
         <Stack.Screen name="i/[token]" />
+        {/* A sitter's family link babybadger.app/f/<token> (S0f, P3d): also open signed in or out. */}
+        <Stack.Screen name="f/[token]" />
         {/* Generated wireframe layouts, for side-by-side checks during development only. */}
         <Stack.Protected guard={__DEV__}>
           <Stack.Screen name="wireframe/[id]" />

@@ -1,4 +1,4 @@
-// GENERATED from wireframe S12-Privacy.dc.html by tools/wf2rn/convert.py. Do not edit by hand:
+// GENERATED from wireframe S12b-PrivacyFoundLater.dc.html by tools/wf2rn/convert.py. Do not edit by hand:
 // regenerate, then copy into the real screen and bind data there.
 import { Text, TextInput, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
@@ -15,8 +15,8 @@ const SVG = [
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #5F6D74; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M9 6l6 6-6 6\"></path></svg>"
 ];
 
-/** What families see */
-export default function WF_S12() {
+/** Privacy · found later on */
+export default function WF_S12b() {
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F5F8", flexDirection: "column", overflow: "hidden" }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 16, paddingRight: 20, paddingBottom: 12, paddingLeft: 20 }}>
@@ -91,12 +91,12 @@ export default function WF_S12() {
         <View style={{ flexDirection: "column", gap: 8, paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Be found by new families later</Text>
-            <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#C3CCD5", borderRadius: 15, flexDirection: "column" }}>
-              <View style={{ width: 24, height: 24, top: 3, left: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
+            <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 15, flexDirection: "column" }}>
+              <View style={{ width: 24, height: 24, top: 3, right: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
               </View>
             </View>
           </View>
-          <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>When BabyBadger opens to new families near you, we can show your profile. Off until you turn it on. Nothing is shared today.</Text>
+          <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>You’ll be first in line. We’ll ask before anything goes live.</Text>
         </View>
         <View style={{ flexDirection: "column", paddingTop: 4, paddingRight: 16, paddingBottom: 4, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 52, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>

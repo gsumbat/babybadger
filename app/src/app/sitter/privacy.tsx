@@ -1,6 +1,7 @@
 import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { CIcon } from '@/components/credentials';
+import { FoundLaterCard } from '@/components/FoundLaterCard';
 import { Text } from '@/components/Text';
 import { Icon, Screen } from '@/components/ui';
 import { familyColor } from '@/lib/calendar-logic';
@@ -9,7 +10,7 @@ import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import { cardShadow, color, font } from '@/theme';
 
-// Wireframe S12 Privacy, per family, from app/src/wireframes/S12.tsx. Opened from Me (S39) "Settings, privacy and help".
+// Wireframe S12 Privacy, per family, from app/src/wireframes/S12.tsx (S12b: the LATER switch turned on). Opened from Me (S39) "Settings, privacy and help".
 // The banner says whether any family can see her location right now (only while she's clocked in). One card per
 // family: consent state and what that family sees ("Photos you send" only where she can message them).
 // Left out until built: "View notice" (no read-only copy of the signed notice yet), "Withdraw consent", "Download my
@@ -76,6 +77,10 @@ export default function Privacy() {
           </View>
         );
       })}
+
+      {/* S12 / S12b: "Be found by new families later" (consent only, migration 29). */}
+      <Text style={[st.label, { marginTop: 4 }]}>LATER</Text>
+      <FoundLaterCard />
 
       <View style={st.listCard}>
         <Pressable accessibilityRole="button" onPress={confirmSignOut} style={st.row}>

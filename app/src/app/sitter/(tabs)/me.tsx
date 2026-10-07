@@ -17,7 +17,8 @@ import { Text } from '@/components/Text';
 // "My profile · N%" opens S13; PROFILE AND CREDENTIALS rows open S40, S14, S17 and S16 (migration 19; before it runs
 // the rows just have no summary); "Settings, privacy and help" opens S12.
 // Money › Hours and pay opens S7 (components/payRow). "What families see" opens S19. Left out until built: Work's Get
-// found, Money's Invoices and payouts (S30).
+// found (S35, marketplace: phase 1 has none), Money's Invoices and payouts (S30). WORK › "Invite a family you sit
+// for" opens S52 / S52b (sitter/invite-family).
 // Not drawn: the Certifications row with nothing expiring (sub-line lists them, no pill) and the background check
 // row before it has started (no pill).
 const SETTINGS =
@@ -89,7 +90,7 @@ export default function Me() {
 
       <Text style={st.label}>WORK</Text>
       <View style={st.card}>
-        <Pressable accessibilityRole="button" onPress={() => router.push('/sitter/availability')} style={st.row}>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/sitter/availability')} style={[st.row, st.rowLine]}>
           <View style={st.rowIcon}>
             <Icon name="clock" size={18} />
           </View>
@@ -100,6 +101,18 @@ export default function Me() {
                 {availabilitySummary(hours)}
               </Text>
             ) : null}
+          </View>
+          <Icon name="chevron-right" size={18} tint={color.ink2} />
+        </Pressable>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/sitter/invite-family')} style={st.row}>
+          <View style={st.rowIcon}>
+            <Icon name="send" size={18} />
+          </View>
+          <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
+            <Text style={st.rowTitle}>Invite a family you sit for</Text>
+            <Text style={st.sub12} numberOfLines={1}>
+              They see your shifts with their kids
+            </Text>
           </View>
           <Icon name="chevron-right" size={18} tint={color.ink2} />
         </Pressable>

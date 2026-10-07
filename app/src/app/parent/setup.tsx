@@ -6,7 +6,7 @@ import { KidDot } from '@/components/bits';
 import { Button, ErrorText, Icon, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { markPlansIntro } from '@/lib/billing';
-import { markFamilySetup } from '@/lib/home-route';
+import { markFamilySetup, peekPendingFamilyLink } from '@/lib/home-route';
 import { ageInMonths, ageLabel } from '@/lib/kid-profile';
 import { DEFAULT_RADIUS_FT, geocode, mainHome, placesApi } from '@/lib/places';
 import { useSession } from '@/lib/session';
@@ -19,7 +19,8 @@ import { Text, TextInput } from '@/components/Text';
 // family (onboarding marks it; see lib/home-route). Existing parents never see it.
 // Step counter: P2 is "Step 1 of 3" as drawn; it continues to P3 Invite, which reads "Step 2 of 3" when it comes from
 // here (P3 keeps "Step 4 of 5" when it opens from Home's setup list, P4a); step 3 is booking the first shift from
-// Home. Back and "Skip for now" on P3 land on Home.
+// Home. Back and "Skip for now" on P3 land on Home. A parent who signed up from a sitter's family link (S0f) goes to
+// P3d Connect with her (app/f/[token].tsx) instead of P3.
 // The kids rows open P55; "Add another child" opens the add-a-child flow (P18 → P19 → P21 → P22). The home address
 // becomes the family's main home (P56/P57's clock-in zone), looked up on the map on a phone; "Add a second home"
 // saves it first, then opens P58.
@@ -97,7 +98,9 @@ export default function FamilySetup() {
     markFamilySetup(null);
     markPlansIntro(family!.id);
     router.replace('/parent');
-    router.push('/parent/invite?from=onboarding');
+    // Signed up from a sitter's family link (S0f): P3d Connect with her instead of P3 Invite your sitter.
+    const famLink = peekPendingFamilyLink();
+    router.push(famLink ? `/f/${famLink}` : '/parent/invite?from=onboarding');
   }
 
   function leave() {

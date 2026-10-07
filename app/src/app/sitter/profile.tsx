@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { CredPill, CredRow, SitterAvatar, credStyles, credTileKey } from '@/components/credentials';
+import { FoundLaterCard } from '@/components/FoundLaterCard';
 import { Text } from '@/components/Text';
 import { ErrorText, Loading, Pill, Screen } from '@/components/ui';
 import { agesLabel, backgroundCheck, backgroundStatus, certificates, driveLabel, expiryLine, languagesLine, longDate, monthYear, profileLine, profileStrength, shortName, sitterBundle, toDay } from '@/lib/credentials';
@@ -9,7 +10,7 @@ import { useQuery } from '@/lib/data';
 import { useSession } from '@/lib/session';
 import { cardShadow, color, font } from '@/theme';
 
-// Wireframe S13 My profile, from app/src/wireframes/S13.tsx. Opened from Me (S39) "My profile · N%".
+// Wireframe S13 My profile, from app/src/wireframes/S13.tsx (S13c: "Be found by new families later" turned on). Opened from Me (S39) "My profile · N%".
 // "Edit details and photo" opens S40; CREDENTIALS "Manage" opens S14; each certificate opens S41, the background
 // check S17, languages S16; "Preview" opens S19 What families see. The ABOUT rows (Ages, Can drive
 // kids, Rate) show only when set: no screen edits them yet. Not drawn: the background check row before the provider
@@ -66,6 +67,9 @@ export default function Profile() {
         </View>
         <Text style={st.tip}>{strength.next}</Text>
       </View>
+
+      {/* S13 / S13c: "Be found by new families later" (consent only, migration 29; the same switch as S12). */}
+      <FoundLaterCard />
 
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
         <Text style={credStyles.label}>CREDENTIALS</Text>

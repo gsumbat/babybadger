@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { JoinCode } from '@/components/JoinCode';
 import { Button, ErrorText, Field, Screen } from '@/components/ui';
-import { markFamilySetup, peekSignupRole, rememberSignupRole } from '@/lib/home-route';
+import { markFamilySetup, peekPendingFamilyLink, peekSignupRole, rememberSignupRole } from '@/lib/home-route';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 
@@ -13,7 +13,8 @@ type Mode = 'choose' | 'parent' | 'sitter';
 export default function Onboarding() {
   const { refresh, signOut, profile } = useSession();
   // A role tapped on P1 before signing in skips the chooser and goes straight to the form.
-  const [mode, setMode] = useState<Mode>(() => peekSignupRole() ?? 'choose');
+  // A sitter's family link (S0f) means a parent signing up.
+  const [mode, setMode] = useState<Mode>(() => peekSignupRole() ?? (peekPendingFamilyLink() ? 'parent' : 'choose'));
   const [name, setName] = useState(profile?.full_name ?? '');
   const [familyName, setFamilyName] = useState('');
   const [busy, setBusy] = useState(false);

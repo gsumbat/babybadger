@@ -2291,4 +2291,183 @@ select public.decline_invite((select v from ctx where k = 'code28'));
 do $$ begin if jsonb_array_length(public.my_invites()) <> 0 then raise exception 'FAIL declined invite still listed'; end if; end $$;
 reset role;
 
+-- 29. Sitter growth (migration 29). Maya invites a family she already sits for (babybadger.app/f/<token>): only she
+-- sees her invites; anyone with the link sees her first name and initial only; the parent (Kim) confirms access and
+-- that makes a normal invite locked to Maya's email, marks the referral joined and pushes Maya. "Be found later" is
+-- hers alone: parents of her families can't read it.
+reset role;
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000a2901', 'kim29@example.com');
+insert into push_tokens (user_id, token, platform) values ('00000000-0000-0000-0000-00000000000b', 'ExponentPushToken[maya29-phone]', 'ios') on conflict do nothing;
+update profiles set full_name = 'Maya Rodriguez' where id = '00000000-0000-0000-0000-00000000000b';
+delete from net.sent;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+insert into family_referrals (parent_name, family_name, email) values (' Dana ', 'The Kim family', ' Dana@Example.com ');
+insert into ctx select 'ref29', id::text from family_referrals where family_name = 'The Kim family';
+insert into ctx select 'tok29', token from family_referrals where family_name = 'The Kim family';
+do $$ declare r family_referrals; begin
+  select * into r from family_referrals where id = (select v::uuid from ctx where k = 'ref29');
+  if r.parent_name <> 'Dana' or r.email <> 'dana@example.com' or r.token !~ '^[0-9a-f]{40}$' or r.sitter_id <> auth.uid() then raise exception 'FAIL referral row %', r; end if;
+  if r.expires_at < now() + interval '29 days' or r.expires_at > now() + interval '31 days' then raise exception 'FAIL referral expiry %', r.expires_at; end if;
+  begin
+    update family_referrals set expires_at = now() + interval '1 year' where id = r.id;
+    raise exception 'FAIL sitter set her own expiry';
+  exception when insufficient_privilege then null; end;
+  begin
+    update family_referrals set joined_at = now() where id = r.id;
+    raise exception 'FAIL sitter marked joined';
+  exception when insufficient_privilege then null; end;
+  begin
+    insert into family_referrals (sitter_id, parent_name) values ('00000000-0000-0000-0000-00000000000c', 'x');
+    raise exception 'FAIL insert for another sitter';
+  exception when insufficient_privilege then null; end;
+  -- 20 open at most
+  insert into family_referrals (parent_name) select 'Cap ' || g from generate_series(1, 19) g;
+  begin
+    insert into family_referrals (parent_name) values ('Cap 20');
+    raise exception 'FAIL more than 20 open invites';
+  exception when others then if sqlerrm not like 'You have 20 open family invites%' then raise exception 'FAIL cap: %', sqlerrm; end if; end;
+  update family_referrals set cancelled_at = now() where parent_name like 'Cap %';
+  if jsonb_array_length(public.my_family_referrals()) <> 1 or public.my_family_referrals()->0->>'status' <> 'open' then raise exception 'FAIL my list %', public.my_family_referrals(); end if;
+end $$;
+-- Parents and strangers: can't read Maya's invites or make their own
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+do $$ begin
+  if (select count(*) from family_referrals) <> 0 then raise exception 'FAIL Jen reads Maya''s family invites'; end if;
+  begin
+    insert into family_referrals (parent_name) values ('Not a sitter');
+    raise exception 'FAIL a parent made a family invite';
+  exception when insufficient_privilege then null; end;
+  if jsonb_array_length(public.my_family_referrals()) <> 0 then raise exception 'FAIL Jen''s list'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+do $$ begin
+  if (select count(*) from family_referrals) <> 0 then raise exception 'FAIL stranger reads family invites'; end if;
+  update family_referrals set cancelled_at = now();
+  perform public.resend_family_referral((select v::uuid from ctx where k = 'ref29'));
+  raise exception 'FAIL stranger resent';
+exception when others then if sqlerrm not like 'invite not found%' then raise exception 'FAIL stranger: %', sqlerrm; end if; end $$;
+-- Anyone with the link: Maya's first name and initial, nothing else
+reset role;
+select pg_temp.as_user('');
+set role anon;
+do $$ declare p jsonb := public.family_referral_preview((select v from ctx where k = 'tok29')); begin
+  if p->>'status' <> 'open' or p->>'sitter_first' <> 'Maya' or p->>'sitter_initial' <> 'R' or p->>'initials' <> 'MR' or (p->>'mine')::boolean then raise exception 'FAIL family link preview %', p; end if;
+  if p ? 'family_name' or p ? 'parent_name' or p ? 'email' or p ? 'sitter_id' or p::text like '%Kim%' or p::text like '%Rodriguez%' then raise exception 'FAIL family link says too much %', p; end if;
+  if public.family_referral_preview(repeat('ab', 20)) <> '{"status": "not_found"}'::jsonb then raise exception 'FAIL unknown family link'; end if;
+  if public.family_referral_preview('Maya') <> '{"status": "not_found"}'::jsonb then raise exception 'FAIL bad family link'; end if;
+  begin perform 1 from family_referrals; raise exception 'FAIL anon reads family invites'; exception when insufficient_privilege then null; end;
+  begin perform public.my_family_referrals(); raise exception 'FAIL anon lists'; exception when insufficient_privilege then null; end;
+  begin perform public.claim_family_referral((select v from ctx where k = 'tok29'), null); raise exception 'FAIL anon claims'; exception when insufficient_privilege then null; end;
+  begin perform public.my_found_later(); raise exception 'FAIL anon found later'; exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+set role authenticated;
+-- Jen can't connect Maya again while she sits for the Lees (scenario 3 removed her; she's back for this check)
+reset role;
+update family_sitters set status = 'active' where sitter_id = '00000000-0000-0000-0000-00000000000b' and family_id = (select v::uuid from ctx where k = 'fam');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+do $$ begin
+  perform public.claim_family_referral((select v from ctx where k = 'tok29'), (select v::uuid from ctx where k = 'fam'));
+  raise exception 'FAIL connected an existing sitter twice';
+exception when others then if sqlerrm <> 'already_connected' then raise exception 'FAIL already connected: %', sqlerrm; end if; end $$;
+reset role;
+update family_sitters set status = 'removed' where sitter_id = '00000000-0000-0000-0000-00000000000b' and family_id = (select v::uuid from ctx where k = 'fam');
+set role authenticated;
+-- Maya can't use her own link
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+do $$ begin
+  perform public.claim_family_referral((select v from ctx where k = 'tok29'), (select v::uuid from ctx where k = 'fam'));
+  raise exception 'FAIL sitter claimed her own link';
+exception when others then if sqlerrm not like 'not a parent%' then raise exception 'FAIL own link: %', sqlerrm; end if; end $$;
+-- Kim signs up, makes a family with a kid, confirms what Maya may see
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a2901');
+insert into ctx values ('fam29', (select public.create_family('The Kim family', 'Dana Kim')::text));
+insert into kids (family_id, name) select v::uuid, 'Noa' from ctx where k = 'fam29';
+do $$ begin
+  -- not her family
+  perform public.claim_family_referral((select v from ctx where k = 'tok29'), (select v::uuid from ctx where k = 'fam'));
+  raise exception 'FAIL claimed for someone else''s family';
+exception when others then if sqlerrm not like 'not a parent%' then raise exception 'FAIL other family: %', sqlerrm; end if; end $$;
+insert into ctx select 'claim29', public.claim_family_referral((select v from ctx where k = 'tok29'), (select v::uuid from ctx where k = 'fam29'), null, false, true, true, 22.5, 'per_shift')::text;
+insert into ctx select 'code29', code from invites where id = ((select v::jsonb from ctx where k = 'claim29')->>'invite_id')::uuid;
+do $$ declare c jsonb := (select v::jsonb from ctx where k = 'claim29'); inv invites; begin
+  select * into inv from invites where id = (c->>'invite_id')::uuid;
+  if inv.family_id <> (select v::uuid from ctx where k = 'fam29') or inv.sitter_email <> 'maya@example.com' or inv.sitter_name <> 'Maya'
+     or inv.sent_at is null or inv.rate <> 22.5 or inv.pay_schedule <> 'per_shift' or inv.can_drive or not inv.can_trip or inv.link_token <> c->>'link_token' then
+    raise exception 'FAIL claimed invite %', row_to_json(inv); end if;
+  if (select count(*) from family_referrals) <> 0 then raise exception 'FAIL Kim reads the referral'; end if;
+  if exists (select 1 from family_sitters where family_id = inv.family_id) then raise exception 'FAIL linked before Maya accepted'; end if;
+  begin
+    perform public.claim_family_referral((select v from ctx where k = 'tok29'), (select v::uuid from ctx where k = 'fam29'));
+    raise exception 'FAIL claimed twice';
+  exception when others then if sqlerrm <> 'used' then raise exception 'FAIL claim twice: %', sqlerrm; end if; end;
+end $$;
+reset role;
+do $$ declare m jsonb; c jsonb := (select v::jsonb from ctx where k = 'claim29'); begin
+  if (select count(*) from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[maya29-phone]') <> 1 then raise exception 'FAIL Maya push count'; end if;
+  select x into m from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[maya29-phone]';
+  if m->>'title' <> 'The Kim family joined BabyBadger' or m->'data'->>'url' <> '/i/' || (c->>'link_token') then raise exception 'FAIL joined push %', m; end if;
+  if (select joined_family_id from family_referrals where id = (select v::uuid from ctx where k = 'ref29')) <> (select v::uuid from ctx where k = 'fam29') then raise exception 'FAIL referral not joined'; end if;
+end $$;
+set role anon;
+do $$ begin if public.family_referral_preview((select v from ctx where k = 'tok29')) <> '{"status": "used"}'::jsonb then raise exception 'FAIL used family link'; end if; end $$;
+reset role;
+set role authenticated;
+-- Maya: her list shows the family joined with its invite; it's in her Home; she accepts the usual way
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+do $$ declare l jsonb := (select jsonb_agg(x) from jsonb_array_elements(public.my_family_referrals()) x where x->>'family_name' = 'The Kim family'); c jsonb := (select v::jsonb from ctx where k = 'claim29'); begin
+  if l->0->>'status' <> 'used' or l->0->>'joined_family_name' <> 'The Kim family' or l->0->>'invite_token' <> c->>'link_token' or (l->0->>'connected')::boolean then raise exception 'FAIL joined in list %', l; end if;
+  if not exists (select 1 from jsonb_array_elements(public.my_invites()) x where x->>'link_token' = c->>'link_token') then raise exception 'FAIL not in Maya''s Home'; end if;
+  perform public.accept_invite((select v from ctx where k = 'code29'), 'Maya Rodriguez');
+  l := (select jsonb_agg(x) from jsonb_array_elements(public.my_family_referrals()) x where x->>'family_name' = 'The Kim family');
+  if not (l->0->>'connected')::boolean or l->0->>'invite_token' is not null then raise exception 'FAIL after accept %', l; end if;
+  if (select status from family_sitters where family_id = (select v::uuid from ctx where k = 'fam29') and sitter_id = auth.uid()) <> 'needs_consent' then raise exception 'FAIL Maya not waiting to sign'; end if;
+end $$;
+-- Expired links: status only; Resend brings one back for 30 days
+insert into family_referrals (parent_name) values ('Old');
+reset role;
+update family_referrals set expires_at = now() - interval '1 day' where parent_name = 'Old';
+insert into ctx select 'tok29old', token from family_referrals where parent_name = 'Old';
+set role anon;
+do $$ begin if public.family_referral_preview((select v from ctx where k = 'tok29old')) <> '{"status": "expired"}'::jsonb then raise exception 'FAIL expired family link'; end if; end $$;
+reset role;
+set role authenticated;
+do $$ begin
+  if public.resend_family_referral((select id from family_referrals where parent_name = 'Old')) < now() + interval '29 days' then raise exception 'FAIL resend'; end if;
+  if (select x->>'status' from jsonb_array_elements(public.my_family_referrals()) x where x->>'parent_name' = 'Old') <> 'open' then raise exception 'FAIL resent status'; end if;
+end $$;
+-- Be found later: off by default, hers alone
+do $$ declare f jsonb; begin
+  if public.my_found_later() <> '{"at": null, "on": false}'::jsonb then raise exception 'FAIL found later default %', public.my_found_later(); end if;
+  f := public.set_found_later(true);
+  if not (f->>'on')::boolean or f->>'at' is null then raise exception 'FAIL found later on %', f; end if;
+  begin
+    update sitter_profiles set discoverable_later = false where sitter_id = auth.uid();
+    raise exception 'FAIL direct write of found later';
+  exception when insufficient_privilege then null; end;
+  -- her own profile still reads and saves as before
+  insert into sitter_profiles (sitter_id, bio) values (auth.uid(), 'Bilingual') on conflict (sitter_id) do update set bio = excluded.bio;
+  if (select bio from sitter_profiles where sitter_id = auth.uid()) <> 'Bilingual' then raise exception 'FAIL own profile save'; end if;
+  if not (public.my_found_later()->>'on')::boolean then raise exception 'FAIL profile save turned found later off'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+do $$ begin
+  if (select bio from sitter_profiles where sitter_id = '00000000-0000-0000-0000-00000000000b') <> 'Bilingual' then raise exception 'FAIL Jen reads Maya''s profile'; end if;
+  begin
+    perform discoverable_later from sitter_profiles;
+    raise exception 'FAIL a parent reads found later';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform 1 from sitter_profiles where discoverable_later;
+    raise exception 'FAIL a parent filters on found later';
+  exception when insufficient_privilege then null; end;
+  begin
+    perform public.set_found_later(true);
+    raise exception 'FAIL a parent set found later';
+  exception when others then if sqlerrm <> 'only sitters' then raise exception 'FAIL parent found later: %', sqlerrm; end if; end;
+end $$;
+reset role;
+
 select 'ALL RLS SCENARIOS PASSED' as result;
