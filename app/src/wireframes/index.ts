@@ -54,6 +54,7 @@ import WF_P4g from './P4g';
 import WF_P4h from './P4h';
 import WF_P4i from './P4i';
 import WF_P4j from './P4j';
+import WF_P4k from './P4k';
 import WF_P5 from './P5';
 import WF_P54 from './P54';
 import WF_P54b from './P54b';
@@ -198,6 +199,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P4h: WF_P4h,
   P4i: WF_P4i,
   P4j: WF_P4j,
+  P4k: WF_P4k,
   P5: WF_P5,
   P54: WF_P54,
   P54b: WF_P54b,

@@ -1,12 +1,12 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
 import { KidDot, kidSub } from '@/components/bits';
 import { LiveMap } from '@/components/LiveMap';
 import { AskToStaySheet, WALK_ICON } from '@/components/timing';
-import { ActionGrid, dayPart, ErrorText, HomeHeader, Icon, initialsOf, Screen } from '@/components/ui';
+import { ActionGrid, dayPart, ErrorText, HomeHeader, Icon, type IconName, initialsOf, Screen } from '@/components/ui';
 import { api, useQuery, useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
 import { describeLog, parentHomeState, workedMinutes } from '@/lib/shift-logic';
@@ -29,7 +29,28 @@ import { isOpenTrip, useShiftTrips } from '@/lib/trips';
 
 // Optional steps (house rules, the care plan) count toward "n of 5 done" but don't keep the setup checklist open on their own.
 type Step = { done: boolean; locked?: boolean; optional?: boolean; title: string; next: string; sub: string; go: '/parent/kid/new' | '/parent/rules' | '/parent/care' | '/parent/invite?from=setup' | '/parent/shift/new' };
-export default function ParentHome() {
+// Tiles whose screens aren't built yet still show (as drawn) and say so when tapped.
+const soon = (what: string) => () => Alert.alert(what, 'Coming soon.');
+type Tile = { icon: IconName; label: string; onPress: () => void };
+const TILES: Record<string, Tile> = {
+  book: { icon: 'plus', label: 'Book a shift', onPress: () => router.push('/parent/shift/new') },
+  find: { icon: 'search', label: 'Find a sitter', onPress: soon('Find a sitter') },
+  pool: { icon: 'users', label: 'Ask my pool', onPress: soon('Ask my pool') },
+  message: { icon: 'message-square', label: 'Message', onPress: () => router.navigate('/parent/messages') },
+  care: { icon: 'list', label: 'Care plan', onPress: () => router.push('/parent/care') },
+  devices: { icon: 'smartphone', label: 'Kids & devices', onPress: soon('Kids & devices') },
+  pay: { icon: 'credit-card', label: 'Pay sitter', onPress: soon('Pay sitter') },
+  requirements: { icon: 'shield', label: 'Requirements', onPress: () => router.push('/parent/requirements') },
+};
+// P4b / P4k: all eight; P4c (shift soon) and P4d (just ended): the four drawn there.
+const TILE_SETS = {
+  full: ['book', 'find', 'pool', 'message', 'care', 'devices', 'pay', 'requirements'],
+  soon: ['book', 'find', 'care', 'devices'],
+  ended: ['book', 'find', 'pool', 'pay'],
+};
+
+/** Home tab. `full` = the live shift on its own screen (P4, opened from the P4k "Shift now" card). */
+export default function ParentHome({ full = false }: { full?: boolean }) {
   const { family, profile } = useSession();
   const fid = family!.id;
   const { data, error } = useQuery(async () => {
@@ -64,8 +85,9 @@ export default function ParentHome() {
   return (
     <Screen
       gap={state?.kind === 'live' ? 12 : 10}
+      {...(full ? { title: 'Live shift', back: true } : {})}
       header={
-        <HomeHeader
+        full ? undefined : <HomeHeader
           eyebrow={setup ? `Welcome, ${firstName(profile?.full_name)}` : dayPart()}
           title={setup ? 'Let’s get set up' : family!.name}
           initials={initialsOf(profile?.full_name)}
@@ -93,13 +115,15 @@ export default function ParentHome() {
           }}
         />
       )}
-      {state?.kind === 'live' && <Live shift={state.shift} sitter={sitterName(state.shift.sitter_id)} />}
+      {state?.kind === 'live' &&
+        (full ? <Live shift={state.shift} sitter={sitterName(state.shift.sitter_id)} /> : <ShiftNow shift={state.shift} sitter={sitterName(state.shift.sitter_id)} />)}
+      {full && state && state.kind !== 'live' && <Text style={st.sub14}>This shift has ended.</Text>}
       {state?.kind === 'soon' && <Soon shift={state.shift} minutes={state.minutes} sitter={sitterName(state.shift.sitter_id)} />}
       {state?.kind === 'ended' && (
         <Ended shift={state.shift} sitter={sitterName(state.shift.sitter_id)} next={data!.shifts.find((s) => s.status === 'scheduled' && new Date(s.starts_at) > new Date())} sitterName={sitterName} />
       )}
       {state?.kind === 'idle' && state.next && <NextShift shift={state.next} sitter={sitterName(state.next.sitter_id)} />}
-      {!setup && data && data.kids.length > 0 && state?.kind === 'idle' && <Kids kids={data.kids} add={!explore} />}
+      {!setup && !full && data && data.kids.length > 0 && (state?.kind === 'idle' || state?.kind === 'live') && <Kids kids={data.kids} add={!explore} />}
 
       {/* P4a has no grid. Tiles not built yet are left out: Find a sitter, Kids & devices, Ask my pool, Pay sitter. P4b's Requirements tile opens P7a. */}
       {explore ? (
@@ -118,25 +142,11 @@ export default function ParentHome() {
           </View>
           <LiveNote />
         </>
-      ) : state && !setup ? (
-        // P4/P4c/P4d: the grid sits 12 below the content; P4b: inside the content (gap 10). Label to grid: 8.
+      ) : state && !setup && !full ? (
+        // P4b/P4k: the grid sits inside the content (gap 10); P4c/P4d: 12 below it. Label to grid: 8.
         <View style={{ gap: 8, marginTop: state.kind === 'soon' || state.kind === 'ended' ? 2 : 0 }}>
           <Text style={st.label}>WHAT DO YOU NEED?</Text>
-          <ActionGrid
-            items={[
-              { icon: 'plus', label: 'Book a shift', onPress: () => router.push('/parent/shift/new') },
-              ...(state.kind === 'idle'
-                ? [
-                    { icon: 'message-square' as const, label: 'Message', onPress: () => router.navigate('/parent/messages') },
-                    { icon: 'shield' as const, label: 'Requirements', onPress: () => router.push('/parent/requirements') },
-                  ]
-                : state.kind === 'live'
-                  ? // P4: Care plan is the one other built tile during a shift (Find a sitter, Kids & devices come later).
-                    [{ icon: 'list' as const, label: 'Care plan', onPress: () => router.push('/parent/care') }]
-                  : []),
-            ]}
-            height={state.kind === 'idle' ? 76 : 70}
-          />
+          <ActionGrid items={TILE_SETS[state.kind === 'soon' || state.kind === 'ended' ? state.kind : 'full'].map((k) => TILES[k])} height={state.kind === 'soon' || state.kind === 'ended' ? 70 : 76} />
         </View>
       ) : null}
     </Screen>
@@ -365,6 +375,56 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
             <Text style={{ fontFamily: font.bodyBold }}>Today’s log</Text> · {bundle.logs.length ? [...new Set(bundle.logs.map((l) => describeLog(l).title.toLowerCase()))].slice(0, 4).join(', ') : 'nothing yet'}
           </Text>
           <Icon name="chevron-right" size={18} tint={color.ink2} />
+        </View>
+      </Pressable>
+    </>
+  );
+}
+
+// P4k: the live shift as one card at the top of the normal Home; "See live" opens the full view (P4).
+function ShiftNow({ shift, sitter }: { shift: Shift; sitter: string }) {
+  const { bundle } = useShiftLive(shift.id);
+  const { trips } = useShiftTrips(shift.id);
+  const openTrip = trips.find(isOpenTrip);
+  if (!bundle) return null;
+  const done = bundle.tasks.filter((t) => t.done_at).length;
+  const next = bundle.tasks.find((t) => !t.done_at);
+  const mins = workedMinutes(bundle.shift);
+  const hm = (iso: string) => timeOf(iso).replace(/\s?[AP]M$/i, '');
+  const injuries = bundle.logs.filter((l) => l.kind === 'incident').sort((a, b) => +new Date(b.happened_at) - +new Date(a.happened_at));
+  const plan = bundle.tasks.length
+    ? `Plan ${done} of ${bundle.tasks.length}${next ? ` · Next ${next.due_at ? `${hm(next.due_at)} ` : ''}${next.title}` : ''}`
+    : `Today’s log · ${bundle.logs.length ? `${bundle.logs.length} ${bundle.logs.length === 1 ? 'entry' : 'entries'}` : 'nothing yet'}`;
+  return (
+    <>
+      {/* P4i: an injury still shows on top, above the card. */}
+      {injuries.map((l) => (
+        <IncidentCard key={l.id} card={incidentCard(l, bundle.kids)} action="See alerts" onAction={() => router.push('/parent/alerts')} />
+      ))}
+      <Pressable accessibilityRole="button" onPress={() => router.push('/parent/live')} style={st.nowCard}>
+        <View style={st.labelRow}>
+          <Text style={st.label}>SHIFT NOW</Text>
+          <View style={st.pill}>
+            <View style={[st.greenDot8, { width: 7, height: 7 }]} />
+            <Text style={st.pillText}>{openTrip ? (openTrip.status === 'pending' ? 'Trip · needs you' : 'On a trip') : 'On shift'}</Text>
+          </View>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <Avatar name={sitter} size={48} letterSize={21} />
+          <View style={{ flexShrink: 1 }}>
+            <Text style={st.when}>
+              {sitter} is with {bundle.kids.map((k) => k.name).join(' and ') || 'the kids'}
+            </Text>
+            <Text style={st.sub14}>
+              {Math.floor(mins / 60)} h {mins % 60} m in · until {timeOf(shift.ends_at)}
+            </Text>
+          </View>
+        </View>
+        <View style={st.nowFoot}>
+          <Text style={[st.sub14, { flexShrink: 1 }]} numberOfLines={1}>
+            {plan}
+          </Text>
+          <Text style={st.nowLink}>See live ›</Text>
         </View>
       </Pressable>
     </>
@@ -605,6 +665,9 @@ const st = StyleSheet.create({
   pillText: { fontFamily: font.bodyBold, fontSize: 12, color: color.okInk },
   // P4b
   nextCard: { gap: 10, paddingVertical: 14, paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
+  nowCard: { gap: 10, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: '#FFFFFF', borderRadius: 24, borderWidth: 2, borderColor: color.ok, ...cardShadow },
+  nowFoot: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, borderTopWidth: 1, borderTopColor: '#EEF1F4', paddingTop: 10 },
+  nowLink: { fontFamily: font.bodyBold, fontSize: 14, color: color.primary },
   when: { fontFamily: font.display, fontSize: 20, color: color.ink, marginVertical: -4.02 },
   // Room above and below each kid so long food/allergy lines never touch the divider or the card edge.
   kidRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingVertical: 12 },
