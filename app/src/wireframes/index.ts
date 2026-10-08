@@ -205,6 +205,7 @@ import WF_S3b from './S3b';
 import WF_S3d from './S3d';
 import WF_S3e from './S3e';
 import WF_S3f from './S3f';
+import WF_S3p from './S3p';
 import WF_S4 from './S4';
 import WF_S40 from './S40';
 import WF_S41 from './S41';
@@ -440,6 +441,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   S3d: WF_S3d,
   S3e: WF_S3e,
   S3f: WF_S3f,
+  S3p: WF_S3p,
   S4: WF_S4,
   S40: WF_S40,
   S41: WF_S41,

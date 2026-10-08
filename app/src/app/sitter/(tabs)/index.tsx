@@ -12,8 +12,11 @@ import { familyPossessive, sitterRulesState } from '@/lib/house-rules';
 import { inviteApi } from '@/lib/invites';
 import { startSharing } from '@/lib/location-sharing';
 import { availabilityApi } from '@/lib/availability';
+import { cardReminders, sitterCredentials } from '@/lib/credentials';
+import { MARKETPLACE } from '@/lib/features';
+import { familyRequirements } from '@/lib/requirements';
 import { calendarFit, requestWindow, requestsApi, sitterRowSub, sitterRowTitle, timeLeft } from '@/lib/pool-requests';
-import { askedLine, requirementRequestsApi, waitingOnHer } from '@/lib/requirement-requests-api';
+import { askedLine, CREDENTIAL_KINDS, requirementRequestsApi, waitingOnHer } from '@/lib/requirement-requests-api';
 import { useSession } from '@/lib/session';
 import { clockInState, formatClock } from '@/lib/shift-logic';
 import { errorText, supabase } from '@/lib/supabase';
@@ -23,8 +26,14 @@ import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframes S3 (shift today), S3b (no shift today) and S3d (nothing booked), translated from their HTML
-// (app/src/wireframes/S3*.tsx). "Running late?" opens S21 before clock-in. Needs you lists pool requests waiting for her answer (S3's "Lee family asks for Sat 6 – 10 PM" row, opens S33 / S20). New family invites sent to her email (S0e) are listed first and open S1; then what families asked her to share (S3f's "The Lee family asked for: …" row, opens S53). Left out until built: other Needs-you items, earnings and
-// payout and most tools. Clock in checks the home zone first (S22 when she isn't there yet). Availability and Time off (tools, S3d's "Set your availability") open S11.
+// (app/src/wireframes/S3*.tsx). "Running late?" opens S21 before clock-in. Needs you, in the board's order (S3f):
+// new family invites sent to her email (S0e, open S1); what families asked her to share ("The Lee family asked for: …",
+// S53); her cards that expire within 30 days or have expired ("Infant CPR expires in 21 days" · "Renew and share the
+// new card · Lee family requires it", S41); pool requests waiting for her answer ("Lee family asks for Sat 6 – 10 PM",
+// S33 / S20); house rules (S42) and location notices. Stats: only the hours booked; earnings, payout and the "unpaid
+// invoice" row wait for in-app payments (canvas S3p). TOOLS: Availability, Time off (S11), New invoice ("Soon"),
+// Hours and pay (S7), Credentials (S14), My details, Requests (one waiting shift request opens it, otherwise the
+// calendar); "Get found" (S35) only with MARKETPLACE. Clock in checks the home zone first (S22 when she isn't there).
 // Times follow the wireframe: "3:00 – 7:00 PM" on the today card, "7:30 – 10 PM" elsewhere.
 export default function SitterHome() {
   const { session, profile, sitterLinks } = useSession();
@@ -59,7 +68,76 @@ export default function SitterHome() {
   // What families asked her to share (S53, migration 31): one row per family, "The Lee family asked for: …".
   const { data: reqGroups } = useQuery(() => requirementRequestsApi.mine(), [uid]);
   const famAsks = (reqGroups ?? []).map((g) => ({ g, open: waitingOnHer(g.requests) })).filter((x) => x.open.length);
-  const needCount = newInvites.length + famAsks.length + asks.length + needsConsent.length + needsRules.length;
+  // Her cards that expire within 30 days or have expired (S3 "Infant CPR expires in 21 days" · "Renew and share the
+  // new card · Lee family requires it"), each opening S41. "Requires it" = a must-have of a family she sits for that
+  // the card's kind meets (family_requirements, migration 20; [] before it runs).
+  const { data: cards } = useQuery(async () => {
+    const creds = await sitterCredentials(uid).catch(() => []);
+    if (!cardReminders(creds).length) return [];
+    const musts = (
+      await Promise.all(
+        sitterLinks
+          .filter((l) => l.status === 'active')
+          .map(async (l) => (await familyRequirements(l.family_id)).filter((r) => r.level === 'must' && CREDENTIAL_KINDS[r.key]).map((r) => ({ family: l.family.name, kinds: CREDENTIAL_KINDS[r.key] }))),
+      )
+    ).flat();
+    return cardReminders(creds, musts);
+  }, [uid, activeIds]);
+  const cardRows = cards ?? [];
+
+  // Needs you, in the board's order (S3 / S3f): invites, share requests, expiring cards, pool requests, then house
+  // rules and location notices. Pool requests use the shared RequestRow; each row draws a divider unless it is last.
+  type Need = { key: string; icon: IconName; tint?: [string, string]; title: string; sub: string; onPress: () => void; pool?: boolean };
+  const needRows: Need[] = [
+    ...newInvites.map((inv): Need => ({
+      key: `inv-${inv.link_token}`,
+      icon: 'users',
+      tint: [color.primaryTint, color.primaryStrong],
+      title: 'New family invite',
+      sub: `${inv.family_name}${inv.kids ? ` · ${inv.kids}` : ''} · Tap to review`,
+      onPress: () => router.push({ pathname: '/i/[token]', params: { token: inv.link_token } }),
+    })),
+    ...famAsks.map(({ g, open }): Need => ({
+      key: `ask-${g.family_id}`,
+      icon: 'file-text',
+      title: askedLine(g.family_name, open.map((q) => q.title)),
+      sub: 'Share what you have · Tap to answer',
+      onPress: () => router.push('/sitter/requests'),
+    })),
+    ...cardRows.map((c): Need => ({
+      key: `card-${c.id}`,
+      icon: 'award',
+      title: c.title,
+      sub: c.sub,
+      onPress: () => router.push({ pathname: '/sitter/credentials/[id]', params: { id: c.id } }),
+    })),
+    ...asks.map((r): Need => ({
+      key: `req-${r.id}`,
+      icon: 'calendar',
+      pool: true,
+      title: sitterRowTitle(famName(r.family_id), requestWindow(r)),
+      sub: sitterRowSub(calendarFit(requestWindow(r), requests?.off ?? [], shifts ?? []), timeLeft(r.expires_at, today, true)),
+      onPress: () => router.push({ pathname: '/sitter/request/[id]', params: { id: r.id } }),
+    })),
+    ...needsRules.map((l): Need => ({
+      key: `rules-${l.family_id}`,
+      icon: 'file-text',
+      title: `Agree to ${familyPossessive(l.family.name).title} house rules`,
+      sub: 'Needed before your next shift',
+      onPress: () => router.push(`/sitter/rules/${l.family_id}`),
+    })),
+    ...needsConsent.map((l): Need => ({
+      key: l.family_id,
+      icon: 'file-text',
+      title: `Sign ${l.family.name.replace(/^The /, '')}’s location notice`,
+      sub: 'They can book you once it’s signed',
+      onPress: () => router.push(`/sitter/consent/${l.family_id}`),
+    })),
+  ];
+  const needCount = needRows.length;
+  // TOOLS "Requests" (S20 on the board): one shift request waiting opens it; otherwise the calendar, where requests
+  // land (S6). There is no request list screen.
+  const openRequests = () => (asks.length === 1 ? router.push({ pathname: '/sitter/request/[id]', params: { id: asks[0].id } }) : router.navigate('/sitter/calendar'));
   const active = shifts?.find((s) => s.status === 'active');
   const upcoming = (shifts ?? []).filter((s) => s.status === 'scheduled' && new Date(s.ends_at).getTime() > now);
   const next = upcoming[0];
@@ -169,102 +247,40 @@ export default function SitterHome() {
             <Text style={st.labelCount}>{needCount}</Text>
           </View>
           <View style={st.listCard}>
-            {newInvites.map((inv, i) => (
-              <Pressable
-                key={`inv-${inv.link_token}`}
-                accessibilityRole="button"
-                onPress={() => router.push({ pathname: '/i/[token]', params: { token: inv.link_token } })}
-                style={[st.needRow, (i < newInvites.length - 1 || famAsks.length + asks.length + needsRules.length + needsConsent.length > 0) && st.line]}>
-                <View style={[st.needIcon, { backgroundColor: color.primaryTint }]}>
-                  <Icon name="users" size={20} tint={color.primaryStrong} />
-                </View>
-                <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
-                  <Text style={st.needTitle}>New family invite</Text>
-                  <Text style={st.needSub} numberOfLines={1}>
-                    {inv.family_name}
-                    {inv.kids ? ` · ${inv.kids}` : ''} · Tap to review
-                  </Text>
-                </View>
-                <Icon name="chevron-right" size={18} tint={color.ink2} />
-              </Pressable>
-            ))}
-            {famAsks.map(({ g, open }, i) => (
-              <Pressable
-                key={`ask-${g.family_id}`}
-                accessibilityRole="button"
-                onPress={() => router.push('/sitter/requests')}
-                style={[st.needRow, (i < famAsks.length - 1 || asks.length + needsRules.length + needsConsent.length > 0) && st.line]}>
-                <View style={[st.needIcon, { backgroundColor: color.warnTint }]}>
-                  <Icon name="file-text" size={20} tint={color.warnInk} />
-                </View>
-                <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
-                  <Text style={st.needTitle}>{askedLine(g.family_name, open.map((q) => q.title))}</Text>
-                  <Text style={st.needSub} numberOfLines={1}>
-                    Share what you have · Tap to answer
-                  </Text>
-                </View>
-                <Icon name="chevron-right" size={18} tint={color.ink2} />
-              </Pressable>
-            ))}
-            {asks.map((r, i) => (
-              <RequestRow
-                key={`req-${r.id}`}
-                title={sitterRowTitle(famName(r.family_id), requestWindow(r))}
-                sub={sitterRowSub(calendarFit(requestWindow(r), requests?.off ?? [], shifts ?? []), timeLeft(r.expires_at, today, true))}
-                last={i === asks.length - 1 && !needsRules.length && !needsConsent.length}
-                sitter
-                onPress={() => router.push({ pathname: '/sitter/request/[id]', params: { id: r.id } })}
-              />
-            ))}
-            {needsRules.map((l, i) => (
-              <Pressable key={`rules-${l.family_id}`} accessibilityRole="button" onPress={() => router.push(`/sitter/rules/${l.family_id}`)} style={[st.needRow, (i < needsRules.length - 1 || needsConsent.length > 0) && st.line]}>
-                <View style={[st.needIcon, { backgroundColor: color.warnTint }]}>
-                  <Icon name="file-text" size={20} tint={color.warnInk} />
-                </View>
-                <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
-                  <Text style={st.needTitle}>Agree to {familyPossessive(l.family.name).title} house rules</Text>
-                  <Text style={st.needSub} numberOfLines={1}>
-                    Needed before your next shift
-                  </Text>
-                </View>
-                <Icon name="chevron-right" size={18} tint={color.ink2} />
-              </Pressable>
-            ))}
-            {needsConsent.map((l, i) => (
-              <Pressable key={l.family_id} accessibilityRole="button" onPress={() => router.push(`/sitter/consent/${l.family_id}`)} style={[st.needRow, i < needsConsent.length - 1 && st.line]}>
-                <View style={[st.needIcon, { backgroundColor: color.warnTint }]}>
-                  <Icon name="file-text" size={20} tint={color.warnInk} />
-                </View>
-                <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
-                  <Text style={st.needTitle}>Sign {l.family.name.replace(/^The /, '')}’s location notice</Text>
-                  <Text style={st.needSub} numberOfLines={1}>
-                    They can book you once it’s signed
-                  </Text>
-                </View>
-                <Icon name="chevron-right" size={18} tint={color.ink2} />
-              </Pressable>
-            ))}
+            {needRows.map(({ key, pool, ...n }, i) =>
+              pool ? <RequestRow key={key} title={n.title} sub={n.sub} last={i === needRows.length - 1} sitter onPress={n.onPress} /> : <NeedRow key={key} {...n} last={i === needRows.length - 1} />,
+            )}
           </View>
         </>
       )}
 
-      {/* Pay stats (earned, payout) aren't built yet; only the booked hours are shown. S3d has no stats. */}
+      {/* Only the booked hours: earnings and payout wait for in-app payments (canvas S3p). The card opens S7, like the
+          board. S3d has no stats. */}
       {!nothingBooked && (
-        <View style={st.stats}>
+        <Pressable accessibilityRole="button" onPress={() => router.push('/sitter/pay')} style={st.stats}>
           <Stat v={`${bookedH} h`} l={focus ? 'booked this week' : 'booked next week'} />
-        </View>
+        </Pressable>
       )}
 
       <View style={st.labelRow}>
         <Text style={st.label}>TOOLS</Text>
       </View>
-      {/* Built tools in the wireframe's order (Availability, Time off, ..., My details); the last tile keeps its empty
-          slot so the tiles stay the wireframe's width. */}
-      <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Tool icon="clock" label="Availability" onPress={() => router.push('/sitter/availability')} />
-        <Tool xml={TIME_OFF} label="Time off" onPress={() => router.push('/sitter/availability')} />
-        <Tool icon="edit-2" label="My details" onPress={() => router.navigate('/sitter/me')} />
-        <View style={{ flex: 1 }} />
+      {/* S3 / S3b / S3d: 4 x 2 tiles in the board's order. "Get found" (S35) shows only with the marketplace
+          (MARKETPLACE, phase 2); without it the last slot stays empty so the tiles keep the board's width. */}
+      <View style={{ gap: 8 }}>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Tool icon="clock" label="Availability" onPress={() => router.push('/sitter/availability')} />
+          <Tool xml={TIME_OFF} label="Time off" onPress={() => router.push('/sitter/availability')} />
+          <Tool xml={INVOICE} label="New invoice" soon onPress={() => Alert.alert('Coming soon', 'Invoices come with in-app payments.')} />
+          <Tool icon="credit-card" label="Hours and pay" onPress={() => router.push('/sitter/pay')} />
+        </View>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <Tool icon="award" label="Credentials" dot={cardRows.length > 0} onPress={() => router.push('/sitter/credentials')} />
+          <Tool icon="edit-2" label="My details" onPress={() => router.navigate('/sitter/me')} />
+          {MARKETPLACE ? <Tool icon="search" label="Get found" onPress={() => Alert.alert('Coming soon')} /> : null}
+          <Tool icon="inbox" label="Requests" onPress={openRequests} />
+          {!MARKETPLACE && <View style={{ flex: 1 }} />}
+        </View>
       </View>
     </Screen>
   );
@@ -309,11 +325,41 @@ function Stat({ v, l }: { v: string; l: string }) {
 const TIME_OFF =
   '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9.5 13.5l5 5M14.5 13.5l-5 5"/></svg>';
 
-function Tool({ icon, xml, label, onPress }: { icon?: IconName; xml?: string; label: string; onPress: () => void }) {
+// S3 "New invoice" tool icon: a receipt.
+const INVOICE =
+  '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>';
+
+/** A TOOLS tile. `dot`: S3's amber dot (Credentials, a card needs renewing). `soon`: the "Soon" marker for a tool
+ * that waits on a later feature (New invoice, in-app payments). */
+function Tool({ icon, xml, label, dot, soon, onPress }: { icon?: IconName; xml?: string; label: string; dot?: boolean; soon?: boolean; onPress: () => void }) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [st.tool, pressed && { opacity: 0.85 }]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={soon ? `${label}, coming soon` : label} onPress={onPress} style={({ pressed }) => [st.tool, pressed && { opacity: 0.85 }]}>
       {xml ? <SvgXml xml={xml} width={22} height={22} style={{ flexShrink: 0 }} /> : icon ? <Icon name={icon} size={22} /> : null}
       <Text style={st.toolText}>{label}</Text>
+      {dot && <View style={st.toolDot} />}
+      {soon && (
+        <View style={st.soon}>
+          <Text style={st.soonText}>Soon</Text>
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
+/** A Needs-you row: tinted icon, title, one-line sub, chevron (warn tint unless given). */
+function NeedRow({ icon, tint = [color.warnTint, color.warnInk], title, sub, last, onPress }: { icon: IconName; tint?: [string, string]; title: string; sub: string; last: boolean; onPress: () => void }) {
+  return (
+    <Pressable accessibilityRole="button" onPress={onPress} style={[st.needRow, !last && st.line]}>
+      <View style={[st.needIcon, { backgroundColor: tint[0] }]}>
+        <Icon name={icon} size={20} tint={tint[1]} />
+      </View>
+      <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
+        <Text style={st.needTitle}>{title}</Text>
+        <Text style={st.needSub} numberOfLines={1}>
+          {sub}
+        </Text>
+      </View>
+      <Icon name="chevron-right" size={18} tint={color.ink2} />
     </Pressable>
   );
 }
@@ -433,5 +479,9 @@ const st = StyleSheet.create({
   // S3d "Set your availability": outlined, 54 high, 8 below the text.
   availBtn: { alignSelf: 'stretch', marginTop: 8, height: 54, borderRadius: 999, borderWidth: 1.5, borderColor: color.primary, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   availText: { fontFamily: font.displayBold, fontSize: 17, color: color.primary, textAlign: 'center' },
+  toolDot: { position: 'absolute', top: 8, right: 10, width: 9, height: 9, borderRadius: 5, backgroundColor: color.warn },
+  // "Soon" marker: the muted Coming soon pill (S17d), small, in the tile's top right corner.
+  soon: { position: 'absolute', top: 5, right: 5, height: 16, paddingHorizontal: 5, borderRadius: 999, backgroundColor: '#FFFFFF', justifyContent: 'center' },
+  soonText: { fontFamily: font.bodyBold, fontSize: 10, lineHeight: 12, color: color.ink2 },
   toolText: { fontFamily: font.bodyBold, fontSize: 12, lineHeight: 14, color: color.primaryStrong, textAlign: 'center' },
 });

@@ -17,7 +17,6 @@ const SVG = [
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><rect x=\"3\" y=\"6\" width=\"18\" height=\"14\" rx=\"2.5\"></rect><path d=\"M3 10h18M16 15h2\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"12\" cy=\"9\" r=\"5.5\"></circle><path d=\"M8.5 13.5L7 21l5-2.5 5 2.5-1.5-7.5\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M4 20h4L19 9l-4-4L4 16z\"></path><path d=\"M13.5 6.5l4 4\"></path></svg>",
-  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"11\" cy=\"11\" r=\"6.5\"></circle><path d=\"M16 16l4.5 4.5\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M4 13l2.5-7h11L20 13v6H4z\"></path><path d=\"M4 13h5l1 2h4l1-2h5\"></path></svg>"
 ];
 
@@ -72,6 +71,7 @@ export default function WF_S3d() {
             <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 62, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 16, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> S31-CreateInvoice.dc.html */}
               <SvgXml xml={SVG[5]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>New invoice</Text>
+              <View style={{ height: 16, top: 5, right: 5, paddingTop: 0, paddingRight: 5, paddingBottom: 0, paddingLeft: 5, backgroundColor: "#FFFFFF", borderRadius: 999, position: "absolute", justifyContent: "center" }}><Text style={{ fontFamily: font.bodyBold, fontSize: 10, color: "#4B5960", lineHeight: 16, textAlign: "center" }}>Soon</Text></View>
             </View>
             <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 62, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 16, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> S7-Pay.dc.html */}
               <SvgXml xml={SVG[6]} width={22} height={22} />
@@ -89,14 +89,11 @@ export default function WF_S3d() {
               <SvgXml xml={SVG[8]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>My details</Text>
             </View>
-            <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 62, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 16, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> S35-GetFound.dc.html */}
-              <SvgXml xml={SVG[9]} width={22} height={22} />
-              <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Get found</Text>
-            </View>
             <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 62, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 16, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> S20-ShiftRequest.dc.html */}
-              <SvgXml xml={SVG[10]} width={22} height={22} />
+              <SvgXml xml={SVG[9]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Requests</Text>
             </View>
+            <View style={{ flex: 1 }} />
           </View>
         </View>
       </View>

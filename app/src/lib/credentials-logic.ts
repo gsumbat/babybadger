@@ -316,3 +316,46 @@ export function familyViewLines(p: Pick<SitterProfile, 'years_experience' | 'age
     [p?.can_drive ? 'Drives' : '', rate != null ? `$${Number(rate).toFixed(Number(rate) % 1 ? 2 : 0)} / hour` : ''].filter(Boolean).join(' · '),
   ];
 }
+
+// ---------------------------------------------------------------- S3 Needs you
+
+/** A family's must-have that a card can meet: the family name ("The Lee family") and the credential kinds that
+ * count for it (CREDENTIAL_KINDS in ./requirement-requests). */
+export type CardMust = { family: string; kinds: string[] };
+
+/** One S3 "Needs you" row for a card: "Infant CPR expires in 21 days" / "Infant CPR expired Oct 2" ·
+ * "Renew and share the new card · Lee family requires it". Opens S41 (`id`). */
+export type CardReminder = { id: string; title: string; sub: string; expired: boolean };
+
+const familyWord = (name: string) => name.trim().replace(/^the /i, '');
+
+/** "Lee family requires it" / "Lee and Kim families require it" / "3 families require it". */
+export function requiresLine(families: string[]): string {
+  const names = [...new Set(families.map(familyWord))];
+  if (!names.length) return '';
+  if (names.length === 1) return `${names[0]} requires it`;
+  const bare = names.map((n) => /^(.+) family$/i.exec(n)?.[1]);
+  if (names.length === 2 && bare.every(Boolean)) return `${bare[0]} and ${bare[1]} families require it`;
+  return `${names.length} families require it`;
+}
+
+/** S3 Needs you: her certificates that expire within 30 days or have expired, soonest (or longest gone) first.
+ * A card she has already replaced (a newer one of the same kind and title that is still good) is left out. */
+export function cardReminders(creds: Credential[], musts: CardMust[] = [], now = new Date()): CardReminder[] {
+  const certs = certificates(creds);
+  const replaced = (c: Credential) =>
+    certs.some((o) => o.id !== c.id && o.kind === c.kind && o.title === c.title && (o.expires_on ?? '9999') > (c.expires_on ?? '') && credentialState(o, now) !== 'expired');
+  return certs
+    .filter((c) => {
+      const s = credentialState(c, now);
+      return (s === 'expiring' || s === 'expired') && !replaced(c);
+    })
+    .sort((a, b) => (a.expires_on ?? '').localeCompare(b.expires_on ?? ''))
+    .map((c) => {
+      const left = daysUntil(c.expires_on!, now);
+      const expiredNow = left <= 0;
+      const title = expiredNow ? `${c.title} expired ${shortExpiry(c.expires_on!, now)}` : `${c.title} expires in ${left} ${left === 1 ? 'day' : 'days'}`;
+      const needs = requiresLine(musts.filter((m) => m.kinds.includes(c.kind)).map((m) => m.family));
+      return { id: c.id, title, sub: ['Renew and share the new card', needs].filter(Boolean).join(' · '), expired: expiredNow };
+    });
+}
