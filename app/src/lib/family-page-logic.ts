@@ -50,3 +50,16 @@ export function mapsUrl(address: string | null | undefined, os: string): string 
   const q = encodeURIComponent(a);
   return os === 'ios' ? `https://maps.apple.com/?q=${q}` : `https://www.google.com/maps/search/?api=1&query=${q}`;
 }
+
+/** An adult the sitter can reach from the shift page: name for the row / chooser, what she typed, what to dial. */
+export type ReachableContact = { user_id: string; name: string; phone: string; tel: string };
+
+/** The shift page's contact row (S4b / S4c under the tiles, S4 under the tasks): the adults with a dialable phone, in
+ * family_contacts' order (owner first). The row shows the first one; with more than one, Text and Call open a chooser.
+ * Empty (no phone saved, or family_contacts not there yet) = no row. */
+export function reachableContacts(contacts: FamilyContact[] | null | undefined): ReachableContact[] {
+  return (contacts ?? []).flatMap((c) => {
+    const tel = dialable(c.phone);
+    return tel ? [{ user_id: c.user_id, name: contactName(c), phone: (c.phone ?? '').trim(), tel }] : [];
+  });
+}

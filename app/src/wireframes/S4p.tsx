@@ -13,6 +13,8 @@ const SVG = [
   "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><rect x=\"3\" y=\"7\" width=\"18\" height=\"13\" rx=\"2.5\"></rect><circle cx=\"12\" cy=\"13.5\" r=\"3.5\"></circle><path d=\"M8.5 7l1.5-2.5h4L15.5 7\"></path></svg>",
   "<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M12 5v14M5 12h14\"></path></svg>",
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #8A5A7A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><rect x=\"3\" y=\"7\" width=\"18\" height=\"13\" rx=\"2.5\"></rect><circle cx=\"12\" cy=\"13.5\" r=\"3.5\"></circle><path d=\"M8.5 7l1.5-2.5h4L15.5 7\"></path></svg>",
+  "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M4 5h16v11H9l-5 4z\"></path></svg>",
+  "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M5 4h3.5l2 5-2.5 1.5a11 11 0 0 0 5.5 5.5l1.5-2.5 5 2V19a1 1 0 0 1-1 1A16 16 0 0 1 4 5a1 1 0 0 1 1-1z\"></path></svg>",
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #7A4E0E; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z\"></path><path d=\"M10 20.5a2 2 0 0 0 4 0\"></path></svg>",
   "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #7A4E0E; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M9 6l6 6-6 6\"></path></svg>"
 ];
@@ -93,11 +95,25 @@ export default function WF_S4p() {
             </View>
           </View>
         </View>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, paddingTop: 8, paddingRight: 8, paddingBottom: 8, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
+          <View style={{ flexDirection: "column", flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Jen (mom)</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 13, color: "#5F6D74" }}>(813) 555-0142</Text>
+          </View>
+          <View style={{ flexDirection: "row", gap: 8, flexShrink: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, flexShrink: 0, paddingTop: 0, paddingRight: 0, paddingBottom: 0, paddingLeft: 0, backgroundColor: "#DCE7F1", borderRadius: 22 }}>
+              <SvgXml xml={SVG[5]} width={20} height={20} />
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, flexShrink: 0, paddingTop: 0, paddingRight: 0, paddingBottom: 0, paddingLeft: 0, backgroundColor: "#DCE7F1", borderRadius: 22 }}>
+              <SvgXml xml={SVG[6]} width={20} height={20} />
+            </View>
+          </View>
+        </View>
         <View style={{ alignSelf: "center" }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#A1321F", textDecorationLine: "underline" }}>Report an injury</Text></View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 10, paddingRight: 14, paddingBottom: 10, paddingLeft: 14, backgroundColor: "#F6E3C6", borderRadius: 12 }}>{/* -> S43-ShiftRules.dc.html */}
-          <SvgXml xml={SVG[5]} width={20} height={20} />
+          <SvgXml xml={SVG[7]} width={20} height={20} />
           <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", flexGrow: 1, flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#7A4E0E" }}>House rules</Text> · 2 logs due</Text>
-          <SvgXml xml={SVG[6]} width={18} height={18} />
+          <SvgXml xml={SVG[8]} width={18} height={18} />
         </View>
         <View style={{ paddingTop: 10, paddingRight: 14, paddingBottom: 10, paddingLeft: 14, backgroundColor: "#F6DCD6", borderRadius: 12 }}><Text style={{ fontFamily: font.body, fontSize: 14, color: "#6E2215" }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#A1321F" }}>Leo · food to avoid:</Text> [listed foods]</Text></View>
       </View>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { contactName, dialable, mapsUrl, routineGroups, routineRow } from '../family-page-logic';
+import { contactName, dialable, type FamilyContact, mapsUrl, reachableContacts, routineGroups, routineRow } from '../family-page-logic';
 import type { CareItem, Kid } from '../types';
 
 const kid = (id: string, name: string): Kid => ({ id, family_id: 'f', name, birthdate: null, avoid_foods: '', notes: '' });
@@ -88,5 +88,24 @@ describe('mapsUrl', () => {
   it('has no link when the address is hidden', () => {
     expect(mapsUrl(null, 'ios')).toBeNull();
     expect(mapsUrl('  ', 'web')).toBeNull();
+  });
+});
+
+describe('reachableContacts', () => {
+  const c = (over: Partial<FamilyContact>): FamilyContact => ({ user_id: 'u', full_name: 'Jen Lee', relation: 'Mom', role: 'parent', phone: null, ...over });
+  it('keeps the adults with a dialable phone, in order', () => {
+    const r = reachableContacts([
+      c({ user_id: 'jen', phone: '(813) 555-0142 ' }),
+      c({ user_id: 'sue', full_name: 'Sue Lee', relation: 'Grandma', role: 'helper', phone: '12' }),
+      c({ user_id: 'dan', full_name: 'Dan Lee', relation: 'Dad', phone: '+1 813 555 0199' }),
+    ]);
+    expect(r).toEqual([
+      { user_id: 'jen', name: 'Jen (mom)', phone: '(813) 555-0142', tel: '8135550142' },
+      { user_id: 'dan', name: 'Dan (dad)', phone: '+1 813 555 0199', tel: '+18135550199' },
+    ]);
+  });
+  it('is empty without phones or before migration 33', () => {
+    expect(reachableContacts([c({})])).toEqual([]);
+    expect(reachableContacts(null)).toEqual([]);
   });
 });

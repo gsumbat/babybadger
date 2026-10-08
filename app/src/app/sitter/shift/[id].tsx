@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
+import { ActionSheetIOS, ActivityIndicator, Alert, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 
@@ -9,6 +9,7 @@ import { ExtendRequestCard, RunningLateSheet } from '@/components/timing';
 import { LogTimeline } from '@/components/LogTimeline';
 import { Banner, Button, Card, ChoicePill, ErrorText, Field, Icon, type IconName, Loading, Screen } from '@/components/ui';
 import { api, type ShiftBundle, useQuery, useShiftLive } from '@/lib/data';
+import { type ReachableContact, reachableContacts } from '@/lib/family-page-logic';
 import { firstName, timeOf } from '@/lib/format';
 import { type HouseRule, rulesApi, rulesLabel, shiftRuleRows, sitterRulesState } from '@/lib/house-rules';
 import { ageInMonths, ageLabel } from '@/lib/kid-profile';
@@ -306,6 +307,7 @@ export default function SitterShift() {
           })}
         </View>
       )}
+      <ContactRow familyId={shift.family_id} />
       {/* Not in wireframe S4 (S23 "Something happened · log it" leads to S24, but the kid app isn't built): opens S24. */}
       <Pressable accessibilityRole="link" onPress={() => router.push(`/sitter/incident/${shift.id}`)} style={st.incident}>
         <Text style={st.incidentText}>Report an injury</Text>
@@ -435,6 +437,7 @@ function BeforeShift({ bundle, family, parent, rules, reload }: { bundle: ShiftB
           </Pressable>
         ))}
       </View>
+      <ContactRow familyId={shift.family_id} />
       <View style={st.note}>
         <SvgXml xml={SHIELD} width={20} height={20} style={{ flexShrink: 0 }} />
         <Text style={st.noteText}>Your location isn’t shared until you clock in.</Text>
@@ -498,6 +501,54 @@ function BeforeShift({ bundle, family, parent, rules, reload }: { bundle: ShiftB
   );
 }
 
+/** S4b / S4c (under the tiles) and S4 (under the tasks): the family's first adult with a phone (owner first, from
+ * family_contacts, migration 33) with round Text (sms:) and Call (tel:) buttons, like S10's PARENTS rows. When more
+ * than one adult has a phone, each button opens a chooser of names (an action sheet on iOS; on Android an alert for
+ * two, otherwise the Family page, which lists them all). No phone saved, or migration 33 not run yet (the call
+ * errors): no row. Not drawn: the chooser. */
+function ContactRow({ familyId }: { familyId: string }) {
+  const { data } = useQuery(() => api.familyContacts(familyId).catch(() => null), [familyId]);
+  const people = reachableContacts(data);
+  if (!people.length) return null;
+  const main = people[0];
+
+  function reach(scheme: 'sms' | 'tel') {
+    const open = (p: ReachableContact) => Linking.openURL(`${scheme}:${p.tel}`).catch(() => Alert.alert('Can’t open', `This phone can’t ${scheme === 'sms' ? 'send texts' : 'make calls'}.`));
+    if (people.length === 1) return open(main);
+    const title = scheme === 'sms' ? 'Text who?' : 'Call who?';
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions({ title, options: [...people.map((p) => p.name), 'Cancel'], cancelButtonIndex: people.length }, (i) => {
+        if (i < people.length) open(people[i]);
+      });
+      return;
+    }
+    // Android shows at most three alert buttons: two names plus Cancel. More adults: the Family page lists them all.
+    if (people.length > 2) return router.push(`/sitter/family/${familyId}`);
+    Alert.alert(title, undefined, [...people.map((p) => ({ text: p.name, onPress: () => open(p) })), { text: 'Cancel', style: 'cancel' as const }], { cancelable: true });
+  }
+
+  return (
+    <View style={st.contact}>
+      <View style={{ flexShrink: 1 }}>
+        <Text style={st.contactName} numberOfLines={1}>
+          {main.name}
+        </Text>
+        <Text style={st.contactSub} numberOfLines={1}>
+          {main.phone}
+        </Text>
+      </View>
+      <View style={{ flexDirection: 'row', gap: 8 }}>
+        <Pressable accessibilityRole="button" accessibilityLabel={people.length > 1 ? 'Text the family' : `Text ${main.name}`} onPress={() => reach('sms')} style={st.contactBtn}>
+          <Icon name="message-square" size={20} strokeWidth={2} />
+        </Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel={people.length > 1 ? 'Call the family' : `Call ${main.name}`} onPress={() => reach('tel')} style={st.contactBtn}>
+          <Icon name="phone" size={20} strokeWidth={2} />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
 const st = StyleSheet.create({
   // values below come from wireframe S4
   top: { backgroundColor: color.primary, marginHorizontal: -20, marginTop: -4, paddingHorizontal: 20, paddingBottom: 56, gap: 6 },
@@ -538,6 +589,11 @@ const st = StyleSheet.create({
   clockOut: { height: 52, borderRadius: 999, borderWidth: 1.5, borderColor: color.primary, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   clockOutText: { fontFamily: font.displayBold, fontSize: 17, color: color.primary },
   cardTitle: { fontFamily: font.bodyBold, fontSize: 16, color: color.ink },
+  // Contact row (S4, S4b, S4c; the S10 PARENTS row in a card of its own)
+  contact: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, paddingTop: 8, paddingBottom: 8, paddingLeft: 16, paddingRight: 8, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
+  contactName: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
+  contactSub: { fontFamily: font.body, fontSize: 13, color: '#5F6D74' },
+  contactBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
   // S4b / S4c values
   topBack: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255, 255, 255, 0.18)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
   span: { fontFamily: font.display, fontSize: 36, color: '#FFFFFF', marginVertical: -6.84 },
