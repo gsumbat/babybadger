@@ -26,7 +26,7 @@ export default function WF_P78d() {
         <Text style={{ fontFamily: font.display, fontSize: 22, color: "#1B2328", flexGrow: 1, flexShrink: 1 }}>Join the Lee family</Text>
       </View>
       <View style={{ flexDirection: "column", gap: 16, flexGrow: 1, paddingTop: 4, paddingRight: 20, paddingBottom: 12, paddingLeft: 20 }}>
-        <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", lineHeight: 22 }}>Jen added you as a family helper.</Text>
+        <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", lineHeight: 22 }}>Jen added you with read-only access.</Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 22 }}>
             <Text style={{ fontFamily: font.displayBold, fontSize: 18, color: "#FFFFFF" }}>J</Text>
@@ -38,7 +38,7 @@ export default function WF_P78d() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
             <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
             </View>
-            <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Family helper</Text>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Read only</Text>
           </View>
         </View>
         <View style={{ flexDirection: "column", gap: 10 }}>
@@ -52,7 +52,7 @@ export default function WF_P78d() {
           </View>
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
             <SvgXml xml={SVG[3]} width={20} height={20} />
-            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}>Jen and Sam manage sitters, pay and the plan.</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}>People with full access manage sitters, pay and the plan.</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
             <SvgXml xml={SVG[4]} width={20} height={20} />

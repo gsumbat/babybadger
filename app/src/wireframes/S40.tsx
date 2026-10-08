@@ -47,11 +47,6 @@ export default function WF_S40() {
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960" }}>Mobile</Text>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10, minHeight: 48, paddingTop: 10, paddingRight: 14, paddingBottom: 10, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1.0, borderColor: "#C3CCD5" }}>
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", lineHeight: 21, flexGrow: 1, flexShrink: 1 }}>(813) 555-0192</Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#DCEEE3", borderRadius: 999 }}>
-              <View style={{ width: 7, height: 7, backgroundColor: "#1F8A4D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
-              </View>
-              <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#1B6B3D", lineHeight: 21 }}>Verified</Text>
-            </View>
           </View>
         </View>
         <View style={{ flexDirection: "column", gap: 5 }}>

@@ -37,7 +37,7 @@ export default function WF_P78e() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
             <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
             </View>
-            <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Family helper</Text>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Read only</Text>
           </View>
         </View>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>WHAT YOU CAN DO</Text>
@@ -55,7 +55,7 @@ export default function WF_P78e() {
             <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}>Jen and Sam manage sitters, pay and the plan</Text>
           </View>
         </View>
-        <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Only a parent can change your role. Leaving keeps your account; you can be invited again.</Text>
+        <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>You have read-only access. Only Jen can change it. Leaving keeps your account; you can be invited again.</Text>
       </View>
       <View style={{ flexDirection: "row", paddingTop: 4, paddingRight: 20, paddingBottom: 32, paddingLeft: 20 }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", height: 54, flexGrow: 1, flexBasis: 0, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.5, borderColor: "#C3CCD5", flexShrink: 1 }}>{/* -> P1-Welcome.dc.html */}

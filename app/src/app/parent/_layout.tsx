@@ -4,11 +4,11 @@ import { useSession } from '@/lib/session';
 import { color } from '@/theme';
 
 export default function ParentLayout() {
-  // Family helpers (migration 30, P4m) see the kids, schedule, live shift and updates and message the sitter. Screens
-  // that manage the family (sitters, pay, requirements, bookings, kids, the care plan, places, billing) are parents
-  // only; the database refuses those writes for helpers too. Keep this list in step with PARENT_ONLY in
-  // lib/family-members (it sends a helper's push taps for these screens to a read-only one).
-  const { familyRole } = useSession();
+  // Read-only members (role 'helper', migration 30, P4m) see the kids, schedule, live shift and updates and message the
+  // sitter. Screens that manage the family (sitters, pay, requirements, bookings, kids, the care plan, places) need full
+  // access; seats and billing are the owner's (migration 32). The database refuses those writes too. Keep these lists
+  // in step with PARENT_ONLY / OWNER_ONLY_ROUTES in lib/family-members (they send push taps to a screen you can open).
+  const { familyRole, isOwner } = useSession();
   const parent = familyRole === 'parent';
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.canvas } }}>
@@ -16,15 +16,19 @@ export default function ParentLayout() {
       <Stack.Screen name="shift/[id]" />
       <Stack.Screen name="trip/[id]" />
       <Stack.Screen name="kid/[id]" />
+      <Stack.Screen name="kid/care" />
       <Stack.Screen name="care/index" />
-      {/* Read-only for a helper (P20h, P56h, P74h): the editors they open are below. */}
+      <Stack.Screen name="care/view" />
+      {/* Read only for a read-only member (P20h, P56h, P74h, P19v, P20v): the editors they open are below. */}
       <Stack.Screen name="kid/routine" />
       <Stack.Screen name="places/index" />
       <Stack.Screen name="rules/index" />
       <Stack.Screen name="members/index" />
       <Stack.Screen name="members/[id]" />
-      <Stack.Protected guard={parent}>
+      <Stack.Protected guard={isOwner}>
         <Stack.Screen name="members/invite" />
+      </Stack.Protected>
+      <Stack.Protected guard={parent}>
         <Stack.Screen name="shift/new" options={{ presentation: 'modal' }} />
         <Stack.Screen name="invite" options={{ presentation: 'modal' }} />
         <Stack.Screen name="invite/[id]" />

@@ -4,7 +4,7 @@ import { SvgXml } from 'react-native-svg';
 
 import { Text } from '@/components/Text';
 import { Pill } from '@/components/ui';
-import { BADGE_LABEL, BADGE_PILL, choiceOf, credentialBadge, sitterFileUrl, type Credential } from '@/lib/credentials';
+import { CARD_LABEL, CARD_PILL, cardState, choiceOf, sitterFileUrl, type Credential } from '@/lib/credentials';
 import { cardShadow, color, font } from '@/theme';
 
 // Shared pieces of the profile and credentials screens (S13, S14, S15, S41, S18, P11). Icons are the wireframes' own
@@ -72,11 +72,12 @@ export function credTileKey(c: Credential) {
 }
 
 export function CredPill({ c }: { c: Credential }) {
-  const b = credentialBadge(c);
+  // Added / Expiring / Expired: BabyBadger checks nothing in phase 1, so never "Verified".
+  const b = cardState(c);
   // Wrapped so the row centers it (Pill pins itself to the top of its parent).
   return (
     <View>
-      <Pill label={BADGE_LABEL[b]} kind={BADGE_PILL[b]} />
+      <Pill label={CARD_LABEL[b]} kind={CARD_PILL[b]} />
     </View>
   );
 }

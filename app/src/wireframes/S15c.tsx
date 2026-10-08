@@ -123,7 +123,7 @@ export default function WF_S15c() {
           </View>
           <View style={{ flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A", textDecorationLine: "underline" }}>Replace</Text></View>
         </View>
-        <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>We check it with the issuer, usually within 1–2 days. Families see the badge and expiry date, never the card or its number.</Text>
+        <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Only you see this card. A family sees it only if you share it with them when they ask.</Text>
       </View>
       <View style={{ flexDirection: "row", paddingTop: 4, paddingRight: 20, paddingBottom: 32, paddingLeft: 20 }}>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 54, flexGrow: 1, flexBasis: 0, backgroundColor: "#47698A", borderRadius: 999, flexShrink: 1 }}>{/* -> S14-Credentials.dc.html */}

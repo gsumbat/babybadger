@@ -32,7 +32,7 @@ import { Text } from '@/components/Text';
 // confirms for this family. "Add a certification" opens S15.
 // Not drawn: the "Missing" pill and its link (a missing certificate opens S15, a background check S17, a language
 // S16), the "Confirmed" pill after a Yes, the banner once every must-have is done, the "Done" footer outside the join
-// flow, a document requirement waiting for the parent ("In review").
+// flow, a document requirement waiting for the parent ("Shared").
 export default function FamilyRequirements() {
   const { familyId, next } = useLocalSearchParams<{ familyId: string; next?: string }>();
   const { session, sitterLinks } = useSession();
@@ -104,7 +104,7 @@ export default function FamilyRequirements() {
             : r.state === 'confirmed' ? <DotPill label="Confirmed" kind="ok" />
             : r.state === 'confirm' ? <DotPill label="Confirm" kind="info" />
             : r.state === 'nice' ? <DotPill label="Nice to have" kind="muted" />
-            : r.state === 'review' ? <DotPill label="In review" kind="info" />
+            : r.state === 'review' ? <DotPill label="Shared" kind="info" />
             : <DotPill label="Missing" kind="bad" />;
           const head = (
             <View style={st.row}>
@@ -147,7 +147,7 @@ export default function FamilyRequirements() {
           );
         })}
       </View>
-      <Text style={st.note}>Your answers and badges are shared with {familyLower(familyName)} only. Documents and report details never are.</Text>
+      <Text style={st.note}>What you share here goes to {familyLower(familyName)} only. Other families never see it.</Text>
       <ErrorText>{err}</ErrorText>
     </Screen>
   );

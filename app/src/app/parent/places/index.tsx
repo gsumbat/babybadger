@@ -87,7 +87,7 @@ function PlaceRow({ place, kids, open, line }: { place: Place; kids: Kid[]; open
   );
 }
 
-/** A helper's empty section (no add row to show). */
+/** A read-only member's empty section (no add row to show). */
 function NoneRow() {
   return (
     <View style={st.add}>

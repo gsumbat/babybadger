@@ -32,7 +32,7 @@ export default function WF_S41() {
       <View style={{ flexDirection: "column", gap: 10, minHeight: 0, flexGrow: 1, paddingTop: 4, paddingRight: 20, paddingBottom: 8, paddingLeft: 20 }}>
         <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#F6E3C6", borderRadius: 16 }}>
           <SvgXml xml={SVG[1]} width={20} height={20} />
-          <Text style={{ fontFamily: font.body, fontSize: 13, color: "#1B2328", lineHeight: 18, flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#7A4E0E", lineHeight: 18 }}>Expires Oct 22, in 21 days.</Text> Upload your renewed card before then to keep the Verified badge.</Text>
+          <Text style={{ fontFamily: font.body, fontSize: 13, color: "#1B2328", lineHeight: 18, flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#7A4E0E", lineHeight: 18 }}>Expires Oct 22, in 21 days.</Text> Renew it and share the new card with your families.</Text>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14, height: 96, paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, borderRadius: 14, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, backgroundColor: "#F6DCD6", borderRadius: 22, flexShrink: 1 }}>
@@ -63,7 +63,7 @@ export default function WF_S41() {
               <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#DCEEE3", borderRadius: 999 }}>
                 <View style={{ width: 7, height: 7, backgroundColor: "#1F8A4D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
                 </View>
-                <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#1B6B3D" }}>Verified</Text>
+                <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#1B6B3D" }}>Added</Text>
               </View>
             </View>
           </View>
@@ -83,7 +83,7 @@ export default function WF_S41() {
             <SvgXml xml={SVG[4]} width={18} height={18} />
           </View>
         </View>
-        <View style={{ paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4 }}><Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 17 }}>If it expires, the badge comes off your profile and families who require it are told you need to renew.</Text></View>
+        <View style={{ paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4 }}><Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 17 }}>Only you see this card. If it expires, families you shared it with see it as Expired until you share a new one.</Text></View>
       </View>
       <View style={{ flexDirection: "column", gap: 8, paddingTop: 6, paddingRight: 20, paddingBottom: 24, paddingLeft: 20 }}>
         <View style={{ flexDirection: "row" }}>

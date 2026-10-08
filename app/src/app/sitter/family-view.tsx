@@ -2,20 +2,20 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { SitterAvatar } from '@/components/credentials';
-import { CredGrid, profileStyles, SpeaksBlock } from '@/components/sitterProfile';
+import { profileStyles, SpeaksBlock } from '@/components/sitterProfile';
 import { Text } from '@/components/Text';
 import { Button, ErrorText, Loading, Pill, Screen } from '@/components/ui';
-import { familyCredentials, familyViewLines, shortName, sitterBundle } from '@/lib/credentials';
+import { familyViewLines, shortName, sitterBundle } from '@/lib/credentials';
 import { useQuery } from '@/lib/data';
 import { useSession } from '@/lib/session';
 import { cardShadow, color, font } from '@/theme';
 
-const NEVER_SHOWN = ['Card photos', 'Certificate numbers', 'Full report', 'Other families'];
+const NEVER_SHOWN = ['Cards you haven’t shared', 'Certificate numbers', 'Other families'];
 
 // Wireframe S19 What families see, from app/src/wireframes/S19.tsx. Opened from S13 "Preview" (`?from=profile`, Edit
 // profile goes back) and S39 "What families see" (Edit profile opens S13). Her own data, read-only, drawn with P11's
-// pieces (components/sitterProfile): the credentials a family sees (verified, not expired; amber "Expires Oct 22"
-// within 30 days, as P11 shows it), SPEAKS, her about-me in quotes. Lines under the name come from S13's ABOUT data
+// pieces (components/sitterProfile): SPEAKS and her about-me in quotes. Her cards are private (phase 1, migration 31):
+// no credential badges here; the line under the card says a family sees one only after she shares it. Lines under the name come from S13's ABOUT data
 // (years with kids, ages, drives, rate); a line with nothing set is left out. Not drawn: no about-me (left out).
 export default function FamilyView() {
   const { from } = useLocalSearchParams<{ from?: string }>();
@@ -49,10 +49,10 @@ export default function FamilyView() {
             ))}
           </View>
         </View>
-        <CredGrid creds={familyCredentials(data.creds)} />
         <SpeaksBlock langs={data.langs} />
         {bio ? <Text style={st.bio}>{`"${bio}"`}</Text> : null}
       </View>
+      <Text style={st.cards}>Your cards stay private. A family sees one only after you share it with them.</Text>
       <Text style={[profileStyles.label, { marginTop: 2 }]}>NEVER SHOWN TO FAMILIES</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
         {NEVER_SHOWN.map((t) => (
@@ -70,6 +70,7 @@ const st = StyleSheet.create({
   card: { gap: 14, padding: 18, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   name: { fontFamily: font.display, fontSize: 22, color: color.ink, marginVertical: -4.62 },
   meta: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
+  cards: { fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.ink2, paddingHorizontal: 4 },
   bio: { fontFamily: font.body, fontSize: 14, lineHeight: 21, color: color.ink },
   // S19 footer: 4 above, 32 below.
   footerBtn: { marginTop: -4 },

@@ -164,6 +164,49 @@ export function ReqStatusCard({
   );
 }
 
+/** P11 "What Maya shared with you": only what she shared with this family (a card, a report or a confirmation), each
+ * with its status (Shared, see it / Looks good ✓ / Expired); a row opens P79b. Languages stay in SPEAKS (`children`).
+ * Empty: "Nothing shared yet. Ask Maya for what you need." with the P79 Ask button for a parent. */
+export function sharedRows(rows: FamilyReqRow[]) {
+  return rows.filter((r) => !r.language && r.request && ['shared', 'met', 'expired'].includes(parentState(r)));
+}
+
+export function SharedCard({
+  rows,
+  name,
+  canAsk,
+  onAsk,
+  onOpen,
+  children,
+}: {
+  rows: FamilyReqRow[];
+  name: string;
+  canAsk: boolean;
+  onAsk: () => void;
+  onOpen: (requestId: string) => void;
+  children?: ReactNode;
+}) {
+  const shared = sharedRows(rows);
+  return (
+    <View style={[st.card, { gap: 4 }]}>
+      <Text style={st.cardTitle}>What {name} shared with you</Text>
+      {shared.length ? (
+        shared.map((r, i) => <StatusRow key={r.requirement_id} row={r} onPress={() => onOpen(r.request!.id)} last={i === shared.length - 1} />)
+      ) : (
+        <>
+          <Text style={st.empty}>Nothing shared yet. Ask {name} for what you need.</Text>
+          {canAsk && askable(rows).length ? (
+            <Pressable accessibilityRole="button" onPress={onAsk} style={({ pressed }) => [st.ask, pressed && { opacity: 0.85 }]}>
+              <Text style={st.askText}>Ask {name}</Text>
+            </Pressable>
+          ) : null}
+        </>
+      )}
+      {children ? <View style={{ marginTop: 10 }}>{children}</View> : null}
+    </View>
+  );
+}
+
 // ---------------------------------------------------------------- P79 Ask sheet
 export function AskSheet({ open, onClose, familyId, sitterId, name, rows, onSent }: { open: boolean; onClose: () => void; familyId: string; sitterId: string; name: string; rows: FamilyReqRow[]; onSent: () => void }) {
   const options = askable(rows);
@@ -315,6 +358,7 @@ const st = StyleSheet.create({
   line: { borderBottomWidth: 1, borderBottomColor: color.divider },
   rowTitle: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
   rowSub: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
+  empty: { fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink2, paddingTop: 6 },
   ask: { height: 44, marginTop: 10, borderRadius: 999, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
   askText: { fontFamily: font.displayBold, fontSize: 16, color: color.primary },
   checkList: { paddingHorizontal: 14, backgroundColor: color.canvas, borderRadius: 14 },

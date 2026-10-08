@@ -15,7 +15,7 @@ import { cardShadow, color, font } from '@/theme';
 
 // Wireframe S40 Personal details, from app/src/wireframes/S40.tsx. Opened from Me (S39) and S13 "Edit details and photo".
 // "Change photo" picks a photo from the library and saves it right away (families she's linked to can see it).
-// Left out until built: the mobile number's "Verified" pill (no SMS check yet) and changing the email (it's the
+// Left out until built: a "Verified" pill on the mobile number (removed from S40: nothing is checked) and changing the email (it's the
 // sign-in address, shown read-only).
 export default function Details() {
   const { session, profile, refresh } = useSession();

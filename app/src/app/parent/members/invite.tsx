@@ -3,7 +3,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Pressable, Share, StyleSheet, View } from 'react-native';
 
-import { BackHeader, memberStyles as ms, RoleCards, RowsCard } from '@/components/familyMembers';
+import { AccessSwitch, BackHeader, memberStyles as ms, RowsCard } from '@/components/familyMembers';
 import { SelectField } from '@/components/SelectField';
 import { Text } from '@/components/Text';
 import { Button, ErrorText, Field, Icon, Loading, Screen } from '@/components/ui';
@@ -12,13 +12,16 @@ import {
   can,
   defaultRole,
   emailOk,
+  managesSeatsLine,
   MAX_FAMILY_MEMBERS,
   memberErrorText,
   memberInviteSubject,
   memberInviteText,
   memberLinkUrl,
+  ownerFirstName,
   RELATIONS,
   roleLabel,
+  seatsLine,
   seatsUsed,
   shortDay,
   type MemberInvite,
@@ -31,9 +34,10 @@ import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
 import { cardShadow, color, font } from '@/theme';
 
-// Wireframes P78b Add a family member and P78s Invite sent. A parent enters a name, the relation (SelectField), the role
-// (Parent / Family helper; Mom and Dad start as Parent, relatives as Family helper) and an optional email (locks the
-// link to that email, migration 30). Send by text / Email / Copy link make the babybadger.app/m/<token> link on the
+// Wireframes P78b Add a family member (Full access on), P78br (off = Read only) and P78s Invite sent. Only the owner
+// (migration 32) gets here. "4 seats · 2 used" on top; a name, the relation (SelectField), the "Full access" switch
+// (Mom and Dad start on, relatives off, until it's touched; the line under it says what that access does) and an
+// optional email (locks the link to that email, migration 30). Send by text / Email / Copy link make the babybadger.app/m/<token> link on the
 // first tap (invite_family_member), stamp it sent and show P78s. Editing the form after the link was made cancels that
 // link and makes a new one. `?id=<invite>` opens P78s for an invite from the P78 list.
 // Not drawn: a phone number (sign-in is by email; Send by text picks the person in the share sheet).
@@ -42,7 +46,7 @@ type Made = { id: string; link_token: string; expires_at: string; saved: Form };
 
 export default function InviteMember() {
   const params = useLocalSearchParams<{ id?: string }>();
-  const { family, profile, familyRole } = useSession();
+  const { family, profile, familyRole, isOwner } = useSession();
   const fid = family!.id;
   const { data, error } = useQuery(async () => {
     const [list, kids] = await Promise.all([membersApi.list(fid, profile!.id), api.kids(fid).catch(() => [])]);
@@ -50,30 +54,30 @@ export default function InviteMember() {
   }, [fid]);
   const [sent, setSent] = useState<Made | null>(null);
   if (!data && !error) return <Loading />;
-  if (!can(familyRole, 'manage_members'))
+  if (!can(familyRole, 'manage_members', data?.i_own ?? isOwner))
     return (
       <Screen gap={12} header={<BackHeader title="Add a family member" />}>
-        <Text style={ms.lead}>Only a parent can add family members.</Text>
+        <Text style={ms.lead}>{managesSeatsLine(ownerFirstName(data?.members ?? []))}</Text>
       </Screen>
     );
   const existing = params.id ? data?.invites.find((i) => i.id === params.id) : undefined;
   const kids = data?.kids ?? [];
   const textFor = (name: string, token: string) => memberInviteText({ name, from: profile?.full_name, family: family?.name, kids, token });
   if (existing)
-    return <Sent invite={existing} used={seatsUsed(data!.members, data!.invites)} textFor={textFor} />;
+    return <Sent invite={existing} used={seatsUsed(data!.members, data!.invites, data!.seats_used)} textFor={textFor} />;
   if (sent)
     return (
       <Sent
         invite={{ id: sent.id, link_token: sent.link_token, expires_at: sent.expires_at, name: sent.saved.name.trim(), relation: sent.saved.relation || null, role: sent.saved.role, email: sent.saved.email.trim() || null }}
-        used={seatsUsed(data?.members ?? [], data?.invites ?? []) + 1}
+        used={seatsUsed(data?.members ?? [], data?.invites ?? [], data?.seats_used) + 1}
         textFor={textFor}
       />
     );
-  return <InviteForm kids={kids} textFor={textFor} onSent={setSent} loadErr={error} />;
+  return <InviteForm kids={kids} used={seatsUsed(data?.members ?? [], data?.invites ?? [], data?.seats_used)} textFor={textFor} onSent={setSent} loadErr={error} />;
 }
 
 // ---------------------------------------------------------------- P78b
-function InviteForm({ kids, textFor, onSent, loadErr }: { kids: string[]; textFor: (name: string, token: string) => string; onSent: (m: Made) => void; loadErr: string }) {
+function InviteForm({ kids, used, textFor, onSent, loadErr }: { kids: string[]; used: number; textFor: (name: string, token: string) => string; onSent: (m: Made) => void; loadErr: string }) {
   const { family, profile } = useSession();
   const [f, setF] = useState<Form>({ name: '', relation: '', role: 'helper', email: '' });
   const [rolePicked, setRolePicked] = useState(false);
@@ -161,6 +165,7 @@ function InviteForm({ kids, textFor, onSent, loadErr }: { kids: string[]; textFo
           </View>
         </View>
       }>
+      <Text style={st.muted14}>{seatsLine(used)}</Text>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Field label="Name" value={f.name} onChangeText={(name) => setF((x) => ({ ...x, name }))} placeholder="Sue" autoCapitalize="words" style={st.input48} />
@@ -173,9 +178,9 @@ function InviteForm({ kids, textFor, onSent, loadErr }: { kids: string[]; textFo
           style={{ flex: 1 }}
         />
       </View>
-      <Text style={[ms.section, { marginTop: 2 }]}>ROLE</Text>
-      <RoleCards
-        value={f.role}
+      <Text style={[ms.section, { marginTop: 2 }]}>ACCESS</Text>
+      <AccessSwitch
+        role={f.role}
         onChange={(role) => {
           setRolePicked(true);
           setF((x) => ({ ...x, role }));
@@ -247,7 +252,7 @@ function Sent({ invite, used, textFor }: { invite: SentInvite; used: number; tex
       <RowsCard>
         <InfoRow label="To" value={invite.email ? `${name} · ${invite.email}` : name} />
         <InfoRow label="Link works" value={`Until ${shortDay(invite.expires_at)}`} />
-        <InfoRow label="Family" value={`${Math.min(used, MAX_FAMILY_MEMBERS)} of ${MAX_FAMILY_MEMBERS} with ${name}`} last />
+        <InfoRow label="Seats" value={`${Math.min(used, MAX_FAMILY_MEMBERS)} of ${MAX_FAMILY_MEMBERS} used with ${name}`} last />
       </RowsCard>
       <Text style={ms.note13}>
         {invite.email

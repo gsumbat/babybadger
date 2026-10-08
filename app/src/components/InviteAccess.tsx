@@ -69,9 +69,9 @@ export function InviteAccessFields({ c, parentNames }: { c: InviteChoicesState; 
       ) : null}
       <Text style={[st.section, { marginTop: 2 }]}>WHAT SHE CAN DO</Text>
       <View style={st.permCard}>
-        <Perm label="Drive the kids" sub="Needs a verified driver’s license" value={c.canDrive} onChange={c.setCanDrive} />
+        <Perm label="Drive the kids" sub="Needs a driver’s license" value={c.canDrive} onChange={c.setCanDrive} />
         <Perm label="Start trips to saved places" value={c.canTrip} onChange={c.setCanTrip} />
-        <Perm label="Message both parents" sub={parentNames || undefined} value={c.canMessage} onChange={c.setCanMessage} last />
+        <Perm label="Message the family" sub={parentNames || undefined} value={c.canMessage} onChange={c.setCanMessage} last />
       </View>
       <Text style={[st.section, { marginTop: 2 }]}>PAY</Text>
       <View style={{ flexDirection: 'row', gap: 10 }}>

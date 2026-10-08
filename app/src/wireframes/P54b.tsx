@@ -20,7 +20,7 @@ export default function WF_P54b() {
     <View style={{ flex: 1, backgroundColor: "#F3F5F8", flexDirection: "column", overflow: "hidden" }}>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 20, paddingRight: 20, paddingBottom: 8, paddingLeft: 20 }}>
         <Text style={{ fontFamily: font.display, fontSize: 26, color: "#1B2328", flexShrink: 1 }}>Sitters</Text>
-        <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 4, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1 }}>{/* -> P3b-InviteFromSitters.dc.html */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1 }}>{/* -> P3b-InviteFromSitters.dc.html */}
           <SvgXml xml={SVG[0]} width={16} height={16} />
           <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#47698A" }}>Invite</Text>
         </View>
@@ -44,7 +44,7 @@ export default function WF_P54b() {
           </View>
           <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
             <Text style={{ fontFamily: font.display, fontSize: 18, color: "#34526E", marginVertical: -3.42 }}>Find a new sitter</Text>
-            <Text style={{ fontFamily: font.body, fontSize: 13, color: "#34526E" }}>48 verified sitters within 3 mi of you</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 13, color: "#34526E" }}>48 sitters within 3 mi of you</Text>
           </View>
           <SvgXml xml={SVG[3]} width={20} height={20} />
         </View>

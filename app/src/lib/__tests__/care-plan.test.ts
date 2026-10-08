@@ -22,6 +22,7 @@ import {
   sortItems,
   suggestedLabel,
   suggestedRoutine,
+  timeRangeLabel,
   toggleDay,
 } from '../care-plan';
 import type { CareItem } from '../types';
@@ -51,6 +52,13 @@ describe('days', () => {
 });
 
 describe('times', () => {
+  it('words a read-only item’s time (P20v)', () => {
+    expect(timeRangeLabel('15:30:00', '16:00:00')).toBe('3:30 – 4:00 PM');
+    expect(timeRangeLabel('11:30:00', '13:00:00')).toBe('11:30 AM – 1:00 PM');
+    expect(timeRangeLabel('19:00:00', null)).toBe('7:00 PM');
+    expect(timeRangeLabel(null, '20:00:00')).toBe('Until 8:00 PM');
+    expect(timeRangeLabel(null, null)).toBe('Any time');
+  });
   it('parses what parents type', () => {
     expect(parseTime('7:00 PM')).toBe('19:00');
     expect(parseTime('7pm')).toBe('19:00');

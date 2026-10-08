@@ -5,11 +5,11 @@ import { SvgXml } from 'react-native-svg';
 
 import { Text } from '@/components/Text';
 import { Icon } from '@/components/ui';
-import { initials, ROLE_OPTIONS, roleLabel, type MemberRole } from '@/lib/family-members';
+import { accessSub, memberPill, roleLabel, initials, type Member, type MemberRole } from '@/lib/family-members';
 import { useManagedBy } from '@/lib/use-family-role';
 import { cardShadow, color, font } from '@/theme';
 
-// Shared pieces of the Family members screens (wireframes P78, P78f, P78b, P78s, P78c, P78e). Values from the boards
+// Shared pieces of the Family members screens (wireframes P78, P78f, P78v, P78b, P78br, P78s, P78c, P78g, P78e). Values from the boards
 // (P78's rows and info card are P27's).
 
 /** P78 avatar colors: you in ink, the others in order. Invites are grey. */
@@ -45,33 +45,40 @@ export function MemberPill({ kind, label }: { kind: keyof typeof PILL; label: st
   );
 }
 
-/** "Parent" (blue) / "Family helper" (grey). */
+/** "Full access" (blue) / "Read only" (grey). */
 export function RolePill({ role }: { role: MemberRole }) {
   return <MemberPill kind={role === 'parent' ? 'info' : 'muted'} label={roleLabel(role)} />;
 }
 
-/** P78b / P78c ROLE: two radio cards with their one-line explanations. */
-export function RoleCards({ value, onChange, disabled }: { value: MemberRole; onChange: (r: MemberRole) => void; disabled?: boolean }) {
+/** P78 / P78c member pill: "Owner" (green) for the owner, else the access level. */
+export function MemberRolePill({ member }: { member: Pick<Member, 'role' | 'owner' | 'creator'> }) {
+  const p = memberPill(member);
+  return <MemberPill kind={p.kind} label={p.label} />;
+}
+
+/**
+ * P78b / P78br / P78c ACCESS: the "Full access" switch (on = full access, off = read only) in a white card, with the
+ * one-line explanation under the label that changes with it.
+ */
+export function AccessSwitch({ role, onChange, disabled }: { role: MemberRole; onChange: (r: MemberRole) => void; disabled?: boolean }) {
+  const on = role === 'parent';
   return (
-    <View accessibilityRole="radiogroup" accessibilityLabel="Role" style={{ gap: 8 }}>
-      {ROLE_OPTIONS.map((o) => {
-        const on = o.value === value;
-        return (
-          <Pressable
-            key={o.value}
-            accessibilityRole="radio"
-            accessibilityState={{ checked: on, disabled }}
-            disabled={disabled}
-            onPress={() => onChange(o.value)}
-            style={[st.roleCard, on ? st.roleOn : st.roleOff, disabled && !on && { opacity: 0.6 }]}>
-            <View style={[st.radio, { borderColor: on ? color.primary : color.lineStrong }]}>{on ? <View style={st.radioDot} /> : null}</View>
-            <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0, gap: 2 }}>
-              <Text style={st.roleTitle}>{o.label}</Text>
-              <Text style={st.roleSub}>{o.sub}</Text>
-            </View>
-          </Pressable>
-        );
-      })}
+    <View style={st.accessCard}>
+      <Pressable
+        accessibilityRole="switch"
+        accessibilityLabel="Full access"
+        accessibilityState={{ checked: on, disabled }}
+        disabled={disabled}
+        onPress={() => onChange(on ? 'helper' : 'parent')}
+        style={[st.accessRow, disabled && { opacity: 0.6 }]}>
+        <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0, gap: 2 }}>
+          <Text style={st.roleTitle}>Full access</Text>
+          <Text style={st.roleSub}>{accessSub(role)}</Text>
+        </View>
+        <View style={[st.track, { backgroundColor: on ? color.primary : color.lineStrong }]}>
+          <View style={[st.knob, on ? { right: 3 } : { left: 3 }]} />
+        </View>
+      </Pressable>
     </View>
   );
 }
@@ -90,8 +97,8 @@ export function MembersNote({ children }: { children: string }) {
 }
 
 /**
- * A family helper's read-only line where a parent has Add / Edit (boards P7h, P55h, P56h, P74h, P20h): "Jen manages
- * the care plan." Renders nothing for a parent.
+ * A read-only member's line where full access has Add / Edit (boards P7h, P55h, P56h, P74h, P20h): "Jen manages the
+ * care plan." Renders nothing for full access.
  */
 export function HelperNote({ what }: { what: string }) {
   const line = useManagedBy(what);
@@ -159,12 +166,12 @@ const st = StyleSheet.create({
   pill: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 26, paddingHorizontal: 10, borderRadius: 999, flexShrink: 0 },
   pillDot: { width: 7, height: 7, borderRadius: 4 },
   pillText: { fontFamily: font.bodyBold, fontSize: 12 },
-  roleCard: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 16, backgroundColor: '#FFFFFF' },
-  roleOn: { borderWidth: 2, borderColor: color.primary },
-  roleOff: { borderWidth: 1, borderColor: color.line, margin: 1 },
-  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: color.primary },
-  roleTitle: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink },
+  // P78b ACCESS card: P23's switch row (58 min, 50×30 track, 24 knob); the line under the label wraps.
+  accessCard: { paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
+  accessRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 58, paddingVertical: 12 },
+  track: { width: 50, height: 30, borderRadius: 15, flexShrink: 0 },
+  knob: { position: 'absolute', top: 3, width: 24, height: 24, borderRadius: 12, backgroundColor: '#FFFFFF' },
+  roleTitle: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
   roleSub: { fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.ink2 },
   info: { flexDirection: 'row', gap: 12, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: color.primaryTint, borderRadius: 14 },
   infoText: { flexShrink: 1, fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.ink },

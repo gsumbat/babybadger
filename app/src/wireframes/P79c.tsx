@@ -63,7 +63,7 @@ export default function WF_P79c() {
         </View>
         <View style={{ flexDirection: "row", gap: 12, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
           <SvgXml xml={SVG[2]} width={22} height={22} />
-          <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#34526E", lineHeight: 20 }}>You can look at it.</Text> Only a parent says it looks good or asks Maya again.</Text>
+          <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#34526E", lineHeight: 20 }}>You can look at it.</Text> Only family members with full access say it looks good or asks Maya again.</Text>
         </View>
         <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18, textAlign: "center" }}>Jen and Sam decide if it looks good.</Text>
       </View>

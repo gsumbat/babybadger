@@ -24,8 +24,9 @@ const TABS: { value: Tab; label: string }[] = [
 // bottles (family and kids); Routines = one row per kid -> P20. The Requirements pill opens P7a. Left out until built: the
 // "Weekday after school" template row with its Templates link, and the "Trip" tags. Row titles carry the type's
 // extras ("Bottle · 4 oz formula", "Tylenol · 5 ml").
-// A family helper (P7h) reads it: no Requirements pill, no "+ Add task" (the note "Jen manages the care plan." instead),
-// rows don't open the editor (P20a); Routines rows open the kid's day read-only (P20h).
+// A read-only member (P7h) reads it: no Requirements pill, no "+ Add task" (the note "Jen manages the care plan."
+// instead), rows open the whole item read-only (P20v) instead of the editor (P20a); Routines rows open the kid's day
+// read-only (P20h).
 export default function CarePlan() {
   const { family } = useSession();
   const manage = useCanManage();
@@ -86,7 +87,7 @@ export default function CarePlan() {
           {shown.length ? (
             <View style={st.card}>
               {shown.map((i, n) => (
-                <ItemRow key={i.id} item={i} kid={kidName(i.kid_id)} last={n === shown.length - 1} open={manage} />
+                <ItemRow key={i.id} item={i} kid={kidName(i.kid_id)} last={n === shown.length - 1} edit={manage} />
               ))}
             </View>
           ) : null}
@@ -106,10 +107,13 @@ export default function CarePlan() {
   );
 }
 
-function ItemRow({ item, kid, last, open }: { item: CareItem; kid?: string; last: boolean; open: boolean }) {
+function ItemRow({ item, kid, last, edit }: { item: CareItem; kid?: string; last: boolean; edit: boolean }) {
   const sub = [scheduleLabel(item), kid, item.how.split('\n')[0]].filter(Boolean).join(' · ');
   return (
-    <Pressable accessibilityRole="button" disabled={!open} onPress={() => router.push(`/parent/care/item?id=${item.id}`)} style={[st.row, !last && st.rowLine]}>
+    <Pressable
+      accessibilityRole="button"
+      onPress={() => router.push(edit ? `/parent/care/item?id=${item.id}` : `/parent/care/view?id=${item.id}`)}
+      style={[st.row, !last && st.rowLine]}>
       <View style={{ width: 44, flexShrink: 1 }}>
         <Text style={st.time}>{shortTime(item.starts)}</Text>
       </View>

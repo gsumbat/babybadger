@@ -53,19 +53,19 @@ const TILE_SETS = {
   soon: ['book', 'care', 'devices'],
   ended: ['book', 'pay', 'care'],
 };
-// P4m: a family helper (migration 30) doesn't book, pay or set requirements; those tiles are left out.
+// P4m: a read-only member (migration 30) doesn't book, pay or set requirements; those tiles are left out.
 const HELPER_HIDDEN = ['book', 'pay', 'requirements'];
 const HELPER_TILES = ['rules', 'care', 'devices'];
 
 /** Home tab. `full` = the live shift on its own screen (P4, opened from the P4k "Shift now" card). */
 export default function ParentHome({ full = false }: { full?: boolean }) {
-  const { family, profile, familyRole } = useSession();
+  const { family, profile, familyRole, isOwner } = useSession();
   const helper = familyRole === 'helper';
   const fid = family!.id;
-  // P4m's note names the parents ("Jen and Sam manage sitters, pay and the plan").
+  // P4m's note names the full-access members ("Jen and Sam manage sitters, pay and the plan").
   const parents = useParentNames();
-  // "Jen manages …" / "Jen and Sam manage …" / "The parents manage …" (before the names load).
-  const parentNames = parents.length ? `${namesLine(parents)} ${parents.length === 1 ? 'manages' : 'manage'}` : 'The parents manage';
+  // "Jen manages …" / "Jen and Sam manage …" / "Full-access members manage …" (before the names load).
+  const parentNames = parents.length ? `${namesLine(parents)} ${parents.length === 1 ? 'manages' : 'manage'}` : 'Full-access members manage';
   const { data, error } = useQuery(async () => {
     // care_items arrives with migration 06; until it's run the care plan step just shows as not done.
     // house_rules arrives with migration 09; same fallback.
@@ -91,18 +91,19 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
   // "Skip for now" on P4a is remembered on this phone; the P4e card brings the checklist back.
   const skipKey = `bb_setup_skipped_${fid}`;
   const [skipped, setSkipped] = useState(() => kv.get(skipKey) === '1');
-  // A helper never sees the setup checklist (P4a / P4e): setting the family up is the parents' job.
+  // Read only never sees the setup checklist (P4a / P4e): setting the family up needs full access.
   const incomplete = !helper && steps.some((s) => !s.done && !s.optional) && state?.kind === 'idle' && !state.next;
   const setup = incomplete && !skipped;
   const explore = incomplete && skipped;
 
-  // P36 once after first-run setup (P2 → P3): when Home is back in front and the family has no plan yet.
+  // P36 once after first-run setup (P2 → P3): when Home is back in front and the family has no plan yet. Only the
+  // owner manages the plan (migration 32).
   const plan = usePlan();
   const focused = useIsFocused();
   useEffect(() => {
-    if (full || helper || !focused || !plan.enabled || !plan.loaded || plan.state !== 'none') return;
+    if (full || !isOwner || !focused || !plan.enabled || !plan.loaded || plan.state !== 'none') return;
     if (takePlansIntro(fid)) router.push('/parent/plans?from=setup');
-  }, [full, helper, focused, plan.enabled, plan.loaded, plan.state, fid]);
+  }, [full, isOwner, focused, plan.enabled, plan.loaded, plan.state, fid]);
 
   return (
     <Screen
@@ -183,7 +184,7 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
         </View>
       ) : null}
       {helper && state && !full ? (
-        <MembersNote>{`You’re a family helper. ${parentNames} sitters, pay and the plan.`}</MembersNote>
+        <MembersNote>{`You have read-only access. ${parentNames} sitters, pay and the plan.`}</MembersNote>
       ) : null}
     </Screen>
   );
@@ -374,7 +375,7 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
         </View>
       </Pressable>
       {/* Not in wireframe P4: asks her to stay longer (she answers on S25). An open request shows instead. */}
-      {/* A family helper sees an open request but can't ask (it changes the booking and the pay). */}
+      {/* Read only sees an open request but can't ask (it changes the booking and the pay). */}
       {familyRole === 'helper' ? (
         pending ? <Text style={st.askLink}>{`Asked ${sitter} to stay until ${timeOf(pending.new_ends_at)} · waiting`}</Text> : null
       ) : (

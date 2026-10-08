@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { CIcon, SitterAvatar } from '@/components/credentials';
-import { AskSheet, ReqStatusCard } from '@/components/requirementRequests';
-import { CredGrid, SpeaksBlock } from '@/components/sitterProfile';
+import { AskSheet, ReqStatusCard, SharedCard, sharedRows } from '@/components/requirementRequests';
+import { SpeaksBlock } from '@/components/sitterProfile';
 import { Text } from '@/components/Text';
 import { Button, ErrorText, Loading, Pill, Screen } from '@/components/ui';
 import { formatHours, hoursOf } from '@/lib/calendar-logic';
-import { familyCredentials, monthDay, monthYear, shortName, sitterAge, sitterBundle, toDay } from '@/lib/credentials';
+import { monthDay, monthYear, shortName, sitterAge, sitterBundle, toDay } from '@/lib/credentials';
 import { api, useQuery } from '@/lib/data';
 import { dayOf } from '@/lib/format';
 import { requirementRequestsApi } from '@/lib/requirement-requests-api';
@@ -19,9 +19,11 @@ import { errorText, supabase } from '@/lib/supabase';
 import { cardShadow, color, font } from '@/theme';
 
 // Wireframe P11 Sitter profile, from app/src/wireframes/P11.tsx. Opened from an active sitter on the Sitters tab (P54).
-// What a parent sees of a sitter: badges and dates only, never documents (nP7a). Credentials show only while they
-// count (verified and not expired; "Expires Oct 22" in amber within 30 days); the background check reads "Checked
-// <month>". Requirements (migration 31, the request form): one row per family requirement with Not asked / Asked /
+// BabyBadger checks nothing (phase 1): there is no "Checked by BabyBadger" and no badge. "What Maya shared with you"
+// lists only what she shared with this family, each with its status (Shared, see it / Looks good ✓ / Expired; a row
+// opens P79b), then SPEAKS from her profile; with nothing shared: "Nothing shared yet. Ask Maya for what you need."
+// and the Ask button (it moves there from the Requirements card so there is one).
+// Requirements (migration 31, the request form): one row per family requirement with Not asked / Asked /
 // Shared, see it / Looks good ✓ / Doesn't have it / Expired; shared ones open P79b (helpers too, read-only, P79c);
 // "Ask Maya" opens P79 (parents only). Before migration 31 the old banner shows (it opens P7a for a parent only).
 // Left out until built: "Monitoring notice · View copy", "Can pick up from", the "Maya has been reminded." line (no
@@ -58,7 +60,7 @@ export default function SitterProfile() {
   const last = [...done].sort((a, b) => b.starts_at.localeCompare(a.starts_at))[0];
   const rate = (data.link as { rate?: number | null } | undefined)?.rate;
   const stats = [`${done.length} ${done.length === 1 ? 'shift' : 'shifts'}`, `${formatHours(hoursOf(done))} hrs`, rate != null ? `$${Number(rate).toFixed(Number(rate) % 1 ? 2 : 0)} / hr` : ''].filter(Boolean).join(' · ');
-  const ordered = familyCredentials(data.bundle.creds);
+  const shared = data.asks.missing ? [] : sharedRows(data.asks.rows);
   const req = data.req;
   const soon = req.expiring[0];
 
@@ -114,7 +116,7 @@ export default function SitterProfile() {
       </View>
 
       {!data.asks.missing ? (
-        <ReqStatusCard rows={data.asks.rows} name={first} canAsk={parent} onAsk={() => setAsking(true)} onOpen={(rid) => router.push({ pathname: '/parent/shared/[id]', params: { id: rid } })} />
+        <ReqStatusCard rows={data.asks.rows} name={first} canAsk={parent && shared.length > 0} onAsk={() => setAsking(true)} onOpen={(rid) => router.push({ pathname: '/parent/shared/[id]', params: { id: rid } })} />
       ) : req.total ? (
         <Pressable accessibilityRole={parent ? 'button' : undefined} disabled={!parent} onPress={() => router.push('/parent/requirements')} style={[st.banner, req.allMet && !soon && { backgroundColor: color.okTint }]}>
           <CIcon name="warn" tint={req.allMet && !soon ? color.okInk : color.warnInk} />
@@ -134,14 +136,14 @@ export default function SitterProfile() {
         </Pressable>
       ) : null}
 
-      <View style={st.card}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-          <Text style={st.cardTitle}>Credentials</Text>
-          <Text style={st.checked}>Checked by BabyBadger</Text>
-        </View>
-        <CredGrid creds={ordered} />
-        <SpeaksBlock langs={data.bundle.langs} />
-      </View>
+      <SharedCard
+        rows={data.asks.missing ? [] : data.asks.rows}
+        name={first}
+        canAsk={parent}
+        onAsk={() => setAsking(true)}
+        onOpen={(rid) => router.push({ pathname: '/parent/shared/[id]', params: { id: rid } })}>
+        {data.bundle.langs.length ? <SpeaksBlock langs={data.bundle.langs} /> : null}
+      </SharedCard>
 
       <AskSheet open={asking} onClose={() => setAsking(false)} familyId={fid} sitterId={id} name={first} rows={data.asks.rows} onSent={reload} />
 
@@ -169,9 +171,6 @@ const st = StyleSheet.create({
   banner: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: color.warnTint, borderRadius: 14 },
   bannerTitle: { fontFamily: font.bodyBold, fontSize: 14, color: color.warnInk },
   bannerText: { fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.ink },
-  card: { gap: 14, padding: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
-  cardTitle: { fontFamily: font.displayBold, fontSize: 18, color: color.ink, flexShrink: 1 },
-  checked: { fontFamily: font.body, fontSize: 12, color: color.ink2, flexShrink: 1 },
   list: { paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 48 },
   line: { borderBottomWidth: 1, borderBottomColor: color.divider },

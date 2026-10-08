@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { CIcon, CredPill, CredRow, credStyles, credTileKey } from '@/components/credentials';
 import { Text } from '@/components/Text';
 import { Button, ErrorText, Loading, Pill, Screen } from '@/components/ui';
-import { backgroundCheck, backgroundStatus, certificates, credentialSub, daysUntil, expiringSoon, isSafety, languagesLine, monthYear, sitterBundle, toDay } from '@/lib/credentials';
+import { backgroundCheck, backgroundStatus, certificates, credentialSub, daysUntil, expiringSoon, isSafety, languagesLine, sitterBundle } from '@/lib/credentials';
 import { useQuery } from '@/lib/data';
 import { askedLine, requirementRequestsApi, usDate, waitingOnHer } from '@/lib/requirement-requests-api';
 import { useSession } from '@/lib/session';
@@ -15,9 +15,11 @@ import { cardShadow, color, font } from '@/theme';
 // water safety plus the background check (S17); SKILLS = the rest plus Languages (S16). A certificate row opens S41;
 // "Add a certification" opens S15. Not drawn: the screen with no certificates (both cards keep their fixed rows), and
 // "Not started" for a background check the provider hasn't begun.
+// Phase 1 checks nothing: her cards read Added / Expiring / Expired (never Verified / In review), the header note says
+// only she sees them, and the banner asks her to renew and share the new card with her families.
 // REQUESTS (migration 31): one row per family still waiting on her ("The Lee family asked for: CPR and First Aid,
 // Infant CPR" · "Share what you have · Tap to answer") opens S53. The background check row opens S17d; a report she
-// uploaded reads "Checkr report · 08/12/2026" with a Saved pill.
+// uploaded reads "Checkr report · 08/12/2026" with an Added pill.
 export default function Credentials() {
   const { session } = useSession();
   const uid = session!.user.id;
@@ -37,6 +39,7 @@ export default function Credentials() {
   return (
     <Screen back title="Credentials" gap={12} footer={<Button label="Add a certification" icon="plus" disabled={data.missing} onPress={() => router.push('/sitter/credentials/add')} />}>
       <ErrorText>{data.error}</ErrorText>
+      <Text style={st.intro}>Only you see your cards. Share one when a family asks.</Text>
       {soon?.expires_on ? (
         <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/sitter/credentials/renew', params: { id: soon.id } })} style={st.banner}>
           <CIcon name="bell" tint={color.warnInk} />
@@ -44,7 +47,7 @@ export default function Credentials() {
             <Text style={st.bannerBold}>
               {soon.title} expires in {daysUntil(soon.expires_on)} {daysUntil(soon.expires_on) === 1 ? 'day' : 'days'}.
             </Text>{' '}
-            Renew to keep the badge.
+            Renew it and share the new card with your families.
           </Text>
           <CIcon name="chevron" size={18} tint={color.warnInk} />
         </Pressable>
@@ -77,15 +80,13 @@ export default function Credentials() {
           tile="background"
           title="Background check"
           sub={
-            bgStatus === 'cleared' && bg?.verified_at
-              ? `Cleared ${monthYear(toDay(new Date(bg.verified_at)))} · renews yearly`
-              : bgStatus === 'expired'
+            bgStatus === 'expired'
                 ? 'Expired · renews yearly'
                 : bg
                   ? [bg.issuer ? `${bg.issuer} report` : 'Report', usDate(bg.issued_on)].filter(Boolean).join(' · ')
                   : 'Upload a report you have'
           }
-          right={bgStatus === 'cleared' ? <Pill label="Verified" kind="ok" /> : bgStatus === 'expired' ? <Pill label="Expired" kind="bad" /> : bg ? <Pill label="Saved" kind="muted" /> : undefined}
+          right={bgStatus === 'expired' ? <Pill label="Expired" kind="bad" /> : bg ? <Pill label="Added" kind="ok" /> : undefined}
           onPress={() => router.push('/sitter/background')}
           last
         />
@@ -111,6 +112,7 @@ export default function Credentials() {
 
 // Values from wireframe S14.
 const st = StyleSheet.create({
+  intro: { fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink2 },
   banner: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: color.warnTint, borderRadius: 14 },
   bannerText: { flexGrow: 1, flexShrink: 1, fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink },
   bannerBold: { fontFamily: font.bodyBold, fontSize: 14, lineHeight: 20, color: color.warnInk },

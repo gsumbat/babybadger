@@ -67,7 +67,7 @@ export default function WF_P54d() {
           </View>
           <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
             <Text style={{ fontFamily: font.display, fontSize: 18, color: "#34526E", marginVertical: -3.42 }}>Find a new sitter</Text>
-            <Text style={{ fontFamily: font.body, fontSize: 13, color: "#34526E" }}>Coming soon: verified sitters near you</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 13, color: "#34526E" }}>Coming soon: sitters near you</Text>
           </View>
           <SvgXml xml={SVG[3]} width={20} height={20} />
         </View>

@@ -68,7 +68,7 @@ export default function Sitters() {
       </View>
       <View style={{ flexGrow: 1, flexShrink: 1 }}>
         <Text style={st.findTitle}>Find a new sitter</Text>
-        <Text style={st.findSub}>Coming soon: verified sitters near you</Text>
+        <Text style={st.findSub}>Coming soon: sitters near you</Text>
       </View>
       <Icon name="chevron-right" size={20} tint={color.primaryStrong} />
     </Pressable>

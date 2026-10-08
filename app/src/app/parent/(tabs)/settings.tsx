@@ -16,14 +16,15 @@ import { color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe P12b (settings · account; supersedes P12): grouped settings rows, account, sign out.
-// Family members opens P78 ("Jen, Dan · 2 of 4", migration 30). Sitters opens P27, Homes and places P56, House rules P74. Rows whose screens aren't built show their value and
+// Family members opens P78 ("Jen, Dan · 2 of 4 seats", migration 30). Sitters opens P27, Homes and places P56, House rules P74. Rows whose screens aren't built show their value and
 // don't open anything: Kids and devices (P13), Consent records. Subscription: with billing on (EXPO_PUBLIC_BILLING=1)
 // it reads the plan ("Free trial · ends Nov 6", "Family · monthly", "Payment issue", "Start free trial") and opens
 // P39, or P36 when the family has no plan; with billing off it reads "Coming soon" and opens nothing. Alerts: "Arrivals and departures" is profiles.alert_arrivals (migration 21; trip alerts skip a
 // parent who turned it off), "Food and tasks" is alert_logs, "Off-plan and help alerts" is always on (a label).
-// A family helper (P4m) doesn't see Subscription: the family's plan covers them and only parents manage it.
+// Only the owner (migration 32) sees Subscription: the family's plan covers everyone else. A read-only member's
+// Sitters row doesn't open P27.
 export default function Settings() {
-  const { family, profile, session, signOut, refresh, familyRole } = useSession();
+  const { family, profile, session, signOut, refresh, familyRole, isOwner } = useSession();
   const plan = usePlan();
   const [logAlerts, setLogAlerts] = useState(profile?.alert_logs ?? true);
   const [arrivals, setArrivals] = useState(profile?.alert_arrivals ?? true);
@@ -92,8 +93,8 @@ export default function Settings() {
       <Text style={[st.section, { marginTop: 2 }]}>PRIVACY</Text>
       <Card style={st.card}>
         <SetRow label="Consent records" value={`${signed} signed`} />
-        <SetRow label="Keep location history" value="[RETENTION]" last={familyRole === 'helper'} />
-        {familyRole === 'helper' ? null : plan.enabled ? (
+        <SetRow label="Keep location history" value="[RETENTION]" last={!isOwner} />
+        {!isOwner ? null : plan.enabled ? (
           <SetRow
             label="Subscription"
             value={plan.loaded ? settingsValue(plan.sub) : ''}

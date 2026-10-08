@@ -23,8 +23,8 @@ export default function WF_P78f() {
         <Text style={{ fontFamily: font.display, fontSize: 22, color: "#1B2328", flexGrow: 1, flexShrink: 1 }}>Family members</Text>
       </View>
       <View style={{ flexDirection: "column", gap: 12, flexGrow: 1, paddingTop: 4, paddingRight: 20, paddingBottom: 12, paddingLeft: 20 }}>
-        <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", lineHeight: 22 }}>Adults who look after Ava and Leo. One plan covers up to 4.</Text>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>MEMBERS · 4 OF 4</Text>
+        <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", lineHeight: 22 }}>Adults who look after Ava and Leo. Your plan has 4 seats.</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>4 SEATS · 4 USED</Text>
         <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "column", borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 68 }}>{/* -> P78e-MemberYou.dc.html */}
@@ -35,10 +35,10 @@ export default function WF_P78f() {
                 <Text style={{ fontFamily: font.bodySemi, fontSize: 16, color: "#1B2328" }}>Jen Lee · You</Text>
                 <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Mom</Text>
               </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#DCE7F1", borderRadius: 999 }}>
-                <View style={{ width: 7, height: 7, backgroundColor: "#47698A", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#DCEEE3", borderRadius: 999 }}>
+                <View style={{ width: 7, height: 7, backgroundColor: "#1F8A4D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
                 </View>
-                <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E" }}>Parent</Text>
+                <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#1B6B3D" }}>Owner</Text>
               </View>
             </View>
           </View>
@@ -54,7 +54,7 @@ export default function WF_P78f() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#DCE7F1", borderRadius: 999 }}>
                 <View style={{ width: 7, height: 7, backgroundColor: "#47698A", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
                 </View>
-                <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E" }}>Parent</Text>
+                <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E" }}>Full access</Text>
               </View>
             </View>
           </View>
@@ -70,7 +70,7 @@ export default function WF_P78f() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
                 <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
                 </View>
-                <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Family helper</Text>
+                <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Read only</Text>
               </View>
             </View>
           </View>
@@ -86,18 +86,18 @@ export default function WF_P78f() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
                 <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
                 </View>
-                <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Family helper</Text>
+                <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Read only</Text>
               </View>
             </View>
           </View>
         </View>
         <View style={{ flexDirection: "row", gap: 12, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
           <SvgXml xml={SVG[1]} width={22} height={22} />
-          <Text style={{ fontFamily: font.body, fontSize: 13, color: "#1B2328", lineHeight: 18, flexShrink: 1 }}>Parents manage sitters, pay and the plan. Family helpers see the kids and updates, and can message the sitter.</Text>
+          <Text style={{ fontFamily: font.body, fontSize: 13, color: "#1B2328", lineHeight: 18, flexShrink: 1 }}>Full access can book shifts, edit the care plan and manage sitters. Read only sees the kids and updates, and can message the sitter.</Text>
         </View>
       </View>
       <View style={{ flexDirection: "row", paddingTop: 4, paddingRight: 20, paddingBottom: 32, paddingLeft: 20 }}>
-        <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960", lineHeight: 20, textAlign: "center", flexGrow: 1, flexShrink: 1 }}>Your family has 4 members, the most a plan covers.</Text>
+        <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960", lineHeight: 20, textAlign: "center", flexGrow: 1, flexShrink: 1 }}>All 4 seats are used. Remove someone to add another.</Text>
       </View>
     </View>
   );

@@ -36,7 +36,7 @@ export default function WF_S18() {
               </View>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#7A4E0E" }}>Now</Text>
             </View>
-            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}>Badge still shows. Reminders at 30, 14 and 3 days.</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}>Families you shared it with still see it. Reminders at 30, 14 and 3 days.</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#F6DCD6", borderRadius: 999 }}>
@@ -44,7 +44,7 @@ export default function WF_S18() {
               </View>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#A1321F" }}>Oct 22</Text>
             </View>
-            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}>Badge comes off your profile. Families who require Infant CPR are told.</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}>It shows as Expired to families you shared it with.</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#DCEEE3", borderRadius: 999 }}>
@@ -52,7 +52,7 @@ export default function WF_S18() {
               </View>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#1B6B3D" }}>Renewed</Text>
             </View>
-            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}>Upload the new card and the badge comes back after review.</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}>Upload the new card and share it with your families.</Text>
           </View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>

@@ -8,15 +8,7 @@ import { cardShadow, font } from '@/theme';
 const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 const SVG = [
-  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #1B2328; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M15 6l-6 6 6 6\"></path></svg>",
-  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #C2412D; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z\"></path><path d=\"M12 10v5M9.5 12.5h5\"></path></svg>",
-  "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #1F8A4D; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"></path></svg>",
-  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z\"></path><path d=\"M8.5 12l2.5 2.5 4.5-4.5\"></path></svg>",
-  "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #1F8A4D; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"></path></svg>",
-  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #C2412D; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"12\" cy=\"8\" r=\"4\"></circle><path d=\"M5 21c0-4 3-7 7-7s7 3 7 7\"></path><path d=\"M10.5 8h0M13.5 8h0\"></path></svg>",
-  "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #1F8A4D; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"></path></svg>",
-  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M4 16v-4l2-5h12l2 5v4z\"></path><circle cx=\"7.5\" cy=\"16.5\" r=\"1.8\"></circle><circle cx=\"16.5\" cy=\"16.5\" r=\"1.8\"></circle></svg>",
-  "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #1F8A4D; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"></path></svg>"
+  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #1B2328; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M15 6l-6 6 6 6\"></path></svg>"
 ];
 
 /** What families see */
@@ -42,60 +34,6 @@ export default function WF_S19() {
               <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960" }}>Drives · [RATE] / hour</Text>
             </View>
           </View>
-          <View style={{ flexDirection: "column", rowGap: 12, columnGap: 10 }}>
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#F6DCD6", borderRadius: 14 }}>
-                  <SvgXml xml={SVG[1]} width={22} height={22} />
-                </View>
-                <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#1B2328" }}>CPR + First Aid</Text>
-                    <SvgXml xml={SVG[2]} width={16} height={16} />
-                  </View>
-                  <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960" }}>Until Mar 2027</Text>
-                </View>
-              </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
-                  <SvgXml xml={SVG[3]} width={22} height={22} />
-                </View>
-                <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#1B2328" }}>Background</Text>
-                    <SvgXml xml={SVG[4]} width={16} height={16} />
-                  </View>
-                  <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960" }}>Checked Aug 2026</Text>
-                </View>
-              </View>
-            </View>
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#F6DCD6", borderRadius: 14 }}>
-                  <SvgXml xml={SVG[5]} width={22} height={22} />
-                </View>
-                <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#1B2328" }}>Infant CPR</Text>
-                    <SvgXml xml={SVG[6]} width={16} height={16} />
-                  </View>
-                  <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960" }}>Until Oct 2026</Text>
-                </View>
-              </View>
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 10, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
-                  <SvgXml xml={SVG[7]} width={22} height={22} />
-                </View>
-                <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
-                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
-                    <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#1B2328" }}>Driver</Text>
-                    <SvgXml xml={SVG[8]} width={16} height={16} />
-                  </View>
-                  <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960" }}>Clean record</Text>
-                </View>
-              </View>
-            </View>
-          </View>
           <View style={{ flexDirection: "column", gap: 6 }}>
             <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>SPEAKS</Text>
             <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
@@ -118,22 +56,18 @@ export default function WF_S19() {
           </View>
           <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 21 }}>"I'm a pre-K teaching assistant who loves art projects and getting kids outside. Calm at bedtime, firm on screen time."</Text>
         </View>
+        <View style={{ paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4 }}><Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Your cards stay private. A family sees one only after you share it with them.</Text></View>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>NEVER SHOWN TO FAMILIES</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
             <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
             </View>
-            <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Card photos</Text>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Cards you haven’t shared</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
             <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
             </View>
             <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Certificate numbers</Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
-            <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
-            </View>
-            <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Full report</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
             <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>

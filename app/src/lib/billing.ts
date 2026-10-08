@@ -33,13 +33,13 @@ export async function fetchSubscription(fid: string): Promise<FamilySubscription
   const { data, error } = await supabase.from('family_subscriptions').select('*').eq('family_id', fid).maybeSingle();
   if (error) return null;
   if (data) return data as FamilySubscription;
-  // A family helper can't read the row (migration 30) but the family's plan covers them: family_has_plan says whether
+  // A read-only member can't read the row (migration 30) but the family's plan covers them: family_has_plan says whether
   // the live map is on. They only ever see "covered" or "paused", never the plan's details.
   const { data: on } = await supabase.rpc('family_has_plan', { fid });
   return on === true ? coveredPlan(fid) : null;
 }
 
-/** What a family helper's app knows about the family's plan: on. */
+/** What a read-only member's app knows about the family's plan: on. */
 function coveredPlan(fid: string): FamilySubscription {
   return {
     family_id: fid,
@@ -129,10 +129,12 @@ export function usePlan(): PlanInfo {
  */
 export function useRequirePlan() {
   const plan = usePlan();
+  // Only the owner opens the plans (migration 32); anyone else goes back Home, where the paused map says who restarts it.
+  const { isOwner } = useSession();
   const blocked = plan.enabled && plan.loaded && !plan.hasPlan;
   useEffect(() => {
-    if (blocked) router.replace('/parent/plans?from=gate');
-  }, [blocked]);
+    if (blocked) router.replace(isOwner ? '/parent/plans?from=gate' : '/parent');
+  }, [blocked, isOwner]);
   return !blocked;
 }
 

@@ -5,6 +5,7 @@ import { SvgXml } from 'react-native-svg';
 import { Text } from '@/components/Text';
 import { graceEnds, longDate, usePlan } from '@/lib/billing';
 import { useSession } from '@/lib/session';
+import { useOwnerName } from '@/lib/use-family-role';
 import { color, font } from '@/theme';
 
 // Icons from the billing wireframes (P36, P40, P41, P4l).
@@ -23,9 +24,9 @@ export const BILLING_SVG = {
 /** P40: Home banner while a payment failed and the grace period runs. Renders nothing otherwise. */
 export function PaymentIssueBanner() {
   const plan = usePlan();
-  // Family helpers (P4m) never see billing banners: only parents manage the plan.
-  const { familyRole } = useSession();
-  if (familyRole === 'helper' || !plan.enabled || plan.state !== 'past_due' || !plan.hasPlan) return null;
+  // Only the owner manages the plan (migration 32): nobody else sees billing banners.
+  const { isOwner } = useSession();
+  if (!isOwner || !plan.enabled || plan.state !== 'past_due' || !plan.hasPlan) return null;
   return (
     <View style={st.issue}>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -45,16 +46,17 @@ export function PaymentIssueBanner() {
 /** P4l: the live map's place when the family has no plan (P40 "Paused: live map and trips"). */
 export function LockedMap({ height = 220 }: { height?: number }) {
   const plan = usePlan();
-  // A family helper can't manage the plan (migration 30): no plans button, a parent restarts it. Not drawn.
-  const { familyRole } = useSession();
-  if (familyRole === 'helper')
+  // Only the owner manages the plan (migration 32): everyone else gets no plans button. Not drawn.
+  const { isOwner } = useSession();
+  const owner = useOwnerName();
+  if (!isOwner)
     return (
       <View style={[st.locked, { height }]}>
         <View style={st.lockCircle}>
           <SvgXml xml={BILLING_SVG.lock} width={22} height={22} />
         </View>
         <Text style={st.lockTitle}>The live map is paused</Text>
-        <Text style={st.lockSub}>A parent in your family can restart the plan. Messages, help alerts and past reports keep working.</Text>
+        <Text style={st.lockSub}>{`${owner || 'The family’s owner'} can restart the plan. Messages, help alerts and past reports keep working.`}</Text>
       </View>
     );
   return (

@@ -35,7 +35,7 @@ export default function WF_S0e() {
         </View>
         <View style={{ flexGrow: 1, flexDirection: "column" }}>
         </View>
-        <View style={{ paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "rgba(255,255,255,0.14)", borderRadius: 16 }}><Text style={{ fontFamily: font.body, fontSize: 13, color: "#FFFFFF", lineHeight: 18 }}>Already a BabyBadger sitter? No download or sign-up. The invite lands in the app, and her badges already count toward the family’s requirements.</Text></View>
+        <View style={{ paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "rgba(255,255,255,0.14)", borderRadius: 16 }}><Text style={{ fontFamily: font.body, fontSize: 13, color: "#FFFFFF", lineHeight: 18 }}>Already a BabyBadger sitter? No download or sign-up. The invite lands in the app, and the cards on her profile are ready to share when the family asks.</Text></View>
       </View>
     </View>
   );

@@ -35,10 +35,11 @@ Deno.serve(async (req) => {
 
     const { familyId, flow, returnTo } = await req.json().catch(() => ({}));
     if (typeof familyId !== 'string') return json({ error: 'familyId is required.' }, 400);
-    const { data: parent } = await admin.from('family_parents').select('*').eq('family_id', familyId).eq('user_id', auth.user.id).maybeSingle();
-    // Family helpers (migration 30, role 'helper') are covered by the plan but can't manage it. Before migration 30 there
-    // is no role column: every row is a parent.
-    if (!parent || (parent as { role?: string }).role === 'helper') return json({ error: 'Only a parent of this family can do that.' }, 403);
+    // Only the family's owner (families.created_by, migration 32) manages the plan. Other members, with full access or
+    // read only, are covered by it.
+    const { data: owner } = await admin.from('families').select('id').eq('id', familyId).eq('created_by', auth.user.id).maybeSingle();
+    const { data: member } = await admin.from('family_parents').select('user_id').eq('family_id', familyId).eq('user_id', auth.user.id).maybeSingle();
+    if (!owner || !member) return json({ error: 'Only the family’s owner can manage the subscription.', code: 'not_owner' }, 403);
 
     const { data: sub } = await admin.from('family_subscriptions').select('stripe_customer_id, stripe_subscription_id').eq('family_id', familyId).maybeSingle();
     if (!sub?.stripe_customer_id) return json({ error: 'No plan yet. Start the free trial first.', code: 'no_customer' }, 404);

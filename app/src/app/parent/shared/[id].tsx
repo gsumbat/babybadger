@@ -27,7 +27,7 @@ import { supabase } from '@/lib/supabase';
 import { useCanManage, useParentNames } from '@/lib/use-family-role';
 import { cardShadow, color, font } from '@/theme';
 
-// Wireframes P79b What Maya shared (parent) and P79c (family helper, read-only), from app/src/wireframes/P79b.tsx /
+// Wireframes P79b What Maya shared (parent) and P79c (read-only access), from app/src/wireframes/P79b.tsx /
 // P79c.tsx. Opened from P11 / P79d (a shared or looked-at row) and the "Maya shared CPR and First Aid" push
 // (/parent/shared/<request id>). The card photo or PDF comes from storage through a signed link; the database lets the
 // family read it only while she shares it with them (migration 31). Looks good -> met; Ask again opens P79e.
@@ -155,7 +155,7 @@ export default function SharedDoc() {
           </Text>
         ) : (
           <Text style={reqReqStyles.infoText}>
-            <Text style={reqReqStyles.infoBold}>You can look at it.</Text> Only a parent says it looks good or asks {name} again.
+            <Text style={reqReqStyles.infoBold}>You can look at it.</Text> Only family members with full access say it looks good or asks {name} again.
           </Text>
         )}
       </View>

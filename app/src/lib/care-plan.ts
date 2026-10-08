@@ -225,6 +225,16 @@ export function formatTime(t: string | null): string {
   return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`;
 }
 
+/** P20v "Time": "3:30 – 4:00 PM", "11:30 AM – 1:00 PM", "7:00 PM" (no end), "Any time" (neither). */
+export function timeRangeLabel(starts: string | null, ends: string | null): string {
+  const a = formatTime(starts);
+  const b = formatTime(ends);
+  if (!a && !b) return 'Any time';
+  if (!a) return `Until ${b}`;
+  if (!b) return a;
+  return a.slice(-2) === b.slice(-2) ? `${a.slice(0, -3)} – ${b}` : `${a} – ${b}`;
+}
+
 /** "15:15:00" -> "3:15" (P7's time column). */
 export function shortTime(t: string | null): string {
   if (!t) return '';

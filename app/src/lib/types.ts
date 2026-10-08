@@ -2,7 +2,8 @@ export type Role = 'parent' | 'sitter';
 
 export type Profile = { id: string; full_name: string; role: Role | null; alert_logs?: boolean; alert_arrivals?: boolean };
 
-export type Family = { id: string; name: string };
+/** created_by = the family's owner (migration 32 lets the owner hand it over). */
+export type Family = { id: string; name: string; created_by?: string };
 
 export type Kid = {
   id: string;

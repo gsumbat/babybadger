@@ -70,7 +70,7 @@ export function MemberLanding({ token, preview, onJoin, onHaveApp }: { token: st
       </View>
       {preview ? <FamilyCard letter={(who[0] ?? fam[0] ?? 'F').toUpperCase()} title={fam} sub={who ? `From ${who} · invite saved` : 'Invite saved'} pill="Saved" /> : <View style={[st.card, { height: 60 }]} />}
       <View style={{ gap: 10 }}>
-        <Bullet icon="lock">{`Only the people ${who || 'a parent'} adds can join. Up to 4 per family.`}</Bullet>
+        <Bullet icon="lock">{`Only the people ${who || 'the family'} adds can join. 4 seats per family.`}</Bullet>
         <Bullet icon="clock">Covered by the family’s plan. Nothing to pay.</Bullet>
       </View>
       <Button label={`Join ${familyPhrase(p.family_name)}`} onPress={onJoin} />
@@ -85,7 +85,7 @@ export function MemberLanding({ token, preview, onJoin, onHaveApp }: { token: st
   );
 }
 
-/** P78d Join the Lee family (signed in): the role, what they'll see, Join / Not now. */
+/** P78d Join the Lee family (signed in): the access level, what they'll see, Join / Not now. */
 export function JoinFamily({ d, busy, err, onJoin, onNotNow, onBack }: { d: MemberLinkDetails; busy: boolean; err: string; onJoin: () => void; onNotNow: () => void; onBack: () => void }) {
   const fam = familyPhrase(d.family_name);
   const who = d.invited_by?.trim() || 'A parent';
@@ -106,12 +106,12 @@ export function JoinFamily({ d, busy, err, onJoin, onNotNow, onBack }: { d: Memb
           </Text>
         </View>
       }>
-      <Text style={st.leadApp}>{`${who} added you as ${helper ? 'a family helper' : 'a parent'}.`}</Text>
+      <Text style={st.leadApp}>{`${who} added you with ${helper ? 'read-only' : 'full'} access.`}</Text>
       <FamilyCard big letter={(who[0] ?? 'F').toUpperCase()} title={d.family_name?.trim() || 'The family'} sub={`${kids ? `${kids} · ` : ''}from ${who}`} pill={roleLabel(d.role)} pillKind={helper ? 'muted' : 'info'} />
       <View style={{ gap: 10 }}>
         <Bullet icon="eye">{`See ${kidsLine}’s schedule, the live shift and the sitter’s updates.`}</Bullet>
         <Bullet icon="message-square">Message the sitter.</Bullet>
-        {helper ? <Bullet icon="lock">{`${who} and the other parents manage sitters, pay and the plan.`}</Bullet> : <Bullet icon="users">Book shifts, invite sitters and manage the plan.</Bullet>}
+        {helper ? <Bullet icon="lock">People with full access manage sitters, pay and the plan.</Bullet> : <Bullet icon="users">Book shifts, edit the care plan and manage sitters.</Bullet>}
         <Bullet icon="clock">Covered by the family’s plan. Nothing to pay.</Bullet>
       </View>
       <ErrorText>{err}</ErrorText>

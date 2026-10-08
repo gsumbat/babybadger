@@ -20,7 +20,8 @@ import { Text } from '@/components/Text';
 // found (S35, marketplace: phase 1 has none), Money's Invoices and payouts (S30). WORK › "Invite a family you sit
 // for" opens S52 / S52b (sitter/invite-family).
 // Not drawn: the Certifications row with nothing expiring (sub-line lists them, no pill) and the background check
-// row before it has started (no pill).
+// row before she has added a report (no pill). Phase 1 checks nothing: the background check reads Added / Expired
+// (never Cleared / In progress).
 const SETTINGS =
   '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>';
 
@@ -81,7 +82,7 @@ export default function Me() {
         <MeRow
           icon="shield"
           title="Background check"
-          right={bg === 'cleared' ? <Pill label="Cleared" kind="ok" /> : bg === 'in_progress' ? <Pill label="In progress" kind="info" /> : bg === 'expired' ? <Pill label="Expired" kind="bad" /> : undefined}
+          right={bg === 'added' ? <Pill label="Added" kind="ok" /> : bg === 'expired' ? <Pill label="Expired" kind="bad" /> : undefined}
           onPress={() => router.push('/sitter/background')}
           line
         />

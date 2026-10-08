@@ -24,7 +24,7 @@ import { cardShadow, color, font } from '@/theme';
 // FREE (dimmed: Booked / Away until … / not free that evening / no hours set). Rows open P11. Change opens the
 // "Pick a time" sheet (canvas P54d / P54f / P54g). Week opens P43 Who's free for the window's week, day and part of the
 // day. Filter chips show only when the pool has 2+ sitters and the filter can match:
-// Meets requirements (family has requirements; lib/requirements), Drives (a verified, unexpired driver's license),
+// Meets requirements (family has requirements; lib/requirements), Drives (an unexpired driver's license she shared with the family),
 // one chip per other language a sitter speaks (sitter_languages; P42 draws Spanish). None are on at first.
 // Left out until built: Find new (P48, "Coming soon"). The main button asks the free sitters at once (P45): "Ask Maya"
 // with one free sitter, "Ask both free sitters" with two, "Ask 3 free sitters" with more (only those the filters
@@ -62,7 +62,7 @@ export default function Pool() {
         color: AVATAR[data.sitters.indexOf(s) % AVATAR.length],
         row: poolRow(status, win, done),
         meets: data.reqs[i].allMet,
-        drives: bundle.creds.some((c) => c.kind === 'drivers_license' && c.verified_at && credentialState(c) !== 'expired'),
+        drives: bundle.creds.some((c) => c.kind === 'drivers_license' && credentialState(c) !== 'expired'),
         langs: bundle.langs.map((l) => l.language),
       };
     });

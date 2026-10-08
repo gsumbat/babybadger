@@ -26,13 +26,13 @@ export default function WF_P23() {
       <View style={{ flexDirection: "column", gap: 12, flexGrow: 1, paddingTop: 4, paddingRight: 20, paddingBottom: 12, paddingLeft: 20 }}>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>WHO SHE’LL LOOK AFTER</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 8, height: 44, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 2.0, borderColor: "#47698A", flexShrink: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, height: 44, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 2.0, borderColor: "#47698A", flexShrink: 1 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 34, height: 34, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 17 }}>
               <Text style={{ fontFamily: font.displayBold, fontSize: 15, color: "#FFFFFF" }}>A</Text>
             </View>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>✓ Ava</Text>
           </View>
-          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 8, height: 44, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 2.0, borderColor: "#47698A", flexShrink: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8, height: 44, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 2.0, borderColor: "#47698A", flexShrink: 1 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 34, height: 34, flexShrink: 0, backgroundColor: "#8676B3", borderRadius: 17 }}>
               <Text style={{ fontFamily: font.displayBold, fontSize: 15, color: "#FFFFFF" }}>L</Text>
             </View>
@@ -44,7 +44,7 @@ export default function WF_P23() {
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 58, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "column", flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Drive the kids</Text>
-              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Needs a verified driver’s license</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Needs a driver’s license</Text>
             </View>
             <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 15, flexDirection: "column" }}>
               <View style={{ width: 24, height: 24, top: 3, right: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
@@ -63,7 +63,7 @@ export default function WF_P23() {
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 58 }}>
             <View style={{ flexDirection: "column", flexShrink: 1 }}>
-              <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Message both parents</Text>
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Message the family</Text>
               <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Jen and Sam</Text>
             </View>
             <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 15, flexDirection: "column" }}>

@@ -47,7 +47,7 @@ export default function WF_S3() {
             <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>3:00 – 7:00 PM</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, flexShrink: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, flexShrink: 1 }}>
               <View style={{ width: 7, height: 7, backgroundColor: "#1F8A4D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
               </View>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B6B3D" }}>At their home · 4 tasks, first 3:15</Text>
@@ -82,7 +82,7 @@ export default function WF_S3() {
             </View>
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328", lineHeight: 19 }}>Infant CPR expires in 21 days</Text>
-              <View style={{ overflow: "hidden", flexShrink: 1, minHeight: 0, justifyContent: "center" }}><Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 16 }}>Renew to keep your badge · Lee family requires it</Text></View>
+              <View style={{ overflow: "hidden", flexShrink: 1, minHeight: 0, justifyContent: "center" }}><Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 16 }}>Renew and share the new card · Lee family requires it</Text></View>
             </View>
             <SvgXml xml={SVG[4]} width={18} height={18} />
           </View>

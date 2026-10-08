@@ -21,7 +21,7 @@ import { color } from '@/theme';
 SplashScreen.preventAutoHideAsync();
 
 function Routes() {
-  const { loading, session, profile, family, familyRole, sitterLinks } = useSession();
+  const { loading, session, profile, family, familyRole, isOwner, sitterLinks } = useSession();
   const signedIn = !!session;
   const isParent = signedIn && profile?.role === 'parent' && !!family;
   const isSitter = signedIn && profile?.role === 'sitter' && sitterLinks.length > 0;
@@ -34,15 +34,17 @@ function Routes() {
   const memberLink = path.startsWith('/m/');
 
   // Once signed in to a family: the system asks to allow notifications, and tapped alerts open their screen (a family
-  // helper's tap on a parent-only screen opens its read-only view instead).
+  // read-only member's tap on a full-access screen, or anyone's tap on an owner-only one, opens the screen beside it).
   const roleRef = useRef(familyRole);
+  const ownerRef = useRef(isOwner);
   useEffect(() => {
     roleRef.current = familyRole;
-  }, [familyRole]);
+    ownerRef.current = isOwner;
+  }, [familyRole, isOwner]);
   useEffect(() => {
     if (!ready) return;
     void registerForPush();
-    return listenForAlertTaps((url) => routeForRole(url, roleRef.current));
+    return listenForAlertTaps((url) => routeForRole(url, roleRef.current, ownerRef.current));
   }, [ready]);
 
   const head = inviteLink ? <InviteHead /> : familyLink ? <FamilyLinkHead /> : memberLink ? <MemberLinkHead /> : null;

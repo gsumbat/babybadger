@@ -2542,13 +2542,13 @@ do $$ declare i family_member_invites; begin
   if i.email <> 'sue30@example.com' or i.role <> 'helper' or i.relation <> 'Grandma' or i.sent_at is null or i.link_token !~ '^[0-9a-f]{40}$'
      or i.expires_at < now() + interval '6 days' or i.expires_at > now() + interval '8 days' then raise exception 'FAIL member invite %', row_to_json(i); end if;
   perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Bea again', 'Mom', 'parent', 'bea30@example.com')$q$, 'already_member');
-  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'X', 'Mom', 'boss', null)$q$, 'Pick a role.');
+  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'X', 'Mom', 'boss', null)$q$, 'Pick full access or read only.');
   perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), ' ', 'Mom', 'helper', null)$q$, 'Add their name.');
 end $$;
 -- Strangers and sitters can't invite members or read invites
 select pg_temp.as_user('00000000-0000-0000-0000-0000000a3002');
 do $$ begin
-  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Me', 'Other', 'parent', null)$q$, 'not a parent%');
+  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Me', 'Other', 'parent', null)$q$, 'not the family owner%');
   if (select count(*) from family_member_invites) <> 0 then raise exception 'FAIL sitter reads member invites'; end if;
   -- the sitter can't join the family she sits for as an adult
   perform pg_temp.must_fail($q$select public.accept_member_invite((select v from ctx where k = 'tok30'))$q$, 'This invite was sent to%');
@@ -2628,10 +2628,10 @@ do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam30'); n int; be
   perform pg_temp.must_fail($q$insert into kids (family_id, name) select v::uuid, 'Hacked' from ctx where k = 'fam30'$q$, '%row-level security%');
   perform pg_temp.must_fail($q$insert into care_items (family_id, type) select v::uuid, 'meal' from ctx where k = 'fam30'$q$, '%row-level security%');
   perform pg_temp.must_fail($q$insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by) select v::uuid, '00000000-0000-0000-0000-0000000a3002', now() + interval '2 days', now() + interval '2 days 3 hours', auth.uid() from ctx where k = 'fam30'$q$, '%row-level security%');
-  perform pg_temp.must_fail($q$select public.set_trial_reminder((select v::uuid from ctx where k = 'fam30'), false)$q$, 'not a parent%');
-  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Gramps', 'Grandpa', 'helper', null)$q$, 'not a parent%');
-  perform pg_temp.must_fail($q$select public.set_member_role((select v::uuid from ctx where k = 'fam30'), auth.uid(), 'parent')$q$, 'not a parent%');
-  perform pg_temp.must_fail($q$select public.remove_family_member((select v::uuid from ctx where k = 'fam30'), '00000000-0000-0000-0000-0000000a3001')$q$, 'not a parent%');
+  perform pg_temp.must_fail($q$select public.set_trial_reminder((select v::uuid from ctx where k = 'fam30'), false)$q$, 'not the family owner%');
+  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Gramps', 'Grandpa', 'helper', null)$q$, 'not the family owner%');
+  perform pg_temp.must_fail($q$select public.set_member_role((select v::uuid from ctx where k = 'fam30'), auth.uid(), 'parent')$q$, 'not the family owner%');
+  perform pg_temp.must_fail($q$select public.remove_family_member((select v::uuid from ctx where k = 'fam30'), '00000000-0000-0000-0000-0000000a3001')$q$, 'not the family owner%');
   perform pg_temp.must_fail($q$select public.request_extension((select v::uuid from ctx where k = 'shift30'), now() + interval '4 hours')$q$, 'not your family%');
   perform pg_temp.must_fail($q$insert into family_requirements (family_id, kind) select v::uuid, 'cpr' from ctx where k = 'fam30'$q$, '%');
   perform pg_temp.must_fail($q$insert into family_parents (family_id, user_id) select v::uuid, '00000000-0000-0000-0000-0000000a3006' from ctx where k = 'fam30'$q$, 'permission denied%');
@@ -2699,7 +2699,7 @@ do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam30'); begin
   if not public.is_parent_of(fid) then raise exception 'FAIL Ben is not a parent'; end if;
   if (select count(*) from family_parents where family_id = fid) <> 4 then raise exception 'FAIL 4 members'; end if;
   if (select count(*) from family_subscriptions) <> 1 then raise exception 'FAIL Ben (parent) reads the subscription'; end if;
-  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Ivy', 'Other', 'helper', null)$q$, 'family_full');
+  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam30'), 'Ivy', 'Other', 'helper', null)$q$, 'not the family owner%');
 end $$;
 -- The database itself refuses a 5th adult
 reset role;
@@ -2707,25 +2707,27 @@ do $$ begin
   perform pg_temp.must_fail($q$insert into family_parents (family_id, user_id) select v::uuid, '00000000-0000-0000-0000-0000000a3006' from ctx where k = 'fam30'$q$, 'family_full');
 end $$;
 set role authenticated;
--- Roles and the last parent: Ben makes Bea a helper, then can't make himself one, leave, or be removed
+-- Access (migration 32: the owner only): Ben (full access, not the owner) can't change anyone's access or remove
+-- anyone; Bea (the owner) makes Ben read only and back, can't make herself read only, leave or be removed.
 do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam30'); begin
-  perform public.set_member_role(fid, '00000000-0000-0000-0000-0000000a3001', 'helper');
-  if (select role from family_parents where family_id = fid and user_id = '00000000-0000-0000-0000-0000000a3001') <> 'helper' then raise exception 'FAIL role change'; end if;
-  perform pg_temp.must_fail(format('select public.set_member_role(%L, auth.uid(), %L)', fid, 'helper'), 'last_parent');
-  perform pg_temp.must_fail(format('select public.leave_family(%L)', fid), 'last_parent');
-  perform public.set_member_role(fid, '00000000-0000-0000-0000-0000000a3001', 'parent');
+  perform pg_temp.must_fail(format('select public.set_member_role(%L, %L, %L)', fid, '00000000-0000-0000-0000-0000000a3001', 'helper'), 'not the family owner%');
+  perform pg_temp.must_fail(format('select public.remove_family_member(%L, %L)', fid, '00000000-0000-0000-0000-0000000a3005'), 'not the family owner%');
 end $$;
 select pg_temp.as_user('00000000-0000-0000-0000-0000000a3001');
 do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam30'); begin
-  -- Bea removes Ben; then she is the last parent
+  perform public.set_member_role(fid, '00000000-0000-0000-0000-0000000a3004', 'helper');
+  if (select role from family_parents where family_id = fid and user_id = '00000000-0000-0000-0000-0000000a3004') <> 'helper' then raise exception 'FAIL role change'; end if;
+  perform public.set_member_role(fid, '00000000-0000-0000-0000-0000000a3004', 'parent');
+  perform pg_temp.must_fail(format('select public.set_member_role(%L, auth.uid(), %L)', fid, 'helper'), 'owner_access');
+  perform pg_temp.must_fail(format('select public.leave_family(%L)', fid), 'owner_leave');
+  perform pg_temp.must_fail(format('select public.remove_family_member(%L, auth.uid())', fid), 'owner_leave');
+  -- Bea removes Ben
   perform public.remove_family_member(fid, '00000000-0000-0000-0000-0000000a3004');
-  perform pg_temp.must_fail(format('select public.leave_family(%L)', fid), 'last_parent');
-  perform pg_temp.must_fail(format('select public.remove_family_member(%L, auth.uid())', fid), 'last_parent');
 end $$;
 -- Sue (helper) leaves on her own; a helper can't remove someone else
 select pg_temp.as_user('00000000-0000-0000-0000-0000000a3005');
 do $$ begin
-  perform pg_temp.must_fail(format('select public.remove_family_member(%L, %L)', (select v from ctx where k = 'fam30'), '00000000-0000-0000-0000-0000000a3003'), 'not a parent%');
+  perform pg_temp.must_fail(format('select public.remove_family_member(%L, %L)', (select v from ctx where k = 'fam30'), '00000000-0000-0000-0000-0000000a3003'), 'not the family owner%');
 end $$;
 select pg_temp.as_user('00000000-0000-0000-0000-0000000a3003');
 select public.leave_family((select v::uuid from ctx where k = 'fam30'));
@@ -2979,6 +2981,140 @@ select pg_temp.as_user('00000000-0000-0000-0000-0000000a3102');
 delete from sitter_credentials where id = (select v::uuid from ctx where k = 'bg31');
 do $$ begin
   if (select status || ':' || (credential_id is null)::text from requirement_requests where req_key = 'background_check') <> 'asked:true' then raise exception 'FAIL deleted card kept the request'; end if;
+end $$;
+reset role;
+
+-- 32. Family seats (migration 32): 4 seats; the owner (families.created_by) adds people with Full access or Read only,
+--     changes access, removes them and manages billing. Oli owns the Oak family; Dee has full access; Ray is read
+--     only; Kai has an open invite. Oli hands the family to Dee, then leaves.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a3201', 'oli32@example.com'),
+  ('00000000-0000-0000-0000-0000000a3202', 'dee32@example.com'),
+  ('00000000-0000-0000-0000-0000000a3203', 'ray32@example.com');
+insert into push_tokens (token, user_id) values ('ExponentPushToken[oli32]', '00000000-0000-0000-0000-0000000a3201'),
+  ('ExponentPushToken[dee32]', '00000000-0000-0000-0000-0000000a3202'), ('ExponentPushToken[ray32]', '00000000-0000-0000-0000-0000000a3203');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3201');
+insert into ctx values ('fam32', (select public.create_family('The Oak family', 'Oli Oak')::text));
+insert into kids (family_id, name) select v::uuid, 'Pip' from ctx where k = 'fam32';
+insert into ctx select 'tok32dee', public.invite_family_member((select v::uuid from ctx where k = 'fam32'), 'Dee', 'Dad', 'full', null)->>'link_token';
+insert into ctx select 'tok32ray', public.invite_family_member((select v::uuid from ctx where k = 'fam32'), 'Ray', 'Grandpa', 'read_only', null)->>'link_token';
+do $$ begin
+  if not public.is_family_owner((select v::uuid from ctx where k = 'fam32')) then raise exception 'FAIL the creator is the owner'; end if;
+  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam32'), 'X', 'Other', 'admin', null)$q$, 'Pick full access or read only.');
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3202');
+do $$ declare d jsonb := public.member_invite_details((select v from ctx where k = 'tok32dee')); begin
+  if d->>'access' <> 'full' or d->>'role' <> 'parent' then raise exception 'FAIL invite access %', d; end if;
+end $$;
+select public.accept_member_invite((select v from ctx where k = 'tok32dee'), 'Dee Oak');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3203');
+select public.accept_member_invite((select v from ctx where k = 'tok32ray'), 'Ray Oak');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3201');
+insert into ctx select 'inv32kai', public.invite_family_member((select v::uuid from ctx where k = 'fam32'), 'Kai', 'Aunt', 'read_only', null)::text;
+do $$ declare m jsonb := public.family_members((select v::uuid from ctx where k = 'fam32')); begin
+  if m->>'owner' <> '00000000-0000-0000-0000-0000000a3201' or not (m->>'i_own')::boolean or m->>'my_access' <> 'full'
+     or (m->>'seats_used')::int <> 4 or jsonb_array_length(m->'invites') <> 1 or m->'invites'->0->>'access' <> 'read_only'
+     or (select string_agg((x->>'name') || ':' || (x->>'access') || ':' || (x->>'owner'), ',' order by x->>'joined_at') from jsonb_array_elements(m->'members') x)
+        <> 'Oli Oak:full:true,Dee Oak:full:false,Ray Oak:read_only:false' then raise exception 'FAIL owner members list %', m; end if;
+end $$;
+-- Dee (full access, not the owner): sees the members and the seat count, no invites; can't manage seats or billing,
+-- can't take the family over by writing created_by; still does what a parent does (kids, the requirement mode)
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3202');
+do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam32'); m jsonb := public.family_members((select v::uuid from ctx where k = 'fam32')); n int; begin
+  if m->>'owner' <> '00000000-0000-0000-0000-0000000a3201' or (m->>'i_own')::boolean or m->>'my_access' <> 'full'
+     or (m->>'seats_used')::int <> 4 or m->'invites' <> '[]'::jsonb or jsonb_array_length(m->'members') <> 3 then raise exception 'FAIL full-access members list %', m; end if;
+  if public.is_family_owner(fid) then raise exception 'FAIL Dee is the owner'; end if;
+  if not public.is_parent_of(fid) then raise exception 'FAIL Dee has no full access'; end if;
+  if (select count(*) from family_member_invites) <> 0 then raise exception 'FAIL Dee reads the member invites'; end if;
+  perform pg_temp.must_fail($q$select public.invite_family_member((select v::uuid from ctx where k = 'fam32'), 'Zed', 'Other', 'full', null)$q$, 'not the family owner%');
+  perform pg_temp.must_fail($q$select public.cancel_member_invite(((select v::jsonb from ctx where k = 'inv32kai')->>'id')::uuid)$q$, 'not the family owner%');
+  perform pg_temp.must_fail($q$select public.resend_member_invite(((select v::jsonb from ctx where k = 'inv32kai')->>'id')::uuid)$q$, 'not the family owner%');
+  perform pg_temp.must_fail($q$select public.member_invite_sent(((select v::jsonb from ctx where k = 'inv32kai')->>'id')::uuid)$q$, 'not the family owner%');
+  perform pg_temp.must_fail(format('select public.set_member_access(%L, %L, %L)', fid, '00000000-0000-0000-0000-0000000a3203', 'full'), 'not the family owner%');
+  perform pg_temp.must_fail(format('select public.remove_family_member(%L, %L)', fid, '00000000-0000-0000-0000-0000000a3203'), 'not the family owner%');
+  perform pg_temp.must_fail(format('select public.transfer_family_ownership(%L, auth.uid())', fid), 'not the family owner%');
+  perform pg_temp.must_fail(format('select public.set_trial_reminder(%L, false)', fid), 'not the family owner%');
+  perform pg_temp.must_fail(format('update families set created_by = auth.uid() where id = %L', fid), 'permission denied%');
+  update families set requirement_mode = 'block' where id = fid;
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL Dee can''t set the requirement mode'; end if;
+  update families set requirement_mode = 'warn' where id = fid;
+  insert into kids (family_id, name) values (fid, 'Bo');
+  update kids set avoid_foods = 'nuts' where family_id = fid and name = 'Pip';
+  get diagnostics n = row_count;
+  if n <> 1 then raise exception 'FAIL Dee can''t edit a kid'; end if;
+end $$;
+-- Ray (read only): reads the kids and their care info, can't edit them
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3203');
+do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam32'); m jsonb := public.family_members((select v::uuid from ctx where k = 'fam32')); n int; begin
+  if m->>'my_access' <> 'read_only' or m->'invites' <> '[]'::jsonb then raise exception 'FAIL read-only members list %', m; end if;
+  if (select avoid_foods from kids where family_id = fid and name = 'Pip') <> 'nuts' then raise exception 'FAIL Ray reads the kids'; end if;
+  update kids set avoid_foods = '' where family_id = fid;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL Ray edited a kid'; end if;
+  perform pg_temp.must_fail(format('insert into kids (family_id, name) values (%L, %L)', fid, 'Hacked'), '%row-level security%');
+  perform pg_temp.must_fail(format('select public.set_trial_reminder(%L, false)', fid), 'not the family owner%');
+  perform pg_temp.must_fail(format('select public.invite_family_member(%L, %L, null, %L, null)', fid, 'Zed', 'full'), 'not the family owner%');
+end $$;
+-- Billing: the owner sets the reminder; the reminder push goes to the owner only
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3201');
+select public.set_trial_reminder((select v::uuid from ctx where k = 'fam32'), true);
+reset role;
+update family_subscriptions set status = 'trialing', trial_ends_at = now() + interval '3 days' where family_id = (select v::uuid from ctx where k = 'fam32');
+delete from net.sent;
+select public.billing_trial_reminder((select v::uuid from ctx where k = 'fam32'));
+do $$ begin
+  if not exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[oli32]') then raise exception 'FAIL owner missed the trial reminder'; end if;
+  if exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'to' in ('ExponentPushToken[dee32]', 'ExponentPushToken[ray32]')) then raise exception 'FAIL non-owner got the trial reminder'; end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+-- The owner changes access: Ray full, then read only again; the owner keeps full access and can't leave yet
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3201');
+do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam32'); begin
+  perform public.set_member_access(fid, '00000000-0000-0000-0000-0000000a3203', 'full');
+  if (select role from family_parents where family_id = fid and user_id = '00000000-0000-0000-0000-0000000a3203') <> 'parent' then raise exception 'FAIL set full access'; end if;
+  perform public.set_member_access(fid, '00000000-0000-0000-0000-0000000a3203', 'read_only');
+  if (select role from family_parents where family_id = fid and user_id = '00000000-0000-0000-0000-0000000a3203') <> 'helper' then raise exception 'FAIL set read only'; end if;
+  perform pg_temp.must_fail(format('select public.set_member_access(%L, %L, %L)', fid, '00000000-0000-0000-0000-0000000a3203', 'boss'), 'Pick full access or read only.');
+  perform pg_temp.must_fail(format('select public.set_member_access(%L, auth.uid(), %L)', fid, 'read_only'), 'owner_access');
+  perform pg_temp.must_fail(format('select public.leave_family(%L)', fid), 'owner_leave');
+  -- transfer: only to a full-access member, not to yourself
+  perform pg_temp.must_fail(format('select public.transfer_family_ownership(%L, %L)', fid, '00000000-0000-0000-0000-0000000a3203'), 'needs_full_access');
+  perform pg_temp.must_fail(format('select public.transfer_family_ownership(%L, auth.uid())', fid), 'already_owner');
+  perform pg_temp.must_fail(format('select public.transfer_family_ownership(%L, %L)', fid, '00000000-0000-0000-0000-0000000a3006'), 'not a member%');
+  perform public.transfer_family_ownership(fid, '00000000-0000-0000-0000-0000000a3202');
+  if public.is_family_owner(fid) then raise exception 'FAIL Oli is still the owner'; end if;
+  if not public.is_parent_of(fid) then raise exception 'FAIL Oli lost full access'; end if;
+  if (select count(*) from family_member_invites) <> 0 then raise exception 'FAIL the old owner reads the invites'; end if;
+  perform pg_temp.must_fail(format('select public.set_trial_reminder(%L, false)', fid), 'not the family owner%');
+  perform pg_temp.must_fail(format('select public.remove_family_member(%L, %L)', fid, '00000000-0000-0000-0000-0000000a3202'), 'not the family owner%');
+end $$;
+reset role;
+do $$ begin
+  if not exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[dee32]' and x->>'title' = 'Oli made you the owner of The Oak family') then
+    raise exception 'FAIL new owner not told'; end if;
+end $$;
+set role authenticated;
+-- Dee is the owner now: she sees Kai's invite, manages billing; Oli (the old owner) can leave
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3202');
+do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam32'); m jsonb := public.family_members((select v::uuid from ctx where k = 'fam32')); begin
+  if not (m->>'i_own')::boolean or m->>'owner' <> '00000000-0000-0000-0000-0000000a3202' or jsonb_array_length(m->'invites') <> 1
+     or m->'members'->0->>'name' <> 'Dee Oak' then raise exception 'FAIL new owner list %', m; end if;
+  perform public.set_trial_reminder(fid, false);
+  perform public.cancel_member_invite(((select v::jsonb from ctx where k = 'inv32kai')->>'id')::uuid);
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3201');
+select public.leave_family((select v::uuid from ctx where k = 'fam32'));
+do $$ begin
+  if exists (select 1 from family_parents where user_id = auth.uid()) then raise exception 'FAIL Oli didn''t leave'; end if;
+  if (select count(*) from kids where family_id = (select v::uuid from ctx where k = 'fam32')) <> 0 then raise exception 'FAIL Oli still sees the kids'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3202');
+do $$ begin
+  if (select count(*) from family_parents where family_id = (select v::uuid from ctx where k = 'fam32')) <> 2 then raise exception 'FAIL 2 left'; end if;
 end $$;
 reset role;
 

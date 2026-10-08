@@ -5,16 +5,18 @@ import { CredPill, CredRow, SitterAvatar, credStyles, credTileKey } from '@/comp
 import { FoundLaterCard } from '@/components/FoundLaterCard';
 import { Text } from '@/components/Text';
 import { ErrorText, Loading, Pill, Screen } from '@/components/ui';
-import { agesLabel, backgroundCheck, backgroundStatus, certificates, driveLabel, expiryLine, languagesLine, longDate, monthYear, profileLine, profileStrength, shortName, sitterBundle, toDay } from '@/lib/credentials';
+import { agesLabel, backgroundCheck, backgroundStatus, certificates, driveLabel, expiryLine, languagesLine, longDate, profileLine, profileStrength, shortName, sitterBundle } from '@/lib/credentials';
 import { useQuery } from '@/lib/data';
+import { usDate } from '@/lib/requirement-requests';
 import { useSession } from '@/lib/session';
 import { cardShadow, color, font } from '@/theme';
 
 // Wireframe S13 My profile, from app/src/wireframes/S13.tsx (S13c: "Be found by new families later" turned on). Opened from Me (S39) "My profile · N%".
 // "Edit details and photo" opens S40; CREDENTIALS "Manage" opens S14; each certificate opens S41, the background
 // check S17, languages S16; "Preview" opens S19 What families see. The ABOUT rows (Ages, Can drive
-// kids, Rate) show only when set: no screen edits them yet. Not drawn: the background check row before the provider
-// has started one ("Not started"), and no ABOUT card when nothing is set.
+// kids, Rate) show only when set: no screen edits them yet. Phase 1 checks nothing: cards read Added / Expiring /
+// Expired and her background check report "Checkr report · 08/12/2026" · Added (never Verified / Cleared).
+// Not drawn: no report yet ("Upload a report you have"), and no ABOUT card when nothing is set.
 export default function Profile() {
   const { session, profile } = useSession();
   const uid = session!.user.id;
@@ -84,8 +86,8 @@ export default function Profile() {
         <CredRow
           tile="background"
           title="Background check"
-          sub={bgStatus === 'cleared' && bg?.verified_at ? `Cleared ${monthYear(toDay(new Date(bg.verified_at)))}` : bgStatus === 'expired' && bg?.expires_on ? `Expired ${longDate(bg.expires_on)}` : bgStatus === 'in_progress' ? 'Usually 2–5 business days' : 'Not started'}
-          right={bgStatus === 'cleared' ? <Pill label="Verified" kind="ok" /> : bgStatus === 'expired' ? <Pill label="Expired" kind="bad" /> : bgStatus === 'in_progress' ? <Pill label="In progress" kind="info" /> : undefined}
+          sub={bgStatus === 'expired' && bg?.expires_on ? `Expired ${longDate(bg.expires_on)}` : bg ? [bg.issuer ? `${bg.issuer} report` : 'Report', usDate(bg.issued_on)].filter(Boolean).join(' · ') : 'Upload a report you have'}
+          right={bgStatus === 'expired' ? <Pill label="Expired" kind="bad" /> : bg ? <Pill label="Added" kind="ok" /> : undefined}
           onPress={() => router.push('/sitter/background')}
         />
         <CredRow

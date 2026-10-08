@@ -2,24 +2,40 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Platform, Pressable, Share, View } from 'react-native';
 
-import { BackHeader, INVITE_COLOR, MemberAvatar, MemberPill, memberColor, MembersNote, memberStyles as ms, RolePill, RowsCard } from '@/components/familyMembers';
+import { BackHeader, INVITE_COLOR, MemberAvatar, MemberPill, memberColor, MemberRolePill, MembersNote, memberStyles as ms, RowsCard } from '@/components/familyMembers';
 import { Text } from '@/components/Text';
 import { ErrorText, Icon, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
-import { can, invitePill, inviteSub, isFull, MAX_FAMILY_MEMBERS, memberErrorText, memberInviteText, memberSub, memberTitle, type MemberInvite } from '@/lib/family-members';
+import {
+  can,
+  invitePill,
+  inviteSub,
+  managesSeatsLine,
+  MAX_FAMILY_MEMBERS,
+  memberErrorText,
+  memberInviteText,
+  memberSub,
+  memberTitle,
+  ownerFirstName,
+  seatsLine,
+  seatsUsed,
+  type MemberInvite,
+} from '@/lib/family-members';
 import { membersApi } from '@/lib/family-members-api';
 import { namesLine } from '@/lib/invite-links';
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
 import { color } from '@/theme';
 
-// Wireframes P78 Family members (Settings › Family members) and P78f (4 of 4). Members first (the family's creator, then
-// by join date) with their relation and a Parent / Family helper pill; parents also see the open and expired invites
-// with Resend (7 more days, then the share sheet) / Cancel. "Add a family member" opens P78b; at 4 of 4 (members plus
-// open invites) it's replaced by the note. Rows open P78c (someone else) or P78e (you). Helpers see the members only
-// and no Add button. Before migration 30 runs everyone shows as a parent and Add says the database needs the update.
+// Wireframes P78 Family members (Settings › Family members), P78f (4 seats used) and P78v (not the owner). "4 SEATS ·
+// 3 USED" counts members plus open invites (migration 32 sends the count to everyone). Members first (the owner, then
+// by join date) with their relation and an Owner / Full access / Read only pill. Only the owner sees the open and
+// expired invites with Resend (7 more days, then the share sheet) / Cancel and "Add a family member" (P78b); with all
+// 4 seats used it's replaced by the note. Everyone else sees the list read-only and "Jen manages seats." instead of
+// Add. Rows open P78c (someone else) or P78e (you). Before migration 30 runs everyone shows with full access and Add
+// says the database needs the update.
 export default function FamilyMembers() {
-  const { family, profile, familyRole } = useSession();
+  const { family, profile, familyRole, isOwner } = useSession();
   const fid = family!.id;
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState('');
@@ -31,8 +47,10 @@ export default function FamilyMembers() {
   const members = data?.members ?? [];
   const invites = data?.invites ?? [];
   const max = data?.max ?? MAX_FAMILY_MEMBERS;
-  const manage = can(data?.my_role ?? familyRole, 'manage_members');
-  const full = isFull(members, invites, max);
+  const owner = data?.i_own ?? isOwner;
+  const manage = can(data?.my_role ?? familyRole, 'manage_members', owner);
+  const used = seatsUsed(members, invites, data?.seats_used);
+  const full = used >= max;
   const kids = namesLine(data?.kids ?? []);
 
   async function resend(i: MemberInvite) {
@@ -84,8 +102,10 @@ export default function FamilyMembers() {
       gap={12}
       header={<BackHeader title="Family members" />}
       footer={
-        !manage ? undefined : full ? (
-          <Text style={ms.fullNote}>{`Your family has ${max} members, the most a plan covers.`}</Text>
+        !manage ? (
+          <Text style={ms.fullNote}>{managesSeatsLine(ownerFirstName(members))}</Text>
+        ) : full ? (
+          <Text style={ms.fullNote}>{`All ${max} seats are used. Remove someone to add another.`}</Text>
         ) : (
           <Pressable accessibilityRole="button" onPress={add} style={({ pressed }) => [ms.primaryBtn, pressed && { opacity: 0.85 }]}>
             <Icon name="plus" size={20} tint="#FFFFFF" strokeWidth={2.2} />
@@ -93,9 +113,9 @@ export default function FamilyMembers() {
           </Pressable>
         )
       }>
-      <Text style={ms.lead}>{`Adults who look after ${kids || 'your kids'}. One plan covers up to ${max}.`}</Text>
+      <Text style={ms.lead}>{`Adults who look after ${kids || 'your kids'}. Your plan has ${max} seats.`}</Text>
       <ErrorText>{error || err}</ErrorText>
-      <Text style={ms.section}>{`MEMBERS · ${members.length} OF ${max}`}</Text>
+      <Text style={ms.section}>{seatsLine(used, max).toUpperCase()}</Text>
       <RowsCard>
         {members.map((m, i) => {
           const bg = memberColor(m.me ? 0 : other++, m.me);
@@ -112,7 +132,7 @@ export default function FamilyMembers() {
                 </Text>
                 {memberSub(m) ? <Text style={ms.sub}>{memberSub(m)}</Text> : null}
               </View>
-              <RolePill role={m.role} />
+              <MemberRolePill member={m} />
             </Pressable>
           );
         })}
@@ -152,7 +172,7 @@ export default function FamilyMembers() {
           </RowsCard>
         </>
       ) : null}
-      <MembersNote>Parents manage sitters, pay and the plan. Family helpers see the kids and updates, and can message the sitter.</MembersNote>
+      <MembersNote>Full access can book shifts, edit the care plan and manage sitters. Read only sees the kids and updates, and can message the sitter.</MembersNote>
     </Screen>
   );
 }

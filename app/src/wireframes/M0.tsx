@@ -48,7 +48,7 @@ export default function WF_M0() {
         <View style={{ flexDirection: "column", gap: 10 }}>
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
             <SvgXml xml={SVG[1]} width={20} height={20} />
-            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}>Only the people Jen adds can join. Up to 4 per family.</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}>Only the people Jen adds can join. 4 seats per family.</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
             <SvgXml xml={SVG[2]} width={20} height={20} />

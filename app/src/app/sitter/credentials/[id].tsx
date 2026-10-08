@@ -13,7 +13,7 @@ import { cardShadow, color, font } from '@/theme';
 // Wireframe S41 Certification detail, from app/src/wireframes/S41.tsx. Opened from a certificate row on S13 / S14.
 // "Upload renewed card" opens S15 filled in; "View" opens the card photo (only she can read it); "Remove" asks first.
 // Left out until built: the card number row (not stored), "WHO NEEDS IT" (family requirements, built separately),
-// "Find a class". Not drawn: the banner once it has expired, a certificate without a card photo, the remove confirm.
+// "Find a class". Phase 1 checks nothing: Status reads Added / Expiring / Expired, never Verified. Not drawn: the banner once it has expired, a certificate without a card photo, the remove confirm.
 export default function CertDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data: c, error } = useQuery(() => credentialApi.get(id), [id]);
@@ -47,7 +47,7 @@ export default function CertDetail() {
       if (globalThis.confirm?.(q)) remove();
       return;
     }
-    Alert.alert(q, 'The badge comes off your profile.', [
+    Alert.alert(q, 'Families you shared it with won’t see it anymore.', [
       { text: 'Keep it', style: 'cancel' },
       { text: 'Remove', style: 'destructive', onPress: remove },
     ]);
@@ -73,14 +73,14 @@ export default function CertDetail() {
           <Text style={st.bannerText}>
             {state === 'expired' ? (
               <>
-                <Text style={[st.bannerBold, { color: color.badInk }]}>Expired {monthDay(c.expires_on)}.</Text> Upload your renewed card to get the Verified badge back.
+                <Text style={[st.bannerBold, { color: color.badInk }]}>Expired {monthDay(c.expires_on)}.</Text> Renew it and share the new card with your families.
               </>
             ) : (
               <>
                 <Text style={st.bannerBold}>
                   Expires {monthDay(c.expires_on)}, in {left} {left === 1 ? 'day' : 'days'}.
                 </Text>{' '}
-                Upload your renewed card before then to keep the Verified badge.
+                Renew it and share the new card with your families.
               </>
             )}
           </Text>
@@ -119,7 +119,7 @@ export default function CertDetail() {
       </View>
 
       <View style={{ paddingHorizontal: 4 }}>
-        <Text style={st.foot}>If it expires, the badge comes off your profile and families who require it are told you need to renew.</Text>
+        <Text style={st.foot}>Only you see this card. If it expires, families you shared it with see it as Expired until you share a new one.</Text>
       </View>
       <ErrorText>{err}</ErrorText>
     </Screen>

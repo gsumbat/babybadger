@@ -11,10 +11,12 @@ type SessionState = {
   configured: boolean;
   session: Session | null;
   profile: Profile | null;
-  /** Parent or family helper: the family you belong to. */
+  /** Any family member (full access or read only): the family you belong to. */
   family: Family | null;
-  /** Your role in that family (migration 30): 'parent' runs it, 'helper' (e.g. grandma) watches and messages. */
+  /** Your access in that family (migration 30): 'parent' = Full access, 'helper' = Read only (e.g. grandma). */
   familyRole: MemberRole;
+  /** You own the family (families.created_by, migration 32): you manage seats and the subscription. */
+  isOwner: boolean;
   /** Sitter: families you joined (any status). */
   sitterLinks: (SitterLink & { family: Family })[];
   refresh: () => Promise<void>;
@@ -28,6 +30,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [family, setFamily] = useState<Family | null>(null);
   const [familyRole, setFamilyRole] = useState<MemberRole>('parent');
+  const [isOwner, setIsOwner] = useState(false);
   const [sitterLinks, setSitterLinks] = useState<SessionState['sitterLinks']>([]);
   const [loading, setLoading] = useState(isConfigured);
 
@@ -36,6 +39,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       setFamily(null);
       setFamilyRole('parent');
+      setIsOwner(false);
       setSitterLinks([]);
       return;
     }
@@ -51,16 +55,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // role arrives with migration 30; until it's run every adult is a parent.
       supabase
         .from('family_parents')
-        .select('role, family:families(id, name)')
+        .select('role, family:families(id, name, created_by)')
         .eq('user_id', uid)
         .limit(1)
-        .then((r) => (r.error ? supabase.from('family_parents').select('family:families(id, name)').eq('user_id', uid).limit(1) : r)),
+        .then((r) => (r.error ? supabase.from('family_parents').select('family:families(id, name, created_by)').eq('user_id', uid).limit(1) : r)),
       supabase.from('family_sitters').select('family_id, sitter_id, status, joined_at, family:families(id, name)').eq('sitter_id', uid).neq('status', 'removed'),
     ]);
     setProfile((prof as Profile) ?? { id: uid, full_name: '', role: null });
     const fam = parentOf?.[0]?.family as unknown as Family | undefined;
     setFamily(fam ?? null);
     setFamilyRole((parentOf?.[0] as { role?: string } | undefined)?.role === 'helper' ? 'helper' : 'parent');
+    setIsOwner(!!fam && fam.created_by === uid);
     setSitterLinks(((links ?? []) as unknown as SessionState['sitterLinks']).filter((l) => l.family));
   }, []);
 
@@ -86,6 +91,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       profile,
       family,
       familyRole,
+      isOwner,
       sitterLinks,
       refresh: () => load(session),
       signOut: async () => {
@@ -93,7 +99,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         await supabase.auth.signOut();
       },
     }),
-    [loading, session, profile, family, familyRole, sitterLinks, load],
+    [loading, session, profile, family, familyRole, isOwner, sitterLinks, load],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -8,8 +8,7 @@ import { cardShadow, font } from '@/theme';
 const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 const SVG = [
-  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #1B2328; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M15 6l-6 6 6 6\"></path></svg>",
-  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #4B5960; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M12 5v14M5 12h14\"></path></svg>"
+  "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #1B2328; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M15 6l-6 6 6 6\"></path></svg>"
 ];
 
 /** Languages */
@@ -24,11 +23,25 @@ export default function WF_S16() {
       </View>
       <View style={{ flexDirection: "column", gap: 12, flexGrow: 1, paddingTop: 4, paddingRight: 20, paddingBottom: 12, paddingLeft: 20 }}>
         <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", lineHeight: 22 }}>Add every language you can use with kids. Families can look for a sitter who speaks theirs.</Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A", flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A" }}>✓ English</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A", flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A" }}>✓ Spanish</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A", flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A" }}>Portuguese ✕</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> S16b-LanguagesAdd.dc.html */}
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>+ Add language</Text>
+          </View>
+        </View>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>LEVEL</Text>
         <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "column", gap: 8, paddingTop: 12, paddingRight: 0, paddingBottom: 12, paddingLeft: 0, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 16, color: "#1B2328", flexShrink: 1 }}>English</Text>
-              <View style={{ flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#A1321F", textDecorationLine: "underline" }}>Remove</Text></View>
             </View>
             <View style={{ flexDirection: "column", gap: 4, paddingTop: 4, paddingRight: 4, paddingBottom: 4, paddingLeft: 4, backgroundColor: "#E8ECF1", borderRadius: 12 }}>
               <View style={{ flexDirection: "row", gap: 4 }}>
@@ -50,7 +63,6 @@ export default function WF_S16() {
           <View style={{ flexDirection: "column", gap: 8, paddingTop: 12, paddingRight: 0, paddingBottom: 12, paddingLeft: 0, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 16, color: "#1B2328", flexShrink: 1 }}>Spanish</Text>
-              <View style={{ flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#A1321F", textDecorationLine: "underline" }}>Remove</Text></View>
             </View>
             <View style={{ flexDirection: "column", gap: 4, paddingTop: 4, paddingRight: 4, paddingBottom: 4, paddingLeft: 4, backgroundColor: "#E8ECF1", borderRadius: 12 }}>
               <View style={{ flexDirection: "row", gap: 4 }}>
@@ -72,7 +84,6 @@ export default function WF_S16() {
           <View style={{ flexDirection: "column", gap: 8, paddingTop: 12, paddingRight: 0, paddingBottom: 12, paddingLeft: 0 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 16, color: "#1B2328", flexShrink: 1 }}>Portuguese</Text>
-              <View style={{ flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#A1321F", textDecorationLine: "underline" }}>Remove</Text></View>
             </View>
             <View style={{ flexDirection: "column", gap: 4, paddingTop: 4, paddingRight: 4, paddingBottom: 4, paddingLeft: 4, backgroundColor: "#E8ECF1", borderRadius: 12 }}>
               <View style={{ flexDirection: "row", gap: 4 }}>
@@ -90,27 +101,6 @@ export default function WF_S16() {
                 </View>
               </View>
             </View>
-          </View>
-        </View>
-        <View style={{ flexDirection: "column" }}>
-          <View style={{ left: -9999, position: "absolute" }}><Text style={{ fontFamily: font.body, fontSize: 16, color: "#1B2328" }}>Add a language</Text></View>
-          <TextInput placeholder="Add a language" defaultValue="" placeholderTextColor="#6B7980" style={{ width: "100%", height: 50, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 44, borderRadius: 8, borderWidth: 1.0, borderColor: "#C3CCD5", fontFamily: font.body, fontSize: 16, color: "#1B2328" }} />
-          <View style={{ top: 14, left: 14, position: "absolute", flexDirection: "column" }}>
-            <SvgXml xml={SVG[1]} width={22} height={22} />
-          </View>
-        </View>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
-            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>French</Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
-            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Mandarin</Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
-            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>ASL</Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
-            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Russian</Text>
           </View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>

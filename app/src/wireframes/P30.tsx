@@ -63,7 +63,7 @@ export default function WF_P30() {
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 24, height: 24, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 6 }}>
               <SvgXml xml={SVG[1]} width={16} height={16} />
             </View>
-            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Clean driving record (checked)</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Clean driving record</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 44 }}>
             <View style={{ width: 24, height: 24, flexShrink: 0, borderRadius: 6, borderWidth: 2.0, borderColor: "#C3CCD5", flexDirection: "column" }}>
@@ -88,7 +88,7 @@ export default function WF_P30() {
         </View>
         <View style={{ flexDirection: "row", gap: 12, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
           <SvgXml xml={SVG[3]} width={22} height={22} />
-          <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#34526E", lineHeight: 20 }}>Checked items are verified.</Text> The license and record come from her background check. Car seat skill is self-confirmed.</Text>
+          <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#34526E", lineHeight: 20 }}>BabyBadger doesn’t check these.</Text> She shares her license and record, and you decide if they look good. She confirms car seat skill herself.</Text>
         </View>
       </View>
     </View>

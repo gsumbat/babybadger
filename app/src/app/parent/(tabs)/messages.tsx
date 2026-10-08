@@ -9,16 +9,19 @@ import { api, useQuery } from '@/lib/data';
 import { firstName, timeOf } from '@/lib/format';
 import { buildThread, messagesApi, threadKey, useThread, useUnread } from '@/lib/messages';
 import { useSession } from '@/lib/session';
+import { useCanManage } from '@/lib/use-family-role';
 import { color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe P10 (app/src/wireframes/P10.tsx): the family's thread with one sitter. With several signed sitters,
 // S37's chip row switches between them (P10 draws only one thread). Opened as a tab, so no back button.
-// `?sitter=` (push alerts) opens that sitter's thread.
+// `?sitter=` (push alerts) opens that sitter's thread. A read-only member (P10r) has no "Running late" quick reply
+// (only full access books and moves shifts).
 const DOTS = ['#2F6FD6', '#D9822B', '#8676B3'];
 
 export default function Messages() {
   const { session, family } = useSession();
+  const manage = useCanManage();
   const uid = session!.user.id;
   const params = useLocalSearchParams<{ sitter?: string }>();
   const { data: sitters, error } = useQuery(async () => (family ? api.familySitters(family.id) : []), [family?.id]);
@@ -102,7 +105,7 @@ export default function Messages() {
       placeholder={`Message ${name}`}
       quick={[
         { label: 'Ask for a photo', onPress: () => send('Can you send a photo?') },
-        { label: 'Running late', onPress: () => send('Running late') },
+        ...(manage ? [{ label: 'Running late', onPress: () => send('Running late') }] : []),
       ]}
       onSend={send}
       busy={busy}

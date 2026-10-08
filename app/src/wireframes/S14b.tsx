@@ -25,6 +25,7 @@ export default function WF_S14b() {
         <Text style={{ fontFamily: font.display, fontSize: 22, color: "#1B2328", flexGrow: 1, flexShrink: 1 }}>Credentials</Text>
       </View>
       <View style={{ flexDirection: "column", gap: 12, flexGrow: 1, paddingTop: 4, paddingRight: 20, paddingBottom: 12, paddingLeft: 20 }}>
+        <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960", lineHeight: 20 }}>Only you see your cards. Share one when a family asks.</Text>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>SAFETY</Text>
         <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 68 }}>{/* -> S17-BackgroundCheck.dc.html */}
@@ -33,7 +34,7 @@ export default function WF_S14b() {
             </View>
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Background check</Text>
-              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Not started</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Upload a report you have</Text>
             </View>
           </View>
         </View>

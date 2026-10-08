@@ -20,8 +20,8 @@ const HEART_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="#4B5960" stroke
 // Wireframe P55 Child profile, from app/src/wireframes/P55.tsx. Left out until built: grade and school, the
 // kid's location line, the See on map / Message tiles (the plan tile keeps its third of the row), and the phone and
 // Who looks after rows. The plan tile reads "Her plan" / "His plan" from the optional gender, "Plan" without one.
-// A family helper (P55h) reads it: no Edit, no Care and safety row (it opens the editor, P19), Routine opens the day
-// read-only (P20h), and the note "Jen manages Ava’s profile." at the end.
+// A read-only member (P55h) reads it: no Edit, Care and safety opens the read-only view (P19v) instead of the editor
+// (P19e), Routine opens the day read-only (P20h), and the note "Jen manages Ava’s profile." at the end.
 export default function KidProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const manage = useCanManage();
@@ -84,8 +84,10 @@ export default function KidProfile() {
       ) : null}
 
       <View style={st.listCard}>
-        {manage ? (
-          <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/kid/new?id=${kid.id}&step=2`)} style={[st.listRow, st.listLine]}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push(manage ? `/parent/kid/new?id=${kid.id}&step=2` : `/parent/kid/care?id=${kid.id}`)}
+          style={[st.listRow, st.listLine]}>
             <View style={st.listIcon}>
               <Icon name="shield" size={20} tint={color.primary} />
             </View>
@@ -94,8 +96,7 @@ export default function KidProfile() {
               <Text style={st.rowSub}>Pediatrician, medicines, what calms {pronouns(kid.gender).obj}</Text>
             </View>
             <Icon name="chevron-right" size={18} tint={color.ink2} />
-          </Pressable>
-        ) : null}
+        </Pressable>
         <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/kid/routine?kidId=${kid.id}`)} style={st.listRow}>
           <View style={st.listIcon}>
             <Icon name="clock" size={20} tint={color.primary} />

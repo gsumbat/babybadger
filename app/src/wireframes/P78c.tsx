@@ -34,27 +34,19 @@ export default function WF_P78c() {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
             <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
             </View>
-            <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Family helper</Text>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Read only</Text>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>ROLE</Text>
-        <View style={{ flexDirection: "column", gap: 8 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 16, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
-            <View style={{ width: 22, height: 22, flexShrink: 0, borderRadius: 11, borderWidth: 2.0, borderColor: "#C3CCD5", flexDirection: "column" }}>
-            </View>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>ACCESS</Text>
+        <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 58, paddingTop: 12, paddingRight: 0, paddingBottom: 12, paddingLeft: 0 }}>
             <View style={{ flexDirection: "column", gap: 2, minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
-              <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#1B2328" }}>Parent</Text>
-              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Everything you can do: sitters, pay and the plan.</Text>
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Full access</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Sees the kids, schedule, live shift and updates. Can message the sitter.</Text>
             </View>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 16, borderWidth: 2.0, borderColor: "#47698A" }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, borderRadius: 11, borderWidth: 2.0, borderColor: "#47698A" }}>
-              <View style={{ width: 10, height: 10, backgroundColor: "#47698A", borderRadius: 5, flexShrink: 1, flexDirection: "column" }}>
+            <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#C3CCD5", borderRadius: 15, flexDirection: "column" }}>
+              <View style={{ width: 24, height: 24, top: 3, left: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
               </View>
-            </View>
-            <View style={{ flexDirection: "column", gap: 2, minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
-              <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#1B2328" }}>Family helper</Text>
-              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Sees the kids, the schedule and updates. Messages the sitter.</Text>
             </View>
           </View>
         </View>

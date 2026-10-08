@@ -40,9 +40,11 @@ import { Text, TextInput } from '@/components/Text';
 
 // Wireframe P7a Sitter requirements, from app/src/wireframes/P7a.tsx. Opened from the Care plan's Requirements pill
 // (P7) and Home's Requirements tile (P4b); the same data as the P28–P32 flow, in one screen. Switches turn a
-// requirement on (as Must) or off; language chips add a "Speaks …" nice-to-have; Save writes everything.
+// requirement on (as Must) or off; language chips (40 tall: English, Spanish, then the ones the parent added) add a
+// "Speaks …" nice-to-have; "+ Add language" turns into a field to type another (P7c), return adds it as a chip;
+// tapping a chip again removes it. Languages count from the sitter's profile (S16), no request. Save writes everything.
 // Not drawn: rows for Non-smoker and the parent's own requirements (shown under the five switches when the P29 flow
-// added them), the "+ Add" language field, the line for a sitter who is missing one, the line with no sitters yet.
+// added them), the line for a sitter who is missing one, the line with no sitters yet.
 // Scrolled down (P79d, migration 31): BY SITTER, each active sitter's status per requirement (the P11 card), her name
 // opens P11, a shared row opens P79b, "Ask Maya" opens P79. Hidden before migration 31 or with no sitters.
 export default function SitterRequirements() {
@@ -169,7 +171,7 @@ export default function SitterRequirements() {
             onChangeText={setLang}
             onSubmitEditing={addLang}
             onBlur={addLang}
-            placeholder="Language"
+            placeholder="Type a language"
             placeholderTextColor={color.quiet}
             autoFocus
             autoCapitalize="words"
@@ -179,7 +181,7 @@ export default function SitterRequirements() {
           />
         ) : (
           <Pressable accessibilityRole="button" onPress={() => setAdding(true)} style={st.chip}>
-            <Text style={st.chipText}>+ Add</Text>
+            <Text style={st.chipText}>+ Add language</Text>
           </Pressable>
         )}
       </View>
@@ -250,7 +252,7 @@ const st = StyleSheet.create({
   chip: { height: 40, paddingHorizontal: 14, borderRadius: 999, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', justifyContent: 'center' },
   chipOn: { backgroundColor: color.primaryTint, borderWidth: 1.5, borderColor: color.primary },
   chipText: { fontFamily: font.bodySemi, fontSize: 14, color: color.ink },
-  chipInput: { minWidth: 120, fontFamily: font.bodySemi, fontSize: 14, color: color.ink, borderColor: color.primary },
+  chipInput: { minWidth: 160, fontFamily: font.bodySemi, fontSize: 14, color: color.ink, borderColor: color.primary },
   note: { fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.ink2 },
   // P79d
   lead2: { fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink2 },

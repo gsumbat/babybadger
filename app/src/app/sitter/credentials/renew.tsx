@@ -30,9 +30,9 @@ export default function Renew() {
       </View>
       <Text style={st.label}>WHAT HAPPENS</Text>
       <View style={st.card}>
-        <Step pill={<Pill label="Now" kind="warn" />} text="Badge still shows. Reminders at 30, 14 and 3 days." />
-        <Step pill={<Pill label={date || 'Expiry'} kind="bad" />} text={`Badge comes off your profile. Families who require ${c.title} are told.`} />
-        <Step pill={<Pill label="Renewed" kind="ok" />} text="Upload the new card and the badge comes back after review." />
+        <Step pill={<Pill label="Now" kind="warn" />} text="Families you shared it with still see it. Reminders at 30, 14 and 3 days." />
+        <Step pill={<Pill label={date || 'Expiry'} kind="bad" />} text="It shows as Expired to families you shared it with." />
+        <Step pill={<Pill label="Renewed" kind="ok" />} text="Upload the new card and share it with your families." />
       </View>
     </Screen>
   );

@@ -29,7 +29,7 @@ export default function WF_P78s() {
           </View>
           <View style={{ flexDirection: "column", gap: 2, minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
             <Text style={{ fontFamily: font.display, fontSize: 20, color: "#1B2328", marginVertical: -4.02 }}>Invite sent to Sue</Text>
-            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960" }}>Grandma · Family helper</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960" }}>Grandma · Read only</Text>
           </View>
         </View>
         <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
@@ -42,8 +42,8 @@ export default function WF_P78s() {
             <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Until Oct 14</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 48 }}>
-            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Family</Text>
-            <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>3 of 4 with Sue</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Seats</Text>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>3 of 4 used with Sue</Text>
           </View>
         </View>
         <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Sue opens the link and signs in with sue@example.com. She joins right away, covered by your plan. We’ll let you know.</Text>

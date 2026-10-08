@@ -3,7 +3,8 @@
 
 export type CredentialKind = 'cpr_infant' | 'cpr_child' | 'first_aid' | 'newborn_care' | 'water_safety' | 'drivers_license' | 'background_check' | 'vaccination' | 'other';
 
-/** One certificate (or the background check). Dates are 'YYYY-MM-DD'. verified_at null = "In review". */
+/** One certificate (or the background check). Dates are 'YYYY-MM-DD'. verified_at is reserved for a later in-app
+ * check: phase 1 checks nothing, so the app never shows it (no "Verified" / "In review"). */
 export type Credential = {
   id: string;
   sitter_id: string;
@@ -107,8 +108,8 @@ export function daysUntil(day: string, now = new Date()): number {
 
 // ---------------------------------------------------------------- state
 
-/** Date state only: valid, expiring (within 30 days), expired (on or after the expiry date: "badge removed on the
- * date"), or missing_date (no expiry entered). */
+/** Date state only: valid, expiring (within 30 days), expired (on or after the expiry date), or missing_date (no
+ * expiry entered). */
 export function credentialState(c: Pick<Credential, 'expires_on'>, now = new Date()): 'valid' | 'expiring' | 'expired' | 'missing_date' {
   if (!c.expires_on) return 'missing_date';
   const left = daysUntil(c.expires_on, now);
@@ -117,35 +118,37 @@ export function credentialState(c: Pick<Credential, 'expires_on'>, now = new Dat
   return 'valid';
 }
 
-export type Badge = 'verified' | 'in_review' | 'expiring' | 'expired';
+/** Where her own card stands (S13 / S14 / S41 pill): Added, Expiring (within 30 days) or Expired. BabyBadger checks
+ * nothing in phase 1, so there is no "Verified" or "In review". */
+export type CardState = 'added' | 'expiring' | 'expired';
 
-/** The pill on S13 / S14 / S41: an expired or expiring date wins over Verified / In review. */
-export function credentialBadge(c: Credential, now = new Date()): Badge {
+export function cardState(c: Pick<Credential, 'expires_on'>, now = new Date()): CardState {
   const s = credentialState(c, now);
   if (s === 'expired') return 'expired';
   if (s === 'expiring') return 'expiring';
-  return c.verified_at ? 'verified' : 'in_review';
+  return 'added';
 }
 
-export const BADGE_LABEL: Record<Badge, string> = { verified: 'Verified', in_review: 'In review', expiring: 'Expiring', expired: 'Expired' };
-export const BADGE_PILL: Record<Badge, 'ok' | 'info' | 'warn' | 'bad'> = { verified: 'ok', in_review: 'info', expiring: 'warn', expired: 'bad' };
+export const CARD_LABEL: Record<CardState, string> = { added: 'Added', expiring: 'Expiring', expired: 'Expired' };
+export const CARD_PILL: Record<CardState, 'ok' | 'warn' | 'bad'> = { added: 'ok', expiring: 'warn', expired: 'bad' };
 
 /** The certificates, without the background check. */
 export function certificates(creds: Credential[]): Credential[] {
   return creds.filter((c) => c.kind !== 'background_check');
 }
 
-/** The background check row (latest), if the provider has started one. */
+/** The background check row (latest): a report she uploaded (S17d). */
 export function backgroundCheck(creds: Credential[]): Credential | null {
   const rows = creds.filter((c) => c.kind === 'background_check').sort((a, b) => b.created_at.localeCompare(a.created_at));
   return rows[0] ?? null;
 }
 
-export type BackgroundStatus = 'none' | 'in_progress' | 'cleared' | 'expired';
+/** S13 / S14 / S39 background check pill: none yet, Added (her report) or Expired. */
+export type BackgroundStatus = 'none' | 'added' | 'expired';
 export function backgroundStatus(bg: Credential | null, now = new Date()): BackgroundStatus {
   if (!bg) return 'none';
   if (credentialState(bg, now) === 'expired') return 'expired';
-  return bg.verified_at ? 'cleared' : 'in_progress';
+  return 'added';
 }
 
 /** Certificates expiring within 30 days (not yet expired), soonest first: S14 banner, S18, S39 "1 expiring". */
@@ -213,11 +216,15 @@ export function levelLabel(level: LanguageLevel) {
   return LEVELS.find((l) => l.value === level)?.label ?? level;
 }
 
-/** S16 suggestion chips (the wireframe's four), minus the ones already added. */
-export const SUGGESTED_LANGUAGES = ['French', 'Mandarin', 'ASL', 'Russian'];
-export function suggestions(langs: Pick<SitterLanguage, 'language'>[]) {
-  const have = new Set(langs.map((l) => l.language.toLowerCase()));
-  return SUGGESTED_LANGUAGES.filter((s) => !have.has(s.toLowerCase()));
+/** S16 chips: English and Spanish always first (on or off), then the other languages she added, in the order she
+ * added them (each removable). "+ Add language" (S16b) types any other. */
+export const FIXED_LANGUAGES = ['English', 'Spanish'];
+export function languageChips(langs: Pick<SitterLanguage, 'language'>[]): { language: string; fixed: boolean; on: boolean }[] {
+  const has = (name: string) => langs.some((l) => l.language.toLowerCase() === name.toLowerCase());
+  return [
+    ...FIXED_LANGUAGES.map((language) => ({ language, fixed: true, on: has(language) })),
+    ...langs.filter((l) => !FIXED_LANGUAGES.some((f) => f.toLowerCase() === l.language.toLowerCase())).map((l) => ({ language: l.language, fixed: false, on: true })),
+  ];
 }
 
 /** "Spanish" from " spanish ". Empty when blank. */
@@ -298,14 +305,6 @@ export function profileStrength(p: SitterProfile | null, creds: Credential[], la
 }
 
 // ---------------------------------------------------------------- what families see (P11, S19)
-
-/** The credentials a family sees (P11, S19 preview): verified and not expired, the first certificate, then the
- * background check, then the other certificates (P11 order: CPR + First Aid, Background, Infant CPR, Driver). */
-export function familyCredentials(creds: Credential[], now = new Date()): Credential[] {
-  const shown = creds.filter((c) => c.verified_at && credentialState(c, now) !== 'expired');
-  const certs = certificates(shown);
-  return [...certs.slice(0, 1), ...shown.filter((c) => c.kind === 'background_check'), ...certs.slice(1)];
-}
 
 /** S19 lines under her name: "6 years · ages newborn – 10" and "Drives · $20 / hour" ('' when nothing is set). */
 export function familyViewLines(p: Pick<SitterProfile, 'years_experience' | 'ages_from' | 'ages_to' | 'can_drive' | 'rate'> | null): [string, string] {

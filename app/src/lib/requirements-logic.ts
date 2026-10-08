@@ -91,7 +91,7 @@ export const CUSTOM_SUGGESTIONS = ['Comfortable with dogs', 'Swims', 'Can cook s
 /** P30 checkboxes. */
 export const DRIVE_ITEMS: { value: DriveItem; label: string }[] = [
   { value: 'license', label: 'Valid driver’s license' },
-  { value: 'record', label: 'Clean driving record (checked)' },
+  { value: 'record', label: 'Clean driving record' },
   { value: 'insurance', label: 'Own car insurance' },
   { value: 'car_seats', label: 'Can install car seats' },
 ];

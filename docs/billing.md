@@ -1,7 +1,10 @@
 # Billing: "BabyBadger Family" with Stripe
 
-Parents pay for one plan per family through **Stripe** (not App Store / Google Play in-app purchase). Both parents
-are covered; sitters are always free. US only. Build and test everything in Stripe **test mode** first.
+Parents pay for one plan per family through **Stripe** (not App Store / Google Play in-app purchase). The plan covers
+4 seats (full access or read only); sitters are always free. US only. Only the family's **owner** (`families.created_by`,
+migration 32) starts, changes or cancels the plan: the billing Edge Functions, `set_trial_reminder` and the screens
+(behind `Stack.Protected guard={isOwner}`) check it, and the trial reminder push goes to the owner only. Everyone else
+sees no Subscription row and no billing banners; the paused map says "Jen can restart the plan". Build and test everything in Stripe **test mode** first.
 
 | Plan | Price | Copy |
 |---|---|---|
@@ -34,7 +37,7 @@ link instead, the route `app/src/app/billing/[status].tsx` sends it to P38 or P3
 | What | Where |
 |---|---|
 | Table, `family_has_plan()`, `set_trial_reminder()`, `billing_trial_reminder()` | `supabase/migrations/20261006000024_billing.sql` |
-| Checkout session (parent only, creates/reuses the family's Stripe customer, 30-day trial if never had one) | `supabase/functions/billing-checkout/index.ts` |
+| Checkout session (the owner only, creates/reuses the family's Stripe customer, 30-day trial if never had one) | `supabase/functions/billing-checkout/index.ts` |
 | Billing portal session (receipts, card, switch plan; `flow: 'payment_method_update'` for P40) | `supabase/functions/billing-portal/index.ts` |
 | Cancel at period end (with reason), pause 1/2/3 months, resume (P41) | `supabase/functions/billing-manage/index.ts` |
 | Stripe webhook (signature checked, writes the row with the service role, sends the trial reminder push) | `supabase/functions/billing-webhook/index.ts` |
@@ -176,7 +179,7 @@ paused, or past due beyond the grace), following P40's lists:
 
 - Still works: kid Help alerts, messages with the sitter, past reports and receipts, Settings.
 - Paused: the live map (P4 shows the P4l lock card) and trip maps (P8), new bookings (`parent/shift/new` opens P36),
-  care plan edits (`parent/care/item` opens P36).
+  care plan edits (`parent/care/item` opens P36; for anyone but the owner they go back Home instead).
 
 New families see P36 once after first-run setup (P2 → P3), closable. The database does not enforce the plan yet
 (`family_has_plan()` exists for when it should).

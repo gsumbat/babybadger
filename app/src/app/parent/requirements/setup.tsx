@@ -379,7 +379,7 @@ function Driving({ draft, on, kids, onCancel, onDone }: { draft: ReqDraft; on: b
         <View style={st.info}>
           <SvgXml xml={reqSvg('car', color.primaryStrong)} width={22} height={22} style={{ flexShrink: 0 }} />
           <Text style={st.infoText}>
-            <Text style={st.infoBold}>Checked items are verified.</Text> The license and record come from her background check. Car seat skill is self-confirmed.
+            <Text style={st.infoBold}>BabyBadger doesn’t check these.</Text> She shares her license and record, and you decide if they look good. She confirms car seat skill herself.
           </Text>
         </View>
       </View>

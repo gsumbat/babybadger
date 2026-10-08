@@ -5,21 +5,20 @@ import {
   backgroundStatus,
   choiceOf,
   cleanLanguage,
-  credentialBadge,
+  cardState,
   credentialState,
   credentialSub,
   daysUntil,
   driveLabel,
   expiringSoon,
   expiryLine,
-  familyCredentials,
   familyViewLines,
   fromUsDate,
   languagesLine,
   profileLine,
   profileStrength,
   shortName,
-  suggestions,
+  languageChips,
   usDate,
   type Credential,
   type SitterProfile,
@@ -44,11 +43,12 @@ describe('credentials', () => {
     expect(daysUntil('2026-10-22', NOW)).toBe(21);
   });
 
-  it('picks the pill', () => {
-    expect(credentialBadge(cred({ verified_at: '2026-09-02T00:00:00Z', expires_on: '2027-03-01' }), NOW)).toBe('verified');
-    expect(credentialBadge(cred({ verified_at: '2026-09-02T00:00:00Z', expires_on: '2026-10-22' }), NOW)).toBe('expiring');
-    expect(credentialBadge(cred({ expires_on: '2026-09-01' }), NOW)).toBe('expired');
-    expect(credentialBadge(cred({}), NOW)).toBe('in_review');
+  it('picks the pill: Added / Expiring / Expired, never Verified', () => {
+    expect(cardState(cred({ verified_at: '2026-09-02T00:00:00Z', expires_on: '2027-03-01' }), NOW)).toBe('added');
+    expect(cardState(cred({ expires_on: '2027-03-01' }), NOW)).toBe('added');
+    expect(cardState(cred({ verified_at: '2026-09-02T00:00:00Z', expires_on: '2026-10-22' }), NOW)).toBe('expiring');
+    expect(cardState(cred({ expires_on: '2026-09-01' }), NOW)).toBe('expired');
+    expect(cardState(cred({}), NOW)).toBe('added');
   });
 
   it('lists what expires soon, soonest first, without the background check', () => {
@@ -64,8 +64,8 @@ describe('credentials', () => {
 
   it('describes the background check', () => {
     expect(backgroundStatus(null, NOW)).toBe('none');
-    expect(backgroundStatus(cred({ kind: 'background_check' }), NOW)).toBe('in_progress');
-    expect(backgroundStatus(cred({ kind: 'background_check', verified_at: '2026-08-01T00:00:00Z', expires_on: '2027-08-01' }), NOW)).toBe('cleared');
+    expect(backgroundStatus(cred({ kind: 'background_check' }), NOW)).toBe('added');
+    expect(backgroundStatus(cred({ kind: 'background_check', verified_at: '2026-08-01T00:00:00Z', expires_on: '2027-08-01' }), NOW)).toBe('added');
     expect(backgroundStatus(cred({ kind: 'background_check', verified_at: '2025-08-01T00:00:00Z', expires_on: '2026-08-01' }), NOW)).toBe('expired');
   });
 
@@ -102,7 +102,15 @@ describe('credentials', () => {
     expect(languagesLine(langs)).toBe('English · Spanish');
     expect(languagesLine(langs, true)).toBe('English (native) · Spanish (fluent)');
     expect(languagesLine([{ language: 'Portuguese', level: 'conversational' }], true)).toBe('Portuguese (good)');
-    expect(suggestions([{ language: 'french' }])).toEqual(['Mandarin', 'ASL', 'Russian']);
+    expect(languageChips([])).toEqual([
+      { language: 'English', fixed: true, on: false },
+      { language: 'Spanish', fixed: true, on: false },
+    ]);
+    expect(languageChips([{ language: 'Portuguese' }, { language: 'spanish' }]).map((c) => [c.language, c.fixed, c.on])).toEqual([
+      ['English', true, false],
+      ['Spanish', true, true],
+      ['Portuguese', false, true],
+    ]);
     expect(cleanLanguage('  haitian   creole ')).toBe('Haitian creole');
     expect(cleanLanguage('asl')).toBe('ASL');
     expect(cleanLanguage('  ')).toBe('');
@@ -144,17 +152,7 @@ describe('sitterAge', () => {
   it('leads the profile line', () => expect(profileLine({ home_area: 'Hyde Park, Tampa', years_experience: 5, birthdate: '2002-01-01' }, today)).toBe('24 years old · Tampa · 5 years with kids'));
 });
 
-describe('what families see (P11 / S19)', () => {
-  it('lists verified, unexpired credentials: first certificate, background check, then the rest', () => {
-    const creds = [
-      cred({ id: 'cpr', kind: 'first_aid', verified_at: '2026-09-01T00:00:00Z', expires_on: '2027-03-01' }),
-      cred({ id: 'inf', kind: 'cpr_infant', verified_at: '2026-09-01T00:00:00Z', expires_on: '2026-10-22' }),
-      cred({ id: 'bg', kind: 'background_check', verified_at: '2026-08-10T00:00:00Z' }),
-      cred({ id: 'old', kind: 'water_safety', verified_at: '2026-01-01T00:00:00Z', expires_on: '2026-09-01' }),
-      cred({ id: 'new', kind: 'newborn_care' }),
-    ];
-    expect(familyCredentials(creds, NOW).map((c) => c.id)).toEqual(['cpr', 'bg', 'inf']);
-  });
+describe('what families see (S19)', () => {
   it('S19 lines under the name', () => {
     expect(familyViewLines({ years_experience: 6, ages_from: 0, ages_to: 10, can_drive: true, rate: 20 })).toEqual(['6 years · ages newborn – 10', 'Drives · $20 / hour']);
     expect(familyViewLines({ years_experience: 1, ages_from: 3, ages_to: null, can_drive: false, rate: 18.5 })).toEqual(['1 year · ages 3 and up', '$18.50 / hour']);
