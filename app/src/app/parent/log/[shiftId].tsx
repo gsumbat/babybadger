@@ -3,14 +3,16 @@ import { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
+import { KidDot } from '@/components/bits';
 import { LOG_ICON, PhotoThumb } from '@/components/LogTimeline';
 import { Text } from '@/components/Text';
-import { Button, ErrorText, Icon, Loading, Screen } from '@/components/ui';
+import { Button, Chip, ErrorText, Icon, Loading, Screen } from '@/components/ui';
+import { planKidId } from '@/lib/care-plan';
 import { useQuery, useShiftLive } from '@/lib/data';
 import { firstName, timeOf } from '@/lib/format';
 import { rulesApi, shiftRuleRows } from '@/lib/house-rules';
 import { useSession } from '@/lib/session';
-import { isRideTask, LOG_FILTERS, type LogFilter, type LogRow, nextPhotoDue, photoAskWaiting, rulesStrip, shiftLogApi, shiftLogRows, shortClock, useShiftReactions } from '@/lib/shift-log';
+import { isRideTask, LOG_FILTERS, type LogFilter, logTitle, type LogRow, nextPhotoDue, photoAskWaiting, rulesStrip, shiftLogApi, shiftLogRows, shortClock, useShiftReactions } from '@/lib/shift-log';
 import { cardShadow, color, font } from '@/theme';
 
 // P77 icons from the wireframe: the chip tick, the strip tick, the bell (P77b, S4's strip) and the "Love it" heart.
@@ -29,8 +31,15 @@ const LOVE_INK = '#8A5A7A';
 // through useShiftLive, hearts and requests through useShiftReactions (each its own channel).
 // Left out until built: the place under a pick-up ("Lincoln Elementary": tasks store no place), opening a photo.
 // Not drawn: an empty filter ("No photos yet."), the ended shift (P77d: "Shift log", no Ask for a photo).
+// Kid filter: opened for the family, a kid chip row All · Ava · Leo sits above the type chips (2+ kids on the shift);
+// opened for one kid (?kidId=, from P5k's "See all") it is "Ava’s log" (P77k) with no kid row. A kid: her logs and the
+// whole family's ("Everyone" tag), done tasks that don't name only other kids (lib/shift-log-logic shiftLogRows).
+// The house-rules strip stays the shift's.
 export default function ShiftLog() {
-  const { shiftId } = useLocalSearchParams<{ shiftId: string }>();
+  const params = useLocalSearchParams<{ shiftId: string; kidId?: string }>();
+  const { shiftId } = params;
+  // Opened for one kid: her log only, no switching.
+  const [scoped] = useState(() => !!params.kidId);
   const { session } = useSession();
   const uid = session!.user.id;
   const { bundle, error } = useShiftLive(shiftId);
@@ -51,7 +60,9 @@ export default function ShiftLog() {
   const name = firstName(sitter?.full_name);
   const live = shift.status === 'active';
   const at = live ? new Date(now) : new Date(shift.clock_out_at ?? shift.ends_at);
-  const rows = shiftLogRows(logs, tasks, kids, filter);
+  const kidId = planKidId(kids, params.kidId);
+  const pick = (k: string | null) => router.setParams({ kidId: k ?? undefined });
+  const rows = shiftLogRows(logs, tasks, kids, filter, kidId);
   const strip = rulesStrip(shiftRuleRows(rules ?? [], logs, kids, shift.clock_in_at, at), live ? nextPhotoDue(rules ?? [], logs, shift.clock_in_at) : null);
   const mine = new Set(reactions.filter((r) => r.parent_id === uid && r.kind === 'love').map((r) => r.log_id));
   const waiting = photoAskWaiting(requests, logs, new Date(now));
@@ -95,7 +106,7 @@ export default function ShiftLog() {
   return (
     <Screen
       back
-      title={live ? 'Today’s log' : 'Shift log'}
+      title={logTitle(kids.find((k) => k.id === kidId)?.name, live)}
       subtitle={subtitle}
       gap={10}
       footer={
@@ -104,6 +115,14 @@ export default function ShiftLog() {
           {live ? <Button label={waiting ? 'Photo asked' : 'Ask for a photo'} kind="tonal" onPress={ask} busy={asking} disabled={waiting} style={st.half} /> : null}
         </View>
       }>
+      {!scoped && kids.length > 1 ? (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20, marginTop: -2, flexGrow: 0 }} contentContainerStyle={st.kidChips}>
+          <Chip label="All" on={!kidId} onPress={() => pick(null)} />
+          {kids.map((k) => (
+            <Chip key={k.id} label={k.name} on={k.id === kidId} onPress={() => pick(k.id)} lead={<KidDot kid={k} size={20} />} />
+          ))}
+        </ScrollView>
+      ) : null}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20, marginTop: -2, flexGrow: 0 }} contentContainerStyle={st.chips}>
         {LOG_FILTERS.map((f) => {
           const on = filter === f.value;
@@ -176,6 +195,8 @@ function Entry({ row, last, loved, onLove }: { row: LogRow; last: boolean; loved
 // Values from wireframe P77.
 const st = StyleSheet.create({
   chips: { flexDirection: 'row', gap: 6, paddingHorizontal: 20 },
+  // The kid row above the type chips (P77 / P77d), as P7's.
+  kidChips: { gap: 8, paddingHorizontal: 20 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 12, borderRadius: 999, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line },
   chipOn: { backgroundColor: color.primaryTint, borderWidth: 1.5, borderColor: color.primary },
   chipText: { fontFamily: font.bodySemi, fontSize: 13, color: color.ink },

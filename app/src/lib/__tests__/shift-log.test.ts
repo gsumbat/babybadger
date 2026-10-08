@@ -3,15 +3,20 @@ import { describe, expect, it } from '@jest/globals';
 import { chipRule, type HouseRule, shiftRuleRows } from '../house-rules-logic';
 import {
   isRideTask,
+  kidLogs,
   kidTag,
+  kidTasks,
   lengthBetween,
+  logTitle,
   lovedLogs,
   nextPhotoDue,
   openPhotoRequest,
   photoAskWaiting,
+  reportTitle,
   rulesStrip,
   shiftLogRows,
   shortClock,
+  taskForKid,
   type PhotoRequest,
 } from '../shift-log-logic';
 import type { LogEntry } from '../types';
@@ -126,5 +131,59 @@ describe('photo requests (S4p / P77c)', () => {
     expect(photoAskWaiting([req('b', at(16, 40))], LOGS, new Date(at(16, 45)))).toBe(true);
     expect(photoAskWaiting([req('b', at(16, 40))], LOGS, new Date(at(16, 51)))).toBe(false);
     expect(photoAskWaiting([req('b', at(16, 40))], [...LOGS, log('p2', 'photo', at(16, 44))], new Date(at(16, 45)))).toBe(false);
+  });
+});
+
+describe('kid-specific report and log', () => {
+  const logs = [
+    log('snack', 'food', at(15, 30), { what: 'Apple slices' }, ['ava']),
+    log('nap', 'nap', at(15, 45), {}, ['leo']),
+    log('park', 'activity', at(16, 30), { what: 'Park' }, ['ava', 'leo']),
+    log('note', 'note', at(17), { text: 'All good' }),
+  ];
+  const tasks = [
+    { id: 't1', title: 'Picked up Ava', done_at: at(15, 24) },
+    { id: 't2', title: 'Soccer for Leo', done_at: at(16) },
+    { id: 't3', title: 'Dinner', done_at: at(18) },
+  ];
+
+  it('keeps her logs and whole-family logs, drops logs only for other kids', () => {
+    expect(kidLogs(logs, 'ava').map((l) => l.id)).toEqual(['snack', 'park', 'note']);
+    expect(kidLogs(logs, 'leo').map((l) => l.id)).toEqual(['nap', 'park', 'note']);
+    expect(kidLogs(logs, null)).toHaveLength(4);
+  });
+
+  it('matches tasks by name', () => {
+    expect(taskForKid('Picked up Ava', KIDS, 'ava')).toBe(true);
+    expect(taskForKid('Soccer for Leo', KIDS, 'ava')).toBe(false);
+    expect(taskForKid('Dinner', KIDS, 'ava')).toBe(true);
+    expect(taskForKid('Bath for Ava and Leo', KIDS, 'leo')).toBe(true);
+    expect(taskForKid('Leonard’s book', KIDS, 'ava')).toBe(true); // "Leo" inside a longer word is not Leo
+    expect(kidTasks(tasks, KIDS, 'ava').map((t) => t.id)).toEqual(['t1', 't3']);
+    expect(kidTasks(tasks, KIDS, null)).toHaveLength(3);
+  });
+
+  it('filters P77 rows by kid and tags family entries "Everyone"', () => {
+    const rows = shiftLogRows(logs, tasks, KIDS, 'all', 'ava');
+    expect(rows.map((r) => r.key)).toEqual(['task-t3', 'note', 'park', 'snack', 'task-t1']);
+    expect(rows.find((r) => r.key === 'note')!.kid).toBe('Everyone');
+    expect(rows.find((r) => r.key === 'park')!.kid).toBe('Both');
+    expect(rows.find((r) => r.key === 'snack')!.kid).toBe('Ava');
+    // No kid selected: the family entry has no tag, every log shows.
+    const all = shiftLogRows(logs, tasks, KIDS, 'all');
+    expect(all.find((r) => r.key === 'note')!.kid).toBe('');
+    expect(all).toHaveLength(7);
+    // Type chips still apply on top.
+    expect(shiftLogRows(logs, tasks, KIDS, 'food', 'leo')).toEqual([]);
+    // One kid on the shift: no "Everyone" tag.
+    expect(shiftLogRows(logs, [], [KIDS[0]], 'all', 'ava').find((r) => r.key === 'note')!.kid).toBe('');
+  });
+
+  it('titles', () => {
+    expect(reportTitle('Ava')).toBe('Ava’s report');
+    expect(reportTitle(null)).toBe('Shift report');
+    expect(logTitle('Ava', true)).toBe('Ava’s log');
+    expect(logTitle(null, true)).toBe('Today’s log');
+    expect(logTitle(undefined, false)).toBe('Shift log');
   });
 });

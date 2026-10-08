@@ -23,7 +23,7 @@ export type LogRow = {
   logId: string | null;
   title: string;
   detail: string;
-  /** Kid tag: "Leo", "Ava, Leo", "Both" (both of two), "All" (all of 3+); '' for none. */
+  /** Kid tag: "Leo", "Ava, Leo", "Both" (both of two), "All" (all of 3+); '' for none ("Everyone" with a kid selected). */
   kid: string;
   at: string;
   photoPath: string | null;
@@ -82,12 +82,48 @@ function logRows(l: LogEntry, kids: Pick<Kid, 'id' | 'name'>[]): LogRow[] {
   return [{ ...base, key: l.id, kind: l.kind, title: t.title, detail: t.detail, at: l.happened_at }];
 }
 
-/** The P77 timeline for a filter, newest first. */
-export function shiftLogRows(logs: LogEntry[], tasks: Pick<Task, 'id' | 'title' | 'done_at'>[], kids: Pick<Kid, 'id' | 'name'>[], filter: LogFilter = 'all'): LogRow[] {
+/** Kid filter (P5 / P77 kid chips, or opened for one kid with ?kidId=): a log is hers when its kid_ids include her, or
+ * are empty (the whole family). Logs only for other kids drop out. No kid: every log. */
+export function logForKid(l: Pick<LogEntry, 'kid_ids'>, kidId: string | null | undefined): boolean {
+  if (!kidId) return true;
+  const ids = l.kid_ids ?? [];
+  return !ids.length || ids.includes(kidId);
+}
+export function kidLogs<L extends Pick<LogEntry, 'kid_ids'>>(logs: L[], kidId: string | null | undefined): L[] {
+  return kidId ? logs.filter((l) => logForKid(l, kidId)) : logs;
+}
+
+const named = (title: string, name: string) => new RegExp(`(^|[^\\p{L}])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?=$|[^\\p{L}])`, 'iu').test(title);
+/** Shift tasks carry no kid, so a task is matched by name: one that names only other kids on the shift ("Soccer for
+ * Leo") drops out for her; one that names her ("Pick up Ava") or no kid stays. */
+export function taskForKid(title: string, kids: Pick<Kid, 'id' | 'name'>[], kidId: string | null | undefined): boolean {
+  if (!kidId) return true;
+  const me = kids.find((k) => k.id === kidId);
+  if (me && named(title, me.name)) return true;
+  return !kids.some((k) => k.id !== kidId && k.name.trim() && named(title, k.name.trim()));
+}
+export function kidTasks<T extends Pick<Task, 'title'>>(tasks: T[], kids: Pick<Kid, 'id' | 'name'>[], kidId: string | null | undefined): T[] {
+  return kidId ? tasks.filter((t) => taskForKid(t.title, kids, kidId)) : tasks;
+}
+
+/** P5 / P77 titles with a kid selected: "Ava’s report", "Ava’s log". */
+export function reportTitle(kidName: string | null | undefined): string {
+  return kidName ? `${kidName}’s report` : 'Shift report';
+}
+export function logTitle(kidName: string | null | undefined, live: boolean): string {
+  return kidName ? `${kidName}’s log` : live ? 'Today’s log' : 'Shift log';
+}
+
+/** The P77 timeline for a filter, newest first. With a kid: her logs and the whole family's (tagged "Everyone" when
+ * the shift has 2+ kids), and the done tasks that don't name only other kids. */
+export function shiftLogRows(logs: LogEntry[], tasks: Pick<Task, 'id' | 'title' | 'done_at'>[], kids: Pick<Kid, 'id' | 'name'>[], filter: LogFilter = 'all', kidId: string | null = null): LogRow[] {
   const kind = filter === 'all' ? null : FILTER_KIND[filter];
-  const rows = logs.filter((l) => !kind || l.kind === kind).flatMap((l) => logRows(l, kids));
+  const rows = kidLogs(logs, kidId)
+    .filter((l) => !kind || l.kind === kind)
+    .flatMap((l) => logRows(l, kids))
+    .map((r) => (kidId && !r.kid && kids.length > 1 ? { ...r, kid: 'Everyone' } : r));
   if (!kind)
-    for (const t of tasks)
+    for (const t of kidTasks(tasks, kids, kidId))
       if (t.done_at) rows.push({ key: `task-${t.id}`, kind: 'task', logId: null, title: t.title, detail: '', kid: '', at: t.done_at, photoPath: null, urgent: false });
   return rows.sort((a, b) => +new Date(b.at) - +new Date(a.at));
 }

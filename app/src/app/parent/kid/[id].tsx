@@ -21,6 +21,7 @@ const HEART_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="#4B5960" stroke
 // kid's location line, the See on map / Message tiles (the plan tile keeps its third of the row), and the phone and
 // Who looks after rows. The plan tile reads "Her plan" / "His plan" from the optional gender, "Plan" without one,
 // and opens the care plan filtered to this kid (P7k, ?kidId=).
+// THIS WEEK counts her shifts (shift_kids) and "Last report" opens the latest completed one as her report (P5k, ?kidId=).
 // A read-only member (P55h) reads it: no Edit, Care and safety opens the read-only view (P19v) instead of the editor
 // (P19e), Routine opens the day read-only (P20h), and the note "Jen manages Ava’s profile." at the end.
 export default function KidProfile() {
@@ -119,7 +120,7 @@ export default function KidProfile() {
         {week.last ? (
           <View style={st.weekRow}>
             <Text style={st.weekText}>Last report</Text>
-            <Pressable accessibilityRole="link" onPress={() => router.push(`/parent/shift/${week.last!.id}`)} style={{ flexShrink: 1 }}>
+            <Pressable accessibilityRole="link" onPress={() => router.push(`/parent/shift/${week.last!.id}?kidId=${kid.id}`)} style={{ flexShrink: 1 }}>
               <Text style={st.link}>{new Date(week.last.starts_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</Text>
             </Pressable>
           </View>

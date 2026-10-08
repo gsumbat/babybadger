@@ -55,7 +55,7 @@ export default function WF_P5b() {
             </View>
             <View style={{ flexDirection: "column", flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Leo</Text>
-              <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 17, marginTop: 2 }}>4 yrs 4 mos · avoid Peanuts, Shellfish</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 17, marginTop: 2 }}>4 yrs 4 mos</Text>
             </View>
           </View>
         </View>

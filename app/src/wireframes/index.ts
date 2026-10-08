@@ -110,6 +110,7 @@ import WF_P58 from './P58';
 import WF_P58b from './P58b';
 import WF_P5b from './P5b';
 import WF_P5e from './P5e';
+import WF_P5k from './P5k';
 import WF_P6a from './P6a';
 import WF_P6b from './P6b';
 import WF_P6bh from './P6bh';
@@ -125,6 +126,7 @@ import WF_P77 from './P77';
 import WF_P77b from './P77b';
 import WF_P77c from './P77c';
 import WF_P77d from './P77d';
+import WF_P77k from './P77k';
 import WF_P78 from './P78';
 import WF_P78b from './P78b';
 import WF_P78br from './P78br';
@@ -355,6 +357,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P58b: WF_P58b,
   P5b: WF_P5b,
   P5e: WF_P5e,
+  P5k: WF_P5k,
   P6a: WF_P6a,
   P6b: WF_P6b,
   P6bh: WF_P6bh,
@@ -370,6 +373,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P77b: WF_P77b,
   P77c: WF_P77c,
   P77d: WF_P77d,
+  P77k: WF_P77k,
   P78: WF_P78,
   P78b: WF_P78b,
   P78br: WF_P78br,

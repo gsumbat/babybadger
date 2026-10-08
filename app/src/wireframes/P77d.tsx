@@ -9,6 +9,7 @@ const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="non
 
 const SVG = [
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #1B2328; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M15 6l-6 6 6 6\"></path></svg>",
+  "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #34526E; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"></path></svg>",
   "<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #34526E; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"></path></svg>",
   "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #1B6B3D; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"></path></svg>",
   "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #6A5A9E; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z\"></path></svg>",
@@ -34,9 +35,27 @@ export default function WF_P77d() {
         </View>
       </View>
       <View style={{ flexDirection: "column", gap: 10, minHeight: 0, flexGrow: 1, paddingTop: 2, paddingRight: 20, paddingBottom: 8, paddingLeft: 20, overflow: "hidden", flexShrink: 1 }}>
+        <View style={{ flexDirection: "row", gap: 8, flexShrink: 0, paddingTop: 0, paddingRight: 20, paddingBottom: 0, paddingLeft: 20, marginRight: -20, marginLeft: -20 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A" }}>
+            <SvgXml xml={SVG[1]} width={14} height={14} />
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#34526E" }}>All</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>{/* -> P77k-AvaLog.dc.html */}
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 10 }}>
+              <Text style={{ fontFamily: font.displayBold, fontSize: 9, color: "#FFFFFF" }}>A</Text>
+            </View>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Ava</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, flexShrink: 0, backgroundColor: "#8676B3", borderRadius: 10 }}>
+              <Text style={{ fontFamily: font.displayBold, fontSize: 9, color: "#FFFFFF" }}>L</Text>
+            </View>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Leo</Text>
+          </View>
+        </View>
         <View style={{ flexDirection: "row", gap: 6, overflow: "hidden", flexShrink: 1, minHeight: 0 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A" }}>
-            <SvgXml xml={SVG[1]} width={16} height={16} />
+            <SvgXml xml={SVG[2]} width={16} height={16} />
             <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#34526E" }}>All</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
@@ -53,7 +72,7 @@ export default function WF_P77d() {
           </View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingTop: 10, paddingRight: 14, paddingBottom: 10, paddingLeft: 14, backgroundColor: "#DCEEE3", borderRadius: 14 }}>
-          <SvgXml xml={SVG[2]} width={18} height={18} />
+          <SvgXml xml={SVG[3]} width={18} height={18} />
           <Text style={{ fontFamily: font.body, fontSize: 13, color: "#1B2328", lineHeight: 18, flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#1B6B3D", lineHeight: 18 }}>House rules on track.</Text> Meals, nap, activity and photo update logged</Text>
         </View>
         <View style={{ paddingTop: 14, paddingRight: 14, paddingBottom: 2, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, flexDirection: "column", ...cardShadow }}>
@@ -61,7 +80,7 @@ export default function WF_P77d() {
             <View style={{ width: 2, top: 38, left: 17, bottom: -6, backgroundColor: "#E6EAEF", position: "absolute", flexShrink: 1, flexDirection: "column" }}>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#ECE7F5", borderRadius: 18 }}>
-              <SvgXml xml={SVG[3]} width={18} height={18} />
+              <SvgXml xml={SVG[4]} width={18} height={18} />
             </View>
             <View style={{ flexDirection: "column", gap: 2, minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -76,7 +95,7 @@ export default function WF_P77d() {
             <View style={{ width: 2, top: 38, left: 17, bottom: -6, backgroundColor: "#E6EAEF", position: "absolute", flexShrink: 1, flexDirection: "column" }}>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#F3E1E3", borderRadius: 18 }}>
-              <SvgXml xml={SVG[4]} width={18} height={18} />
+              <SvgXml xml={SVG[5]} width={18} height={18} />
             </View>
             <View style={{ flexDirection: "column", gap: 2, minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -89,7 +108,7 @@ export default function WF_P77d() {
                 <View style={{ width: 92, height: 64, borderRadius: 10, flexShrink: 1, flexDirection: "column" }}>
                 </View>
                 <View style={{ flexDirection: "row", alignItems: "center", alignSelf: "flex-end", gap: 4, height: 30, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#F3E1E3", borderRadius: 999, flexShrink: 1 }}>
-                  <SvgXml xml={SVG[5]} width={14} height={14} />
+                  <SvgXml xml={SVG[6]} width={14} height={14} />
                   <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#8A5A7A" }}>Love it</Text>
                 </View>
               </View>
@@ -99,7 +118,7 @@ export default function WF_P77d() {
             <View style={{ width: 2, top: 38, left: 17, bottom: -6, backgroundColor: "#E6EAEF", position: "absolute", flexShrink: 1, flexDirection: "column" }}>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 18 }}>
-              <SvgXml xml={SVG[6]} width={18} height={18} />
+              <SvgXml xml={SVG[7]} width={18} height={18} />
             </View>
             <View style={{ flexDirection: "column", gap: 2, minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -114,7 +133,7 @@ export default function WF_P77d() {
             <View style={{ width: 2, top: 38, left: 17, bottom: -6, backgroundColor: "#E6EAEF", position: "absolute", flexShrink: 1, flexDirection: "column" }}>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#ECE7F5", borderRadius: 18 }}>
-              <SvgXml xml={SVG[7]} width={18} height={18} />
+              <SvgXml xml={SVG[8]} width={18} height={18} />
             </View>
             <View style={{ flexDirection: "column", gap: 2, minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -129,7 +148,7 @@ export default function WF_P77d() {
             <View style={{ width: 2, top: 38, left: 17, bottom: -6, backgroundColor: "#E6EAEF", position: "absolute", flexShrink: 1, flexDirection: "column" }}>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#F6E3C6", borderRadius: 18 }}>
-              <SvgXml xml={SVG[8]} width={18} height={18} />
+              <SvgXml xml={SVG[9]} width={18} height={18} />
             </View>
             <View style={{ flexDirection: "column", gap: 2, minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
@@ -142,7 +161,7 @@ export default function WF_P77d() {
           </View>
           <View style={{ flexDirection: "row", gap: 12, paddingBottom: 12 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 18 }}>
-              <SvgXml xml={SVG[9]} width={18} height={18} />
+              <SvgXml xml={SVG[10]} width={18} height={18} />
             </View>
             <View style={{ flexDirection: "column", gap: 2, minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>

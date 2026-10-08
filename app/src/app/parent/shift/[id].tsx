@@ -1,14 +1,17 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { KidDot, kidSub, SafetyBox, TaskRows } from '@/components/bits';
+import { KidDot, SafetyBox, TaskRows } from '@/components/bits';
 import { LiveMap } from '@/components/LiveMap';
 import { LogTimeline, PhotoThumb } from '@/components/LogTimeline';
 import { EditableTasksCard } from '@/components/shiftTasks';
-import { Avatar, Button, Card, ErrorText, Icon, Loading, Pill, Screen, T } from '@/components/ui';
+import { Avatar, Button, Card, Chip, ErrorText, Icon, Loading, Pill, Screen, T } from '@/components/ui';
+import { planKidId } from '@/lib/care-plan';
 import { useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
+import { ageLabel } from '@/lib/kid-profile';
+import { kidLogs, kidTasks, reportTitle } from '@/lib/shift-log-logic';
 import { canEditShiftTasks, describeLog, workedMinutes } from '@/lib/shift-logic';
 import { useSession } from '@/lib/session';
 import { useCanManage } from '@/lib/use-family-role';
@@ -19,8 +22,17 @@ import { Text } from '@/components/Text';
 // Live view (P4 detail) while on shift, report (P5) after clock-out, details before (P5b).
 // P5e: on an upcoming or live shift a full-access parent edits Today's plan (add, rename, retime, remove; migration 34
 // pushes the sitter). Read-only members, and completed or cancelled shifts, keep the read-only card.
+// Kid filter (like the care plan): opened for one kid (P55's "Last report", ?kidId=) it is only her report (P5k:
+// "Ava’s report", no chips). Opened for the family (Home, calendar, pushes) the report shows All · Ava · Leo chips under
+// the header (2+ kids on the shift). A kid: her logs and the whole family's (lib/shift-log-logic kidLogs), tasks that
+// don't name only other kids (tasks store no kid, so they match by name: kidTasks), photos likewise; "See all N" counts
+// hers and opens P77 with the same kid. Time, pay, the map and the notes are the shift's. The live "Today’s log" card
+// follows ?kidId= too (no chips drawn there).
 export default function ParentShift() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{ id: string; kidId?: string }>();
+  const { id } = params;
+  // Opened from a kid's profile: that kid's report only, no switching to All or another kid.
+  const [scoped] = useState(() => !!params.kidId);
   const { bundle, error, reload } = useShiftLive(id);
   const [, tick] = useState(0);
   // A family helper (migration 30) can't cancel a booking.
@@ -32,8 +44,15 @@ export default function ParentShift() {
   }, []);
 
   if (!bundle) return error ? <Screen title="Shift" back><ErrorText>{error}</ErrorText></Screen> : <Loading />;
-  const { shift, tasks, logs, points, kids, sitter } = bundle;
+  const { shift, points, kids, sitter } = bundle;
+  const kidId = planKidId(kids, params.kidId);
+  const kidName = kids.find((k) => k.id === kidId)?.name;
+  // setParams keeps the choice in the route, so back / forward land on the same kid.
+  const pick = (k: string | null) => router.setParams({ kidId: k ?? undefined });
+  const logs = kidLogs(bundle.logs, kidId);
+  const logParams = kidId ? { shiftId: shift.id, kidId } : { shiftId: shift.id };
   const name = firstName(sitter?.full_name);
+  const tasks = shift.status === 'completed' ? kidTasks(bundle.tasks, kids, kidId) : bundle.tasks;
   const done = tasks.filter((t) => t.done_at).length;
   const mins = workedMinutes(shift);
   const when = `${dayOf(shift.starts_at)} · ${timeOf(shift.starts_at)} – ${timeOf(shift.ends_at)}`;
@@ -60,7 +79,7 @@ export default function ParentShift() {
   );
 
   // Wireframe P5, translated from its HTML (app/src/wireframes/P5.tsx). Left out until built: total pay,
-  // Approve hours, Replay route, house-rules check, the full log page.
+  // Approve hours, Replay route, house-rules check.
   if (shift.status === 'completed') {
     const photos = logs.filter((l) => l.photo_path);
     const hm = (iso: string) => timeOf(iso).replace(/\s?[AP]M$/i, '');
@@ -69,16 +88,26 @@ export default function ParentShift() {
       <Screen
         header={
           // P5 header: 20 px title and 14 px subtitle (the shared back header is 22 / 13).
-          <View style={st.head}>
-            <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={st.backBtn}>
-              <Icon name="chevron-left" size={22} tint={color.ink} strokeWidth={2} />
-            </Pressable>
-            <View style={{ flexShrink: 1 }}>
-              <Text style={st.headTitle}>Shift report</Text>
-              <Text style={st.headSub}>
-                {name} · {new Date(shift.starts_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-              </Text>
+          <View style={st.headWrap}>
+            <View style={st.head}>
+              <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={st.backBtn}>
+                <Icon name="chevron-left" size={22} tint={color.ink} strokeWidth={2} />
+              </Pressable>
+              <View style={{ flexShrink: 1 }}>
+                <Text style={st.headTitle}>{reportTitle(kidName)}</Text>
+                <Text style={st.headSub}>
+                  {name} · {new Date(shift.starts_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                </Text>
+              </View>
             </View>
+            {!scoped && kids.length > 1 ? (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={st.chips} contentContainerStyle={st.chipRow}>
+                <Chip label="All" on={!kidId} onPress={() => pick(null)} />
+                {kids.map((k) => (
+                  <Chip key={k.id} label={k.name} on={k.id === kidId} onPress={() => pick(k.id)} lead={<KidDot kid={k} size={20} />} />
+                ))}
+              </ScrollView>
+            ) : null}
           </View>
         }>
         <View style={st.blue}>
@@ -111,7 +140,7 @@ export default function ParentShift() {
           <Text style={st.summary}>{tasks.length ? tasks.map((t) => (t.done_at ? t.title : `${t.title} (not done)`)).join(' · ') : 'No tasks were set for this shift.'}</Text>
         </View>
         {/* P5's Logs card opens the full log (P77, ended: P77d). */}
-        <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/parent/log/[shiftId]', params: { shiftId: shift.id } })} style={[st.card, { gap: 8 }]}>
+        <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/parent/log/[shiftId]', params: logParams })} style={[st.card, { gap: 8 }]}>
           <View style={st.cardHead}>
             <Text style={st.cardTitle}>Logs</Text>
             {logs.length ? <Text style={st.seeAll}>See all {logs.length} ›</Text> : null}
@@ -161,7 +190,7 @@ export default function ParentShift() {
         </View>
         <SafetyBox kids={kids} />
         {taskCard}
-        <Card onPress={() => router.push({ pathname: '/parent/log/[shiftId]', params: { shiftId: shift.id } })}>
+        <Card onPress={() => router.push({ pathname: '/parent/log/[shiftId]', params: logParams })}>
           <Text style={st.cardTitle}>Today’s log</Text>
           <LogTimeline logs={logs} kids={kids} />
         </Card>
@@ -189,7 +218,8 @@ export default function ParentShift() {
               <KidDot kid={k} />
               <View style={{ flex: 1 }}>
                 <T variant="strong">{k.name}</T>
-                {kidSub(k) ? <T variant="small">{kidSub(k)}</T> : null}
+                {/* Age only: food to avoid and allergies are for the sitter; parents wrote them. */}
+                {ageLabel(k.birthdate) ? <T variant="small">{ageLabel(k.birthdate)}</T> : null}
               </View>
             </View>
           ))}
@@ -202,7 +232,11 @@ export default function ParentShift() {
 
 const st = StyleSheet.create({
   // P5 values
-  head: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 16, paddingHorizontal: 20, paddingBottom: 8 }, // + 4 content top = 12
+  headWrap: { gap: 12, paddingTop: 16, paddingHorizontal: 20, paddingBottom: 8 }, // + 4 content top = 12
+  head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  // Kid chips under the header (as P7), edge to edge so a long row scrolls past the gutter.
+  chips: { marginHorizontal: -20, flexGrow: 0 },
+  chipRow: { gap: 8, paddingHorizontal: 20 },
   backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   headTitle: { fontFamily: font.display, fontSize: 20, color: color.ink },
   headSub: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
