@@ -19,7 +19,8 @@ const HEART_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="#4B5960" stroke
 
 // Wireframe P55 Child profile, from app/src/wireframes/P55.tsx. Left out until built: grade and school, the
 // kid's location line, the See on map / Message tiles (the plan tile keeps its third of the row), and the phone and
-// Who looks after rows. The plan tile reads "Her plan" / "His plan" from the optional gender, "Plan" without one.
+// Who looks after rows. The plan tile reads "Her plan" / "His plan" from the optional gender, "Plan" without one,
+// and opens the care plan filtered to this kid (P7k, ?kidId=).
 // A read-only member (P55h) reads it: no Edit, Care and safety opens the read-only view (P19v) instead of the editor
 // (P19e), Routine opens the day read-only (P20h), and the note "Jen manages Ava’s profile." at the end.
 export default function KidProfile() {
@@ -64,7 +65,7 @@ export default function KidProfile() {
       </View>
 
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Pressable accessibilityRole="button" onPress={() => router.push('/parent/care')} style={st.tile}>
+        <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/care?kidId=${kid.id}`)} style={st.tile}>
           <SvgXml xml={LIST} width={20} height={20} style={{ flexShrink: 0 }} />
           <Text style={st.tileText}>{kid.gender ? `${pronouns(kid.gender).poss[0].toUpperCase()}${pronouns(kid.gender).poss.slice(1)} plan` : 'Plan'}</Text>
         </Pressable>

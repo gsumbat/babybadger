@@ -145,6 +145,8 @@ import WF_P7a from './P7a';
 import WF_P7b from './P7b';
 import WF_P7c from './P7c';
 import WF_P7h from './P7h';
+import WF_P7k from './P7k';
+import WF_P7m from './P7m';
 import WF_P8 from './P8';
 import WF_P8b from './P8b';
 import WF_P8h from './P8h';
@@ -388,6 +390,8 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P7b: WF_P7b,
   P7c: WF_P7c,
   P7h: WF_P7h,
+  P7k: WF_P7k,
+  P7m: WF_P7m,
   P8: WF_P8,
   P8b: WF_P8b,
   P8h: WF_P8h,

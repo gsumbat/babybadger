@@ -1,20 +1,20 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
+import { KidDot } from '@/components/bits';
 import { HelperNote } from '@/components/familyMembers';
-import { ErrorText, Icon, Loading, Screen } from '@/components/ui';
+import { Chip, ErrorText, Icon, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
-import { isFood, itemLine, itemTitle, scheduleLabel, shortTime, sortItems } from '@/lib/care-plan';
+import { avoidKids, isEveryone, isFood, itemLine, itemTitle, planAdd, planItems, planKidId, planKids, planTitle, scheduleLabel, shortTime, sortItems, type PlanTab } from '@/lib/care-plan';
 import { useSession } from '@/lib/session';
 import { useCanManage } from '@/lib/use-family-role';
 import type { CareItem, Kid } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
-type Tab = 'tasks' | 'meals' | 'routines';
-const TABS: { value: Tab; label: string }[] = [
+const TABS: { value: PlanTab; label: string }[] = [
   { value: 'tasks', label: 'Tasks' },
   { value: 'meals', label: 'Meals' },
   { value: 'routines', label: 'Routines' },
@@ -27,6 +27,10 @@ const TABS: { value: Tab; label: string }[] = [
 // A read-only member (P7h) reads it: no Requirements pill, no "+ Add task" (the note "Jen manages the care plan."
 // instead), rows open the whole item read-only (P20v) instead of the editor (P20a); Routines rows open the kid's day
 // read-only (P20h).
+// Kid filter (P7k / P7m / P7r): All · Ava · Leo chips under the tabs (only with two or more kids), ?kidId= preselects
+// (P55's "Her plan"). A kid: the title reads "Ava’s plan", family rows carry "Everyone", Tasks adds her own non-food
+// items, Meals her meals and bottles, Routines only her row; new items are pre-assigned to her. Food to avoid shows
+// on Meals only (P7m), for the selected kid. The add button reads "+ Add meal" on Meals; Routines has none.
 export default function CarePlan() {
   const { family } = useSession();
   const manage = useCanManage();
@@ -35,13 +39,18 @@ export default function CarePlan() {
     const [items, kids] = await Promise.all([api.careItems(fid), api.kids(fid)]);
     return { items: sortItems(items), kids };
   }, [fid]);
-  const [tab, setTab] = useState<Tab>('tasks');
+  const params = useLocalSearchParams<{ kidId?: string }>();
+  const [tab, setTab] = useState<PlanTab>('tasks');
 
   if (!data) return error ? <Screen title="Care plan" back><ErrorText>{error}</ErrorText></Screen> : <Loading />;
   const { items, kids } = data;
+  const kidId = planKidId(kids, params.kidId);
   const kidName = (id: string | null) => kids.find((k) => k.id === id)?.name;
-  const shown = tab === 'tasks' ? items.filter((i) => !i.kid_id && !isFood(i.type)) : items.filter((i) => isFood(i.type));
-  const avoid = kids.filter((k) => k.avoid_foods.trim());
+  const shown = planItems(items, tab, kidId);
+  const avoid = avoidKids(kids, tab, kidId);
+  const add = manage ? planAdd(tab, kidId) : null;
+  // setParams keeps the choice in the route, so back / forward and deep links land on the same kid.
+  const pick = (id: string | null) => router.setParams({ kidId: id ?? undefined });
 
   return (
     <Screen
@@ -52,7 +61,9 @@ export default function CarePlan() {
             <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={st.back}>
               <Icon name="chevron-left" size={22} tint={color.ink} strokeWidth={2} />
             </Pressable>
-            <Text style={st.title}>Care plan</Text>
+            <Text style={st.title} numberOfLines={1}>
+              {planTitle(kidName(kidId))}
+            </Text>
             {manage ? (
               <Pressable accessibilityRole="button" onPress={() => router.push('/parent/requirements')} style={st.reqPill}>
                 <SvgXml xml={SHIELD} width={16} height={16} style={{ flexShrink: 0 }} />
@@ -70,6 +81,14 @@ export default function CarePlan() {
               );
             })}
           </View>
+          {kids.length > 1 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={st.chips} contentContainerStyle={st.chipRow}>
+              <Chip label="All" on={!kidId} onPress={() => pick(null)} />
+              {kids.map((k) => (
+                <Chip key={k.id} label={k.name} on={k.id === kidId} onPress={() => pick(k.id)} lead={<KidDot kid={k} size={20} />} />
+              ))}
+            </ScrollView>
+          ) : null}
         </View>
       }>
       <ErrorText>{error}</ErrorText>
@@ -81,21 +100,21 @@ export default function CarePlan() {
       ))}
 
       {tab === 'routines' ? (
-        kids.length ? <Routines kids={kids} items={items} manage={manage} /> : null
+        kids.length ? <Routines kids={planKids(kids, kidId)} items={items} manage={manage} /> : null
       ) : (
         <>
           {shown.length ? (
             <View style={st.card}>
               {shown.map((i, n) => (
-                <ItemRow key={i.id} item={i} kid={kidName(i.kid_id)} last={n === shown.length - 1} edit={manage} />
+                <ItemRow key={i.id} item={i} kid={kidId ? undefined : kidName(i.kid_id)} everyone={isEveryone(i, kidId)} last={n === shown.length - 1} edit={manage} />
               ))}
             </View>
           ) : null}
-          {manage ? (
-            <Pressable accessibilityRole="button" onPress={() => router.push(tab === 'meals' ? '/parent/care/item?type=meal' : '/parent/care/item')} style={st.add}>
-              <Text style={st.addText}>+ Add task</Text>
+          {add ? (
+            <Pressable accessibilityRole="button" onPress={() => router.push(add.href)} style={st.add}>
+              <Text style={st.addText}>{add.label}</Text>
             </Pressable>
-          ) : (
+          ) : manage ? null : (
             <>
               {shown.length ? null : <Text style={st.none}>{tab === 'meals' ? 'No meals in the plan yet.' : 'No tasks in the plan yet.'}</Text>}
               <HelperNote what="the care plan" />
@@ -107,7 +126,7 @@ export default function CarePlan() {
   );
 }
 
-function ItemRow({ item, kid, last, edit }: { item: CareItem; kid?: string; last: boolean; edit: boolean }) {
+function ItemRow({ item, kid, everyone, last, edit }: { item: CareItem; kid?: string; everyone: boolean; last: boolean; edit: boolean }) {
   const sub = [scheduleLabel(item), kid, item.how.split('\n')[0]].filter(Boolean).join(' · ');
   return (
     <Pressable
@@ -123,6 +142,11 @@ function ItemRow({ item, kid, last, edit }: { item: CareItem; kid?: string; last
           {sub}
         </Text>
       </View>
+      {everyone ? (
+        <View style={st.everyone}>
+          <Text style={st.everyoneText}>Everyone</Text>
+        </View>
+      ) : null}
       {isFood(item.type) ? (
         <View style={st.tag}>
           <Text style={st.tagText}>Food</Text>
@@ -181,6 +205,12 @@ const st = StyleSheet.create({
   rowSub: { fontFamily: font.body, fontSize: 13, color: color.quiet },
   tag: { alignSelf: 'flex-start', height: 24, paddingHorizontal: 8, justifyContent: 'center', backgroundColor: color.accentTint, borderRadius: 999, flexShrink: 0 },
   tagText: { fontFamily: font.bodyBold, fontSize: 12, color: color.ink },
+  // P7k: the small grey "Everyone" label on a whole-family row while one kid is selected.
+  everyone: { alignSelf: 'flex-start', height: 24, paddingHorizontal: 8, justifyContent: 'center', backgroundColor: color.muted, borderRadius: 999, flexShrink: 0 },
+  everyoneText: { fontFamily: font.bodyBold, fontSize: 12, color: color.ink2 },
+  // P7 kid chips under the tabs, edge to edge so a long row scrolls past the gutter.
+  chips: { marginHorizontal: -20, marginTop: -4 },
+  chipRow: { gap: 8, paddingHorizontal: 20 },
   add: { height: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 999, borderWidth: 2, borderColor: '#C9D3DD', borderStyle: 'dashed' },
   addText: { fontFamily: font.displayBold, fontSize: 16, color: color.primary },
   none: { fontFamily: font.body, fontSize: 14, color: color.ink2, textAlign: 'center', paddingVertical: 6 },

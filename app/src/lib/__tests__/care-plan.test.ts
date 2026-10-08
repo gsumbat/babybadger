@@ -1,7 +1,14 @@
 import { describe, expect, it } from '@jest/globals';
 
 import {
+  avoidKids,
   cleanDetails,
+  isEveryone,
+  planAdd,
+  planItems,
+  planKidId,
+  planKids,
+  planTitle,
   daysLabel,
   detailLabel,
   hasDetails,
@@ -281,5 +288,64 @@ describe('per-type extras', () => {
   });
   it('leaves suggestion extras empty', () => {
     expect(suggestedRoutine(6).every((s) => !('details' in s))).toBe(true);
+  });
+});
+
+describe('kid filter (P7 All · Ava · Leo)', () => {
+  const kids = [
+    { id: 'ava', avoid_foods: 'peanuts' },
+    { id: 'leo', avoid_foods: ' ' },
+    { id: 'mia', avoid_foods: 'eggs' },
+  ];
+  const famTask = item({ type: 'activity', title: 'Pick up' });
+  const famMeal = item({ type: 'meal', title: 'Dinner' });
+  const avaNap = item({ type: 'nap', kid_id: 'ava' });
+  const avaBottle = item({ type: 'bottle', kid_id: 'ava' });
+  const leoMeal = item({ type: 'meal', kid_id: 'leo' });
+  const leoNap = item({ type: 'nap', kid_id: 'leo' });
+  const all = [famTask, famMeal, avaNap, avaBottle, leoMeal, leoNap];
+
+  it('reads the kid param, falling back to All', () => {
+    expect(planKidId(kids, 'ava')).toBe('ava');
+    expect(planKidId(kids, 'nobody')).toBeNull();
+    expect(planKidId(kids, '')).toBeNull();
+    expect(planKidId(kids, undefined)).toBeNull();
+  });
+  it('All keeps the whole-family plan', () => {
+    expect(planItems(all, 'tasks', null)).toEqual([famTask]);
+    expect(planItems(all, 'meals', null)).toEqual([famMeal, avaBottle, leoMeal]);
+    expect(planItems(all, 'routines', null)).toEqual([]);
+  });
+  it('a kid sees the family items plus her own', () => {
+    expect(planItems(all, 'tasks', 'ava')).toEqual([famTask, avaNap]);
+    expect(planItems(all, 'meals', 'ava')).toEqual([famMeal, avaBottle]);
+    expect(planItems(all, 'meals', 'leo')).toEqual([famMeal, leoMeal]);
+  });
+  it('lists one kid on Routines', () => {
+    expect(planKids(kids, 'leo').map((k) => k.id)).toEqual(['leo']);
+    expect(planKids(kids, null)).toHaveLength(3);
+  });
+  it('shows food to avoid only on Meals, for the selected kid', () => {
+    expect(avoidKids(kids, 'tasks', null)).toEqual([]);
+    expect(avoidKids(kids, 'routines', 'ava')).toEqual([]);
+    expect(avoidKids(kids, 'meals', null).map((k) => k.id)).toEqual(['ava', 'mia']);
+    expect(avoidKids(kids, 'meals', 'ava').map((k) => k.id)).toEqual(['ava']);
+    expect(avoidKids(kids, 'meals', 'leo')).toEqual([]);
+  });
+  it('marks family rows "Everyone" only when a kid is selected', () => {
+    expect(isEveryone(famTask, 'ava')).toBe(true);
+    expect(isEveryone(avaNap, 'ava')).toBe(false);
+    expect(isEveryone(famTask, null)).toBe(false);
+  });
+  it('titles the plan', () => {
+    expect(planTitle('Ava')).toBe('Ava’s plan');
+    expect(planTitle(null)).toBe('Care plan');
+  });
+  it('labels the add button and pre-assigns the kid', () => {
+    expect(planAdd('tasks', null)).toEqual({ label: '+ Add task', href: '/parent/care/item' });
+    expect(planAdd('meals', null)).toEqual({ label: '+ Add meal', href: '/parent/care/item?type=meal' });
+    expect(planAdd('meals', 'ava')).toEqual({ label: '+ Add meal', href: '/parent/care/item?type=meal&kidId=ava' });
+    expect(planAdd('tasks', 'ava')).toEqual({ label: '+ Add task', href: '/parent/care/item?kidId=ava' });
+    expect(planAdd('routines', 'ava')).toBeNull();
   });
 });

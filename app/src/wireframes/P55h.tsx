@@ -57,7 +57,7 @@ export default function WF_P55h() {
             <SvgXml xml={SVG[2]} width={20} height={20} />
             <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E" }}>Message Ava</Text>
           </View>
-          <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, height: 64, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1 }}>{/* -> P7-CarePlan.dc.html */}
+          <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, height: 64, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1 }}>{/* -> P7k-AvaPlan.dc.html */}
             <SvgXml xml={SVG[3]} width={20} height={20} />
             <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E" }}>Her plan</Text>
           </View>

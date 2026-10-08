@@ -33,7 +33,7 @@ export default function WF_P55() {
           <SvgXml xml={SVG[0]} width={22} height={22} />
         </View>
         <Text style={{ fontFamily: font.display, fontSize: 22, color: "#1B2328", marginVertical: -4.62, flexGrow: 1, flexShrink: 1 }}>Ava</Text>
-        <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 4, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1 }}>{/* -> P18-AddChild.dc.html */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1 }}>{/* -> P18-AddChild.dc.html */}
           <SvgXml xml={SVG[1]} width={16} height={16} />
           <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#47698A" }}>Edit</Text>
         </View>
@@ -63,7 +63,7 @@ export default function WF_P55() {
             <SvgXml xml={SVG[3]} width={20} height={20} />
             <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E" }}>Message Ava</Text>
           </View>
-          <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, height: 64, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1 }}>{/* -> P7-CarePlan.dc.html */}
+          <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, height: 64, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1 }}>{/* -> P7k-AvaPlan.dc.html */}
             <SvgXml xml={SVG[4]} width={20} height={20} />
             <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E" }}>Her plan</Text>
           </View>

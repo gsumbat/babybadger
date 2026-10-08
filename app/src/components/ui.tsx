@@ -227,10 +227,11 @@ export function Field({ label, hint, ...props }: TextInputProps & { label: strin
   );
 }
 
-export function Chip({ label, on, onPress }: { label: string; on?: boolean; onPress?: () => void }) {
+/** A choice chip. `lead` (a kid dot on P7) shows instead of the check, selected or not. */
+export function Chip({ label, on, onPress, lead }: { label: string; on?: boolean; onPress?: () => void; lead?: ReactNode }) {
   return (
     <Pressable accessibilityRole="button" accessibilityState={{ selected: !!on }} onPress={onPress} style={[s.chip, on ? s.chipOn : s.chipOff]}>
-      {on ? <Icon name="check" size={14} tint={color.primaryStrong} /> : null}
+      {lead ?? (on ? <Icon name="check" size={14} tint={color.primaryStrong} /> : null)}
       <Text style={[s.chipText, { color: on ? color.primaryStrong : color.ink }]}>{label}</Text>
     </Pressable>
   );
