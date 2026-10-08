@@ -1,4 +1,3 @@
-import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -53,6 +52,14 @@ export default function Background() {
   const sharing = !!share && !!data.ask;
 
   async function pickPdf() {
+    // Loaded on tap: test builds made before expo-document-picker was added don't have its native module, and a
+    // top-level import crashed the whole app there. Those builds get a photo instead until the next native build.
+    let DocumentPicker: typeof import('expo-document-picker');
+    try {
+      DocumentPicker = await import('expo-document-picker');
+    } catch {
+      return setErr('PDF upload comes with the next app update. Add a photo of the report for now.');
+    }
     const res = await DocumentPicker.getDocumentAsync({ type: 'application/pdf', copyToCacheDirectory: true });
     if (!res.canceled) setFile({ uri: res.assets[0].uri, name: res.assets[0].name, pdf: true });
   }
