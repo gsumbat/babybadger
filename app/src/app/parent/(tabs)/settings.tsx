@@ -17,8 +17,9 @@ import { color, font } from '@/theme';
 import { Text, TextInput } from '@/components/Text';
 
 // Wireframe P12b (settings · account; supersedes P12): grouped settings rows, account, sign out.
-// Family members opens P78 ("Jen, Dan · 2 of 4 seats", migration 30). Sitters opens P27, Homes and places P56, House rules P74. Rows whose screens aren't built show their value and
-// don't open anything: Kids and devices (P13), Consent records. Subscription: with billing on (EXPO_PUBLIC_BILLING=1)
+// Family members opens P78 ("Jen, Dan · 2 of 4 seats", migration 30). Sitters opens P27, Homes and places P56, House rules P74,
+// Kids and devices P13k (the kids list; devices there are Coming soon). Rows whose screens aren't built show their value and
+// don't open anything: Consent records. Subscription: with billing on (EXPO_PUBLIC_BILLING=1)
 // it reads the plan ("Free trial · ends Nov 6", "Family · monthly", "Payment issue", "Start free trial") and opens
 // P39, or P36 when the family has no plan; with billing off it reads "Coming soon" and opens nothing. Alerts: "Arrivals and departures" is profiles.alert_arrivals (migration 21; trip alerts skip a
 // parent who turned it off), "Food and tasks" is alert_logs, "Off-plan and help alerts" is always on (a label).
@@ -73,7 +74,7 @@ export default function Settings() {
       <Text style={st.section}>FAMILY</Text>
       <Card style={st.card}>
         <SetRow label="Family members" value={members} onPress={() => router.push('/parent/members')} />
-        <SetRow label="Kids and devices" value={kids || 'None yet'} />
+        <SetRow label="Kids and devices" value={kids || 'None yet'} onPress={() => router.push('/parent/kids')} />
         <SetRow label="Sitters" value={sitters || 'None yet'} onPress={familyRole === 'helper' ? undefined : () => router.push('/parent/sitter-list')} />
         <SetRow label="Homes and places" value={placesCountLabel(data?.places ?? [])} onPress={() => router.push('/parent/places')} />
         <SetRow label="House rules" value={rulesLabel(data?.rules.length ?? 0)} onPress={() => router.push('/parent/rules')} last />

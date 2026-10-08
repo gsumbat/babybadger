@@ -95,6 +95,22 @@ export const api = {
   async familyContacts(familyId: string) {
     return must(await supabase.rpc('family_contacts', { p_family: familyId })) as FamilyContact[];
   },
+  /** A sitter's own number (S40, sitter_profiles.phone): readable by the parents and members of her families
+   * (sitter_can_be_seen_by, migration 19). null when she hasn't added one or it can't be read. P4n's Call. */
+  async sitterPhone(sitterId: string) {
+    const r = await supabase.from('sitter_profiles').select('phone').eq('sitter_id', sitterId).maybeSingle();
+    return r.error ? null : ((r.data as { phone: string | null } | null)?.phone ?? null);
+  },
+  /** Shift tasks after booking (P5e, migration 34): full-access parents, upcoming or live shifts; the sitter gets a push. */
+  async addShiftTask(shiftId: string, title: string, dueAt: string | null) {
+    return must(await supabase.rpc('add_shift_task', { p_shift: shiftId, p_title: title, p_due: dueAt })) as Task;
+  },
+  async editShiftTask(taskId: string, title: string, dueAt: string | null) {
+    return must(await supabase.rpc('edit_shift_task', { p_task: taskId, p_title: title, p_due: dueAt })) as Task;
+  },
+  async deleteShiftTask(taskId: string) {
+    must(await supabase.rpc('delete_shift_task', { p_task: taskId }));
+  },
   /** Settings › Account › Phone (P12b / P12p, migration 33): her own number, null when none. */
   async myPhone() {
     return (must(await supabase.rpc('my_phone')) as string | null) ?? null;
@@ -187,6 +203,14 @@ export function useShiftLive(shiftId: string | undefined) {
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'shift_tasks', filter: `shift_id=eq.${shiftId}` }, (p) =>
         setBundle((b) => (b ? { ...b, tasks: b.tasks.map((t) => (t.id === (p.new as Task).id ? (p.new as Task) : t)) } : b)),
       )
+      // A parent adds or removes a task after booking (P5e): the sitter's shift page follows along.
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'shift_tasks', filter: `shift_id=eq.${shiftId}` }, (p) =>
+        setBundle((b) => (b && !b.tasks.some((t) => t.id === (p.new as Task).id) ? { ...b, tasks: [...b.tasks, p.new as Task].sort((x, y) => x.position - y.position) } : b)),
+      )
+      // Deletes can't be filtered by column (Realtime sends only the old id), so match it against this shift's tasks.
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'shift_tasks' }, (p) =>
+        setBundle((b) => (b && b.tasks.some((t) => t.id === (p.old as Partial<Task>).id) ? { ...b, tasks: b.tasks.filter((t) => t.id !== (p.old as Partial<Task>).id) } : b)),
+      )
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'shifts', filter: `id=eq.${shiftId}` }, (p) =>
         setBundle((b) => (b ? { ...b, shift: p.new as Shift } : b)),
       )
@@ -195,6 +219,16 @@ export function useShiftLive(shiftId: string | undefined) {
       supabase.removeChannel(ch);
     };
   }, [shiftId, load]);
+
+  // Coming back to the screen (e.g. from a "Jen added a task" push) fetches again, in case Realtime missed something
+  // while the app was in the background. The first focus is the initial fetch above.
+  const focusedOnce = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (focusedOnce.current) load();
+      focusedOnce.current = true;
+    }, [load]),
+  );
 
   return { bundle, reload: load, error };
 }

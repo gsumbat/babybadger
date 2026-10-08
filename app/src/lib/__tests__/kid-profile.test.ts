@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { ageLabel, isoToUS, kidWeek, maskUSDate, parseUSDate, safetyLine, suggestedFoods } from '../kid-profile';
+import { ageLabel, isoToUS, kidCardTitle, kidWeek, maskUSDate, parseUSDate, safetyLine, suggestedFoods } from '../kid-profile';
 
 const today = new Date(2026, 9, 5); // Oct 5, 2026
 
@@ -55,5 +55,15 @@ describe('child profile (P55)', () => {
     expect(w.count).toBe(2);
     expect(w.last?.id).toBe('b');
     expect(kidWeek([], today).last).toBeUndefined();
+  });
+});
+
+describe('kids list (P13k)', () => {
+  const today = new Date(2026, 9, 8);
+  it('names the kid with her age: whole years from 2, months before', () => {
+    expect(kidCardTitle('Ava', '2019-03-02', today)).toBe('Ava, 7');
+    expect(kidCardTitle('Mia', '2025-08-01', today)).toBe('Mia, 14 months');
+    expect(kidCardTitle('Noah', '2026-09-30', today)).toBe('Noah, Newborn');
+    expect(kidCardTitle('Leo', null, today)).toBe('Leo');
   });
 });

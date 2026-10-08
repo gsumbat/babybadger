@@ -5,22 +5,27 @@ import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { KidDot, kidSub, SafetyBox, TaskRows } from '@/components/bits';
 import { LiveMap } from '@/components/LiveMap';
 import { LogTimeline, PhotoThumb } from '@/components/LogTimeline';
+import { EditableTasksCard } from '@/components/shiftTasks';
 import { Avatar, Button, Card, ErrorText, Icon, Loading, Pill, Screen, T } from '@/components/ui';
 import { useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
-import { describeLog, workedMinutes } from '@/lib/shift-logic';
+import { canEditShiftTasks, describeLog, workedMinutes } from '@/lib/shift-logic';
 import { useSession } from '@/lib/session';
+import { useCanManage } from '@/lib/use-family-role';
 import { errorText, supabase } from '@/lib/supabase';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
-// Live view (P4 detail) while on shift, report (P5) after clock-out, details before.
+// Live view (P4 detail) while on shift, report (P5) after clock-out, details before (P5b).
+// P5e: on an upcoming or live shift a full-access parent edits Today's plan (add, rename, retime, remove; migration 34
+// pushes the sitter). Read-only members, and completed or cancelled shifts, keep the read-only card.
 export default function ParentShift() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { bundle, error } = useShiftLive(id);
+  const { bundle, error, reload } = useShiftLive(id);
   const [, tick] = useState(0);
   // A family helper (migration 30) can't cancel a booking.
   const { familyRole } = useSession();
+  const manage = useCanManage();
   useEffect(() => {
     const t = setInterval(() => tick((n) => n + 1), 30_000);
     return () => clearInterval(t);
@@ -42,7 +47,9 @@ export default function ParentShift() {
     Alert.alert('Cancel this shift?', `${name} will be told it’s cancelled.`, [{ text: 'Keep it' }, { text: 'Cancel shift', style: 'destructive', onPress: go }]);
   }
 
-  const taskCard = tasks.length > 0 && (
+  const taskCard = manage && canEditShiftTasks(shift) ? (
+    <EditableTasksCard shift={shift} tasks={tasks} onChanged={reload} />
+  ) : tasks.length > 0 && (
     <Card style={{ paddingVertical: 12 }}>
       <View style={st.cardHead}>
         <Text style={st.cardTitle}>{shift.status === 'completed' ? 'Tasks' : 'Today’s plan'}</Text>

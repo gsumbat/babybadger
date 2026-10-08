@@ -1,6 +1,6 @@
 import { router, useIsFocused } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { type ReactNode, useEffect, useState } from 'react';
+import { Alert, Linking, Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
 import { KidDot, kidSub } from '@/components/bits';
@@ -11,13 +11,14 @@ import { ParentRequestsNeedYou } from '@/components/poolRequest';
 import { AskToStaySheet, WALK_ICON } from '@/components/timing';
 import { ActionGrid, dayPart, ErrorText, HomeHeader, Icon, type IconName, initialsOf, Screen } from '@/components/ui';
 import { takePlansIntro, usePlan } from '@/lib/billing';
-import { api, useQuery, useShiftLive } from '@/lib/data';
+import { api, type ShiftBundle, useQuery, useShiftLive } from '@/lib/data';
 import { namesLine } from '@/lib/invite-links';
 import { dayOf, firstName, timeOf } from '@/lib/format';
-import { describeLog, parentHomeState, workedMinutes } from '@/lib/shift-logic';
+import { dialable } from '@/lib/family-page-logic';
+import { describeLog, lateHomeCard, parentHomeState, workedMinutes } from '@/lib/shift-logic';
 import { rulesApi } from '@/lib/house-rules';
 import { useSession } from '@/lib/session';
-import { useParentNames } from '@/lib/use-family-role';
+import { useCanManage, useParentNames } from '@/lib/use-family-role';
 import { type ShiftTiming, usePendingExtension } from '@/lib/shift-timing';
 import { lateText } from '@/lib/shift-timing-logic';
 import { kv } from '@/lib/storage';
@@ -32,6 +33,8 @@ import { isOpenTrip, useShiftTrips } from '@/lib/trips';
 // from their HTML (app/src/wireframes/P4*.tsx). Left out until built: Message / Call / Ask for photo, kids' devices and
 // places, Needs you invoices (open pool requests show there, P46), Approve hours, "On my way". P4c shows the sitter's late notice (S21) where it
 // draws "On my way". While a trip is open, P4's "On shift" pill reads "On a trip" (P8's pill) and opens P8. P4 has an "Ask Maya to stay longer" link under the live card (S25 request; not drawn yet).
+// P4n (late): the start has passed with no clock-in; amber card with Message / Call (the sitter's S40 phone).
+// KIDS shows in every state with kids (P4a-P4n, P4m), right after the state's main card (P4c / P4n: after its location note).
 
 // Optional steps (house rules, the care plan) count toward "n of 5 done" but don't keep the setup checklist open on their own.
 type Step = { done: boolean; locked?: boolean; optional?: boolean; title: string; next: string; sub: string; go: '/parent/kid/new' | '/parent/rules' | '/parent/care' | '/parent/invite?from=setup' | '/parent/shift/new' };
@@ -42,19 +45,15 @@ const TILES: Record<string, Tile> = {
   book: { icon: 'plus', label: 'Book a shift', onPress: () => router.push('/parent/shift/new') },
   rules: { icon: 'clipboard', label: 'House rules', onPress: () => router.push('/parent/rules') },
   care: { icon: 'list', label: 'Care plan', onPress: () => router.push('/parent/care') },
-  devices: { icon: 'smartphone', label: 'Kids & devices', onPress: soon('Kids & devices') },
+  // P13k: the kids list (devices there are Coming soon).
+  devices: { icon: 'smartphone', label: 'Kids & devices', onPress: () => router.push('/parent/kids') },
   pay: { icon: 'credit-card', label: 'Pay sitter', onPress: soon('Pay sitter') },
   requirements: { icon: 'shield', label: 'Required', onPress: () => router.push('/parent/requirements') },
 };
-// P4b / P4k: six tiles in three columns. Finding sitters and asking the pool live on the Sitters tab, messages on
-// Messages, so they aren't repeated here. P4c (shift soon) and P4d (just ended): three each.
-const TILE_SETS = {
-  full: ['book', 'rules', 'care', 'devices', 'pay', 'requirements'],
-  soon: ['book', 'care', 'devices'],
-  ended: ['book', 'pay', 'care'],
-};
+// All six tiles in three columns, 76 tall, in every state (P4b, P4c, P4d, P4k, P4n). Finding sitters and asking the
+// pool live on the Sitters tab, messages on Messages, so they aren't repeated here.
+const FULL_TILES = ['book', 'rules', 'care', 'devices', 'pay', 'requirements'];
 // P4m: a read-only member (migration 30) doesn't book, pay or set requirements; those tiles are left out.
-const HELPER_HIDDEN = ['book', 'pay', 'requirements'];
 const HELPER_TILES = ['rules', 'care', 'devices'];
 
 /** Home tab. `full` = the live shift on its own screen (P4, opened from the P4k "Shift now" card). */
@@ -73,6 +72,12 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
     return { shifts, kids, sitters, careCount: care.length, rulesCount: rules.length };
   }, [fid]);
 
+  // Re-reads the clock every 30 s so "starts in 25 min" counts down and turns into P4n (late) on time.
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => tick((n) => n + 1), 30_000);
+    return () => clearInterval(t);
+  }, []);
   const state = data ? parentHomeState(data.shifts) : null;
   const sitterName = (id: string) => firstName(data?.sitters.find((s) => s.sitter_id === id)?.profile?.full_name);
   // Booking opens once the kids are added (each went through the P19 safety step) and a sitter has joined and signed.
@@ -105,9 +110,12 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
     if (takePlansIntro(fid)) router.push('/parent/plans?from=setup');
   }, [full, isOwner, focused, plan.enabled, plan.loaded, plan.state, fid]);
 
+  // KIDS (P4b's list) in every state that has kids; read only (P4m) and the setup screens have no Add link.
+  const kids = data && data.kids.length > 0 ? <Kids kids={data.kids} add={!helper && !setup && !explore} /> : null;
+
   return (
     <Screen
-      gap={state?.kind === 'live' ? 12 : 10}
+      gap={state?.kind === 'live' && full ? 12 : 10}
       {...(full ? { title: 'Live shift', back: true } : {})}
       header={
         full ? undefined : <HomeHeader
@@ -130,6 +138,7 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
           }}
         />
       )}
+      {setup && kids}
       {explore && (
         <FinishSetup
           steps={steps}
@@ -140,20 +149,23 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
           }}
         />
       )}
+      {explore && kids}
       {state?.kind === 'live' &&
-        (full ? <Live shift={state.shift} sitter={sitterName(state.shift.sitter_id)} /> : <ShiftNow shift={state.shift} sitter={sitterName(state.shift.sitter_id)} />)}
+        (full ? <Live shift={state.shift} sitter={sitterName(state.shift.sitter_id)} kids={kids} /> : <ShiftNow shift={state.shift} sitter={sitterName(state.shift.sitter_id)} />)}
       {full && state && state.kind !== 'live' && <Text style={st.sub14}>This shift has ended.</Text>}
-      {state?.kind === 'soon' && <Soon shift={state.shift} minutes={state.minutes} sitter={sitterName(state.shift.sitter_id)} />}
-      {state?.kind === 'ended' && (
-        <Ended shift={state.shift} sitter={sitterName(state.shift.sitter_id)} next={data!.shifts.find((s) => s.status === 'scheduled' && new Date(s.starts_at) > new Date())} sitterName={sitterName} />
+      {!full && state?.kind === 'soon' && <Soon shift={state.shift} minutes={state.minutes} sitter={sitterName(state.shift.sitter_id)} kids={kids} />}
+      {!full && state?.kind === 'late' && <Late shift={state.shift} minutesLate={state.minutesLate} sitter={sitterName(state.shift.sitter_id)} kids={kids} />}
+      {!full && state?.kind === 'ended' && (
+        <Ended shift={state.shift} sitter={sitterName(state.shift.sitter_id)} next={data!.shifts.find((s) => s.status === 'scheduled' && new Date(s.starts_at) > new Date())} sitterName={sitterName} kids={kids} />
       )}
-      {state?.kind === 'idle' && state.next && <NextShift shift={state.next} sitter={sitterName(state.next.sitter_id)} />}
-      {!setup && !full && data && data.kids.length > 0 && (state?.kind === 'idle' || state?.kind === 'live') && <Kids kids={data.kids} add={!explore && !helper} />}
+      {!full && state?.kind === 'idle' && state.next && <NextShift shift={state.next} sitter={sitterName(state.next.sitter_id)} />}
+      {/* Live (P4k) and idle (P4b): the list right under the card. Soon, late and ended place it themselves. */}
+      {!setup && !explore && !full && (state?.kind === 'idle' || state?.kind === 'live') && kids}
 
       {/* P4b "Needs you": open pool requests (P46). Invoices aren't built. */}
       {!setup && !full && !helper && <ParentRequestsNeedYou familyId={fid} />}
 
-      {/* P4a has no grid. Tiles not built yet are left out: Find a sitter, Kids & devices, Ask my pool, Pay sitter. P4b's Requirements tile opens P7a. */}
+      {/* P4a has no grid. Find a sitter and Ask my pool aren't on Home (Sitters tab); Pay sitter says Coming soon; Kids & devices opens P13k; Required opens P7a. */}
       {explore ? (
         // P4e: "Invite a sitter", "House rules" and "Care plan" are built; Kids & devices is left out.
         <>
@@ -171,16 +183,10 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
           <LiveNote />
         </>
       ) : state && !setup && !full ? (
-        // P4b/P4k: the grid sits inside the content (gap 10); P4c/P4d: 12 below it. Label to grid: 8.
-        <View style={{ gap: 8, marginTop: state.kind === 'soon' || state.kind === 'ended' ? 2 : 0 }}>
+        // The grid sits inside the content (gap 10), label to grid 8; the same six tiles in every state.
+        <View style={{ gap: 8 }}>
           <Text style={st.label}>WHAT DO YOU NEED?</Text>
-          <ActionGrid
-            items={(helper && state.kind !== 'soon' && state.kind !== 'ended' ? HELPER_TILES : TILE_SETS[state.kind === 'soon' || state.kind === 'ended' ? state.kind : 'full'])
-              .filter((k) => !helper || !HELPER_HIDDEN.includes(k))
-              .map((k) => TILES[k])}
-            height={state.kind === 'soon' || state.kind === 'ended' ? 70 : 76}
-            columns={3}
-          />
+          <ActionGrid items={(helper ? HELPER_TILES : FULL_TILES).map((k) => TILES[k])} height={76} columns={3} />
         </View>
       ) : null}
       {helper && state && !full ? (
@@ -325,7 +331,7 @@ function FinishSetup({ steps, lock, onOpen }: { steps: Step[]; lock: string; onO
 }
 
 // P4
-function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
+function Live({ shift, sitter, kids }: { shift: Shift; sitter: string; kids: ReactNode }) {
   const { bundle } = useShiftLive(shift.id);
   const { pending } = usePendingExtension(shift.id);
   const { trips } = useShiftTrips(shift.id);
@@ -384,6 +390,7 @@ function Live({ shift, sitter }: { shift: Shift; sitter: string }) {
         </Text>
       )}
       <AskToStaySheet open={askOpen} onClose={() => setAskOpen(false)} shift={bundle.shift} sitter={sitter} />
+      {kids}
       <Pressable onPress={() => router.push(`/parent/shift/${shift.id}`)} style={st.planCard}>
         {/* P4i: with no tasks on the shift the plan header and bar are left out; the log row stays. */}
         {bundle.tasks.length ? (
@@ -477,11 +484,10 @@ function ShiftNow({ shift, sitter }: { shift: Shift; sitter: string }) {
 }
 
 // P4c
-function Soon({ shift, minutes, sitter }: { shift: Shift; minutes: number; sitter: string }) {
+function Soon({ shift, minutes, sitter, kids }: { shift: Shift; minutes: number; sitter: string; kids: ReactNode }) {
   const { bundle } = useShiftLive(shift.id);
   // The late notice (S21) arrives live through the shift's Realtime updates.
   const late = (bundle?.shift ?? shift) as ShiftTiming;
-  const avoid = (bundle?.kids ?? []).filter((k) => k.avoid_foods || k.allergies);
   return (
     <>
       <Pressable onPress={() => router.push(`/parent/shift/${shift.id}`)} style={st.blue}>
@@ -505,12 +511,26 @@ function Soon({ shift, minutes, sitter }: { shift: Shift; minutes: number; sitte
           </View>
         ) : null}
       </Pressable>
+      <BeforeClockIn shift={shift} bundle={bundle} sitter={sitter} kids={kids} />
+    </>
+  );
+}
+
+/** P4c / P4n below the card: the location note, KIDS, TODAY'S PLAN (Edit opens this shift's tasks, P5e) and food to avoid. */
+function BeforeClockIn({ shift, bundle, sitter, kids }: { shift: Shift; bundle: ShiftBundle | null; sitter: string; kids: ReactNode }) {
+  const manage = useCanManage();
+  const avoid = (bundle?.kids ?? []).filter((k) => k.avoid_foods || k.allergies);
+  return (
+    <>
       <View style={st.note}>
         <Text style={st.noteText}>Her location starts sharing when she clocks in at your home. Not before.</Text>
       </View>
+      {kids}
       {bundle && bundle.tasks.length > 0 && (
         <>
-          <LabelRow>TODAY’S PLAN</LabelRow>
+          <LabelRow link={manage ? 'Edit' : undefined} onLink={() => router.push(`/parent/shift/${shift.id}`)}>
+            TODAY’S PLAN
+          </LabelRow>
           <View style={[st.listCard, { paddingVertical: 4, paddingHorizontal: 16 }]}>
             {bundle.tasks.map((t, i) => (
               <View key={t.id} style={[st.planItem, i < bundle.tasks.length - 1 && st.line]}>
@@ -533,8 +553,48 @@ function Soon({ shift, minutes, sitter }: { shift: Shift; minutes: number; sitte
   );
 }
 
+// P4n: past the start, no clock-in. Amber card; her S21 "running late" notice replaces the words while it still holds.
+function Late({ shift, minutesLate, sitter, kids }: { shift: Shift; minutesLate: number; sitter: string; kids: ReactNode }) {
+  const { bundle } = useShiftLive(shift.id);
+  const notice = (bundle?.shift ?? shift) as ShiftTiming;
+  const card = lateHomeCard(sitter, minutesLate, span(shift.starts_at, shift.ends_at), notice);
+  // Her number from her profile (S40, sitter_profiles.phone; parents of her families may read it). No number, no Call.
+  const { data: phone } = useQuery(() => api.sitterPhone(shift.sitter_id), [shift.sitter_id]);
+  const tel = dialable(phone);
+  return (
+    <>
+      <Pressable onPress={() => router.push(`/parent/shift/${shift.id}`)} style={st.lateCard}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <Avatar name={sitter} size={48} letterSize={21} />
+          <View style={{ flexGrow: 1, flexShrink: 1 }}>
+            <Text style={st.lateTitle}>{card.title}</Text>
+            <Text style={st.lateSub}>{card.sub}</Text>
+          </View>
+        </View>
+        {card.said ? (
+          <View style={st.lateSaid}>
+            <SvgXml xml={WALK_ICON.replace('#FFFFFF', color.warnInk)} width={20} height={20} style={{ flexShrink: 0 }} />
+            <Text style={st.lateSaidText}>{card.said}</Text>
+          </View>
+        ) : null}
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/parent/thread/[sitterId]', params: { sitterId: shift.sitter_id } })} style={st.lateBtn}>
+            <Text style={st.lateBtnText}>Message {sitter}</Text>
+          </Pressable>
+          {tel ? (
+            <Pressable accessibilityRole="button" accessibilityLabel={`Call ${sitter}`} onPress={() => Linking.openURL(`tel:${tel}`)} style={st.lateBtn}>
+              <Text style={st.lateBtnText}>Call</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      </Pressable>
+      <BeforeClockIn shift={shift} bundle={bundle} sitter={sitter} kids={kids} />
+    </>
+  );
+}
+
 // P4d
-function Ended({ shift, sitter, next, sitterName }: { shift: Shift; sitter: string; next?: Shift; sitterName: (id: string) => string }) {
+function Ended({ shift, sitter, next, sitterName, kids }: { shift: Shift; sitter: string; next?: Shift; sitterName: (id: string) => string; kids: ReactNode }) {
   const { bundle } = useShiftLive(shift.id);
   const mins = workedMinutes(shift);
   return (
@@ -565,6 +625,7 @@ function Ended({ shift, sitter, next, sitterName }: { shift: Shift; sitter: stri
           <Text style={st.primaryBtnText}>Read report</Text>
         </Pressable>
       </View>
+      {kids}
       {next && (
         <>
           <LabelRow link="Calendar" onLink={() => router.navigate('/parent/calendar')}>
@@ -699,6 +760,14 @@ const st = StyleSheet.create({
   noteText: { fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.primaryStrong },
   planItem: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44 },
   avoid: { gap: 2, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: color.badTint, borderRadius: 12 },
+  // P4n: amber (warn) card, white pill buttons.
+  lateCard: { gap: 12, padding: 16, backgroundColor: color.warnTint, borderRadius: 20 },
+  lateTitle: { fontFamily: font.displayBold, fontSize: 19, color: color.ink, marginVertical: -3.72 },
+  lateSub: { fontFamily: font.bodySemi, fontSize: 14, color: color.warnInk, marginTop: 2 },
+  lateSaid: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, backgroundColor: 'rgba(255,255,255,0.55)', borderRadius: 12 },
+  lateSaidText: { fontFamily: font.body, fontSize: 14, lineHeight: 19, color: color.warnInk, flexShrink: 1 },
+  lateBtn: { flexGrow: 1, flexBasis: 0, height: 48, borderRadius: 999, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  lateBtnText: { fontFamily: font.displayBold, fontSize: 16, color: color.warnInk },
   // P4d
   endCard: { gap: 14, padding: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   endTitle: { fontFamily: font.displayBold, fontSize: 19, color: color.ink, marginVertical: -3.72 },

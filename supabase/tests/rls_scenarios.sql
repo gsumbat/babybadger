@@ -3212,4 +3212,137 @@ do $$ begin
 end $$;
 reset role;
 
+-- 34. Edit tasks on a booked shift (migration 34, P5e). Ria Moss (parent), Sol Diaz (sitter), Han Moss (read only):
+-- only full-access parents add / change / remove tasks, only on an upcoming or live shift, each change pushes the
+-- sitter; nobody changes the tasks of a completed or cancelled shift, not even directly.
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a3401', 'ria34@example.com'),
+  ('00000000-0000-0000-0000-0000000a3402', 'sol34@example.com'),
+  ('00000000-0000-0000-0000-0000000a3403', 'han34@example.com');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3401');
+insert into ctx values ('fam34', (select public.create_family('The Moss family', 'Ria Moss')::text));
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3402');
+select public.register_push_token('ExponentPushToken[sol34]', 'ios');
+reset role;
+update profiles set full_name = 'Sol Diaz' where id = '00000000-0000-0000-0000-0000000a3402';
+insert into profiles (id, full_name, role) values ('00000000-0000-0000-0000-0000000a3403', 'Han Moss', 'parent') on conflict (id) do update set full_name = excluded.full_name;
+insert into family_parents (family_id, user_id, role, relation) select v::uuid, '00000000-0000-0000-0000-0000000a3403', 'helper', 'Grandpa' from ctx where k = 'fam34';
+insert into family_sitters (family_id, sitter_id, status) select v::uuid, '00000000-0000-0000-0000-0000000a3402', 'active' from ctx where k = 'fam34';
+insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by)
+  select v::uuid, '00000000-0000-0000-0000-0000000a3402', now() + interval '1 day', now() + interval '1 day 4 hours', '00000000-0000-0000-0000-0000000a3401' from ctx where k = 'fam34';
+insert into ctx select 'shift34', id::text from shifts where family_id = (select v::uuid from ctx where k = 'fam34');
+-- an older shift that's done, with one task
+insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by, status, clock_in_at, clock_out_at)
+  select v::uuid, '00000000-0000-0000-0000-0000000a3402', now() - interval '3 days', now() - interval '3 days' + interval '4 hours', '00000000-0000-0000-0000-0000000a3401', 'completed', now() - interval '3 days', now() - interval '3 days' + interval '4 hours' from ctx where k = 'fam34';
+insert into ctx select 'old34', id::text from shifts where family_id = (select v::uuid from ctx where k = 'fam34') and status = 'completed';
+alter table shift_tasks disable trigger shift_tasks_open_only;
+insert into shift_tasks (shift_id, title) select v::uuid, 'Old task' from ctx where k = 'old34';
+alter table shift_tasks enable trigger shift_tasks_open_only;
+insert into ctx select 'oldtask34', id::text from shift_tasks where shift_id = (select v::uuid from ctx where k = 'old34');
+delete from net.sent;
+set role authenticated;
+-- Ria adds a task with a time; Sol is told; position goes to the end
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3401');
+insert into shift_tasks (shift_id, title, position) select v::uuid, 'Bath', 0 from ctx where k = 'shift34';
+do $$ declare sid uuid := (select v::uuid from ctx where k = 'shift34'); r shift_tasks; begin
+  r := public.add_shift_task(sid, '  Pick up   milk ', (select starts_at + interval '1 hour' from shifts where id = sid));
+  if r.title <> 'Pick up milk' or r.position <> 1 then raise exception 'FAIL add_shift_task %', r; end if;
+  insert into ctx values ('task34', r.id::text);
+  perform pg_temp.must_fail(format('select public.add_shift_task(%L, %L)', sid, '   '), 'Add what needs doing.');
+  perform pg_temp.must_fail(format('select public.add_shift_task(%L, %L, %L)', sid, 'Too late', now() + interval '5 days'), 'Pick a time during the shift.');
+end $$;
+reset role;
+do $$ declare sid text := (select v from ctx where k = 'shift34'); begin
+  if not exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[sol34]'
+                 and x->>'title' = 'Ria added a task: Pick up milk' and x->'data'->>'url' = '/sitter/shift/' || sid) then
+    raise exception 'FAIL sitter not told about the new task %', (select json_agg(body) from net.sent); end if;
+  if (select count(*) from net.sent) <> 1 then raise exception 'FAIL booking-time insert or a refused add pushed'; end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3401');
+-- no time is fine; edit: title and time change -> push; saving the same values again sends nothing
+do $$ declare tid uuid := (select v::uuid from ctx where k = 'task34'); r shift_tasks; begin
+  perform public.add_shift_task((select v::uuid from ctx where k = 'shift34'), 'Tidy toys');
+  r := public.edit_shift_task(tid, 'Pick up oat milk', null);
+  if r.title <> 'Pick up oat milk' or r.due_at is not null then raise exception 'FAIL edit_shift_task %', r; end if;
+  perform public.edit_shift_task(tid, 'Pick up oat milk', null);
+end $$;
+reset role;
+do $$ begin
+  if (select string_agg(x->>'title', ' | ' order by s.id) from net.sent s, jsonb_array_elements(body) x) <> 'Ria added a task: Tidy toys | Ria changed a task: Pick up oat milk' then
+    raise exception 'FAIL edit pushes %', (select string_agg(x->>'title', ' | ' order by s.id) from net.sent s, jsonb_array_elements(body) x); end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+-- Sol (sitter), Han (read only) and a stranger can't add, edit or remove; Sol and Han still read them
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3402');
+do $$ declare sid uuid := (select v::uuid from ctx where k = 'shift34'); tid uuid := (select v::uuid from ctx where k = 'task34'); begin
+  if (select count(*) from shift_tasks where shift_id = sid) <> 3 then raise exception 'FAIL sitter reads % tasks', (select count(*) from shift_tasks where shift_id = sid); end if;
+  perform pg_temp.must_fail(format('select public.add_shift_task(%L, %L)', sid, 'Sitter task'), 'not allowed');
+  perform pg_temp.must_fail(format('select public.edit_shift_task(%L, %L)', tid, 'Mine'), 'not allowed');
+  perform pg_temp.must_fail(format('select public.delete_shift_task(%L)', tid), 'not allowed');
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3403');
+do $$ declare sid uuid := (select v::uuid from ctx where k = 'shift34'); tid uuid := (select v::uuid from ctx where k = 'task34'); n int; begin
+  if (select count(*) from shift_tasks where shift_id = sid) <> 3 then raise exception 'FAIL helper reads tasks'; end if;
+  perform pg_temp.must_fail(format('select public.add_shift_task(%L, %L)', sid, 'Grandpa task'), 'not allowed');
+  perform pg_temp.must_fail(format('select public.delete_shift_task(%L)', tid), 'not allowed');
+  update shift_tasks set title = 'x' where id = tid;
+  get diagnostics n = row_count;
+  if n <> 0 then raise exception 'FAIL helper updated a task directly'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+do $$ begin
+  perform pg_temp.must_fail(format('select public.add_shift_task(%L, %L)', (select v from ctx where k = 'shift34'), 'x'), 'not allowed');
+  perform pg_temp.must_fail(format('select public.delete_shift_task(%L)', (select v from ctx where k = 'task34')), 'not allowed');
+end $$;
+-- a completed shift: the functions refuse, and so does a direct write
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3401');
+do $$ declare old uuid := (select v::uuid from ctx where k = 'old34'); ot uuid := (select v::uuid from ctx where k = 'oldtask34'); begin
+  perform pg_temp.must_fail(format('select public.add_shift_task(%L, %L)', old, 'Late add'), 'This shift is over%');
+  perform pg_temp.must_fail(format('select public.edit_shift_task(%L, %L)', ot, 'Renamed'), 'This shift is over%');
+  perform pg_temp.must_fail(format('select public.delete_shift_task(%L)', ot), 'This shift is over%');
+  perform pg_temp.must_fail(format('insert into shift_tasks (shift_id, title) values (%L, %L)', old, 'Direct'), 'This shift is over%');
+  perform pg_temp.must_fail(format('update shift_tasks set title = %L where id = %L', 'Direct', ot), 'This shift is over%');
+  perform pg_temp.must_fail(format('delete from shift_tasks where id = %L', ot), 'This shift is over%');
+end $$;
+-- live shift: still editable; delete pushes "removed"
+reset role;
+update shifts set starts_at = now() - interval '10 minutes', ends_at = now() + interval '3 hours' where id = (select v::uuid from ctx where k = 'shift34');
+delete from net.sent;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3402');
+select public.clock_in((select v::uuid from ctx where k = 'shift34'));
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3401');
+do $$ declare tid uuid := (select v::uuid from ctx where k = 'task34'); begin
+  perform public.delete_shift_task(tid);
+  if exists (select 1 from shift_tasks where id = tid) then raise exception 'FAIL task not deleted'; end if;
+  perform public.add_shift_task((select v::uuid from ctx where k = 'shift34'), 'Snack');
+end $$;
+reset role;
+do $$ begin
+  if not exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'title' = 'Ria removed a task: Pick up oat milk') then raise exception 'FAIL no push for the delete'; end if;
+end $$;
+-- cancelled: refused
+reset role;
+update shifts set status = 'cancelled' where id = (select v::uuid from ctx where k = 'shift34');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3401');
+do $$ begin
+  perform pg_temp.must_fail(format('select public.add_shift_task(%L, %L)', (select v from ctx where k = 'shift34'), 'x'), 'This shift is over%');
+end $$;
+reset role;
+set role anon;
+do $$ begin
+  begin perform public.add_shift_task((select v::uuid from ctx where k = 'shift34'), 'x'); raise exception 'FAIL anon adds a task'; exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+-- deleting the shift itself still removes its tasks
+delete from shifts where id = (select v::uuid from ctx where k = 'old34');
+do $$ begin
+  if exists (select 1 from shift_tasks where id = (select v::uuid from ctx where k = 'oldtask34')) then raise exception 'FAIL tasks left behind'; end if;
+end $$;
+
 select 'ALL RLS SCENARIOS PASSED' as result;

@@ -44,6 +44,13 @@ export function ageLabel(iso: string | null, today = new Date()): string {
   return r ? `${y} yrs ${r} mo${r === 1 ? '' : 's'}` : `${y} yrs`;
 }
 
+/** P13k kid card title: "Ava, 7" (whole years from 2), "Mia, 14 months", "Noah, Newborn"; just the name with no birthday. */
+export function kidCardTitle(name: string, birthdate: string | null, today = new Date()): string {
+  if (!birthdate) return name;
+  const m = ageInMonths(birthdate, today);
+  return `${name}, ${m < 24 ? ageLabel(birthdate, today) : Math.floor(m / 12)}`;
+}
+
 /** Foods parents most often keep away from a child this age (choking hazards and early-years rules). */
 export function suggestedFoods(ageMonths: number | null): string[] {
   if (ageMonths === null) return ['Peanuts', 'Tree nuts', 'Shellfish', 'Eggs', 'Dairy'];

@@ -20,6 +20,8 @@ export function clockInState(shift: Pick<Shift, 'status' | 'starts_at' | 'ends_a
 export type ParentHomeState =
   | { kind: 'live'; shift: Shift }
   | { kind: 'soon'; shift: Shift; minutes: number }
+  /** P4n: its start time has passed and the sitter hasn't clocked in (still 'scheduled', not over yet). */
+  | { kind: 'late'; shift: Shift; minutesLate: number }
   | { kind: 'ended'; shift: Shift }
   | { kind: 'idle'; next: Shift | null };
 
@@ -33,6 +35,8 @@ export function parentHomeState(shifts: Shift[], now = new Date()): ParentHomeSt
     .sort((a, b) => +new Date(a.starts_at) - +new Date(b.starts_at));
   const next = upcoming[0] ?? null;
   if (next) {
+    // Past the start with no clock-in: "late" until the shift's end, then it's no longer next.
+    if (+now > +new Date(next.starts_at)) return { kind: 'late', shift: next, minutesLate: Math.max(1, Math.floor((+now - +new Date(next.starts_at)) / 60_000)) };
     const minutes = Math.round((+new Date(next.starts_at) - +now) / 60_000);
     if (minutes <= 60) return { kind: 'soon', shift: next, minutes: Math.max(0, minutes) };
   }
@@ -43,6 +47,36 @@ export function parentHomeState(shifts: Shift[], now = new Date()): ParentHomeSt
   if (recentlyEnded) return { kind: 'ended', shift: recentlyEnded };
 
   return { kind: 'idle', next };
+}
+
+/** "45 min", "1 h", "1 h 36 min" (same words as lib/shift-timing-logic minutesLabel). */
+function minutesWords(min: number): string {
+  const m = Math.max(0, Math.round(min));
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  return m % 60 ? `${h} h ${m % 60} min` : `${h} h`;
+}
+
+/** Slack after her own "running late" estimate before Home stops trusting it. */
+export const LATE_NOTICE_GRACE_MIN = 5;
+
+/**
+ * P4n's card words. `span` is the shift's "3:00 – 7:00 PM".
+ * - No notice: "Maya hasn't clocked in" / "1 h 36 min late · 3:00 – 7:00 PM".
+ * - She sent "running late" (S21) and is still inside it (+5 min): "Maya is running 15 min late" / "Traffic on I-275 · 3:00 – 7:00 PM".
+ * - Her estimate has passed: back to "hasn't clocked in", with her notice as a quiet line ("Said 15 min late · Traffic on I-275").
+ */
+export function lateHomeCard(sitter: string, minutesLate: number, span: string, notice?: { late_minutes?: number | null; late_note?: string | null }): { title: string; sub: string; said?: string } {
+  const told = notice?.late_minutes ? notice.late_minutes : 0;
+  const note = notice?.late_note?.trim() || '';
+  if (told && minutesLate <= told + LATE_NOTICE_GRACE_MIN) {
+    return { title: `${sitter} is running ${told} min late`, sub: [note, span].filter(Boolean).join(' · ') };
+  }
+  return {
+    title: `${sitter} hasn’t clocked in`,
+    sub: `${minutesWords(minutesLate)} late · ${span}`,
+    ...(told ? { said: [`Said ${told} min late`, note].filter(Boolean).join(' · ') } : {}),
+  };
 }
 
 export function workedMinutes(shift: Pick<Shift, 'clock_in_at' | 'clock_out_at'>, now = new Date()): number {
@@ -127,4 +161,23 @@ export function parseTimeOnDay(text: string, day: Date): Date | null {
   const d = new Date(day);
   d.setHours(h, min, 0, 0);
   return d;
+}
+
+/** P5e: may this shift's tasks still change? Upcoming (scheduled, not over) or live. Mirrors editable_shift (migration 34). */
+export function canEditShiftTasks(shift: Pick<Shift, 'status' | 'ends_at'>, now = new Date()): boolean {
+  return shift.status === 'active' || (shift.status === 'scheduled' && +new Date(shift.ends_at) > +now);
+}
+
+/** P5e time wheel text ("4:30 PM", '' = no time) → the task's due_at on the shift's day. A time before the start on a
+ * shift that runs past midnight is the next morning. Outside the shift: an error (the database checks it too). */
+export function taskDueOnShift(text: string, shift: Pick<Shift, 'starts_at' | 'ends_at'>): { ok: true; due: string | null } | { ok: false; error: string } {
+  if (!text.trim()) return { ok: true, due: null };
+  const start = new Date(shift.starts_at);
+  const end = new Date(shift.ends_at);
+  let d = parseTimeOnDay(text, start);
+  if (!d) return { ok: false, error: 'Pick a time.' };
+  const slack = 60_000;
+  if (+d < +start - slack) d = new Date(+d + 24 * 3600_000);
+  if (+d < +start - slack || +d > +end + slack) return { ok: false, error: 'Pick a time during the shift.' };
+  return { ok: true, due: d.toISOString() };
 }
