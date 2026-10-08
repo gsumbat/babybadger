@@ -6,7 +6,6 @@ import { KidDot } from '@/components/bits';
 import { HelperNote } from '@/components/familyMembers';
 import { ErrorText, Icon, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
-import { routineSummary } from '@/lib/care-plan';
 import { ageLabel, kidWeek, pronouns } from '@/lib/kid-profile';
 import { useCanManage } from '@/lib/use-family-role';
 import { cardShadow, color, font } from '@/theme';
@@ -20,21 +19,21 @@ const HEART_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="#4B5960" stroke
 // Wireframe P55 Child profile, from app/src/wireframes/P55.tsx. Left out until built: grade and school, the
 // kid's location line, the See on map / Message tiles (the plan tile keeps its third of the row), and the phone and
 // Who looks after rows. The plan tile reads "Her plan" / "His plan" from the optional gender, "Plan" without one,
-// and opens the care plan filtered to this kid (P7k, ?kidId=).
+// and opens her day (P20k): her routine and the family's to-dos in one timeline. No separate Routine row (it
+// opened the same day).
 // THIS WEEK counts her shifts (shift_kids) and "Last report" opens the latest completed one as her report (P5k, ?kidId=).
 // A read-only member (P55h) reads it: no Edit, Care and safety opens the read-only view (P19v) instead of the editor
-// (P19e), Routine opens the day read-only (P20h), and the note "Jen manages Ava’s profile." at the end.
+// (P19e), the plan tile opens the day read-only (P20h), and the note "Jen manages Ava’s profile." at the end.
 export default function KidProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const manage = useCanManage();
   const { data, error } = useQuery(async () => {
-    // The care plan table arrives with migration 06; until it's run the Routine row just shows its empty copy.
-    const [kid, shifts, care] = await Promise.all([api.kid(id), api.kidShifts(id), api.kidCareItems(id).catch(() => [])]);
-    return { kid, week: kidWeek(shifts), routine: routineSummary(care) };
+    const [kid, shifts] = await Promise.all([api.kid(id), api.kidShifts(id)]);
+    return { kid, week: kidWeek(shifts) };
   }, [id]);
 
   if (!data) return error ? <Screen title="" back><ErrorText>{error}</ErrorText></Screen> : <Loading />;
-  const { kid, week, routine } = data;
+  const { kid, week } = data;
   const rest = [kid.avoid_foods && `Avoid ${kid.avoid_foods}.`, kid.health_notes].filter(Boolean).join(' ');
 
   return (
@@ -66,7 +65,7 @@ export default function KidProfile() {
       </View>
 
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/care?kidId=${kid.id}`)} style={st.tile}>
+        <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/kid/routine?kidId=${kid.id}`)} style={st.tile}>
           <SvgXml xml={LIST} width={20} height={20} style={{ flexShrink: 0 }} />
           <Text style={st.tileText}>{kid.gender ? `${pronouns(kid.gender).poss[0].toUpperCase()}${pronouns(kid.gender).poss.slice(1)} plan` : 'Plan'}</Text>
         </Pressable>
@@ -89,7 +88,7 @@ export default function KidProfile() {
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push(manage ? `/parent/kid/new?id=${kid.id}&step=2` : `/parent/kid/care?id=${kid.id}`)}
-          style={[st.listRow, st.listLine]}>
+          style={st.listRow}>
             <View style={st.listIcon}>
               <Icon name="shield" size={20} tint={color.primary} />
             </View>
@@ -98,16 +97,6 @@ export default function KidProfile() {
               <Text style={st.rowSub}>Pediatrician, medicines, what calms {pronouns(kid.gender).obj}</Text>
             </View>
             <Icon name="chevron-right" size={18} tint={color.ink2} />
-        </Pressable>
-        <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/kid/routine?kidId=${kid.id}`)} style={st.listRow}>
-          <View style={st.listIcon}>
-            <Icon name="clock" size={20} tint={color.primary} />
-          </View>
-          <View style={{ flexDirection: 'column', minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
-            <Text style={st.rowTitle}>Routine</Text>
-            <Text style={st.rowSub}>{routine || (manage ? 'Add naps, meals and bedtime' : 'Nothing set yet')}</Text>
-          </View>
-          <Icon name="chevron-right" size={18} tint={color.ink2} />
         </Pressable>
       </View>
 
@@ -147,7 +136,6 @@ const st = StyleSheet.create({
   listCard: { paddingHorizontal: 14, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   // 58 tall as drawn; the vertical padding only shows when a long line wraps.
   listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 58, paddingVertical: 8 },
-  listLine: { borderBottomWidth: 1, borderBottomColor: color.divider },
   // "See on map / Message / Her plan" tiles: a third of the row each.
   tile: { flex: 1, minWidth: 0, height: 64, borderRadius: 18, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center', gap: 4 },
   tileText: { fontFamily: font.bodyBold, fontSize: 12, color: color.primaryStrong },

@@ -1,5 +1,4 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
@@ -7,8 +6,8 @@ import { CareIcon } from '@/components/care';
 import { HelperNote } from '@/components/familyMembers';
 import { ErrorText, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
-import { daysLabel, detailLabel, EVERY_DAY, formatTime, itemTitle, repeatLabel, scheduleLabel, sortItems, suggestedLabel, suggestedRoutine } from '@/lib/care-plan';
-import { ageInMonths } from '@/lib/kid-profile';
+import { daysLabel, detailLabel, EVERY_DAY, formatTime, itemTitle, kidDayItems, repeatLabel, scheduleLabel } from '@/lib/care-plan';
+import { useSession } from '@/lib/session';
 import type { CareType } from '@/lib/types';
 import { useCanManage } from '@/lib/use-family-role';
 import { cardShadow, color, font } from '@/theme';
@@ -18,74 +17,59 @@ import { Text } from '@/components/Text';
 const MORE = '<svg viewBox="0 0 24 24" fill="none" stroke="#4B5960" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>';
 const PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>';
 
-type Row = { key: string; type: CareType; title: string; detail: string; starts: string | null; ends: string | null; days: number; every: number | null; open?: () => void };
+type Row = { key: string; type: CareType; title: string; detail: string; starts: string | null; ends: string | null; days: number; every: number | null; everyone?: boolean; open?: () => void };
 
-// Wireframe P20 Routine, from app/src/wireframes/P20.tsx, opened from the kid profile (P55) with a plain back header
+// Wireframe P20 Routine, from app/src/wireframes/P20.tsx, opened from the kid profile's "Her plan" (P55) with a plain back header
 // instead of the Add-a-child step header. Left out: the Places row and the "Set a time ... to continue" footer
-// (it belongs to Add a child). "Suggested" lists the saved items plus age suggestions not yet added (not saved;
-// tapping one opens P20a prefilled); "Start blank" lists only what is saved. A repeating item shows its start chip
+// (it belongs to Add a child), and the Suggested / Start blank switch (dropped: it only listed what is saved, plus
+// age suggestions that "+ Add to Ava's day" covers). A repeating item shows its start chip
 // (or an "Every 2 hrs" chip with no start time) and "Every 3 hrs" where the days go. Bottle and medicine extras
 // follow the days ("Every 3 hrs · 4 oz formula").
-// A family helper (P20h) reads the saved day only: no Suggested / Start blank switch, no hint, no •••, times as plain
+// A family helper (P20h) reads the saved day only: no hint, no •••, times as plain
 // text (no "Set a time"), no "Add to Ava's day"; the note "Jen manages Ava’s day." instead.
+// It is her whole plan in one timeline (P20k): her own items and the whole-family ones ("Everyone" label, e.g.
+// "Pick up from school"), in time order, with her food to avoid on top. The family Care plan (P7) keeps its
+// Tasks / Meals / Routines tabs.
 export default function KidRoutine() {
   const { kidId } = useLocalSearchParams<{ kidId: string }>();
+  const fid = useSession().family!.id;
   const { data, error } = useQuery(async () => {
-    const [kid, items] = await Promise.all([api.kid(kidId), api.kidCareItems(kidId)]);
-    return { kid, items: sortItems(items) };
-  }, [kidId]);
-  const [mode, setMode] = useState<'suggested' | 'blank'>();
+    const [kid, items] = await Promise.all([api.kid(kidId), api.careItems(fid)]);
+    return { kid, items: kidDayItems(items, kidId) };
+  }, [kidId, fid]);
   const manage = useCanManage();
 
   if (!data) return error ? <Screen back><ErrorText>{error}</ErrorText></Screen> : <Loading />;
   const { kid, items } = data;
-  const months = kid.birthdate ? ageInMonths(kid.birthdate) : null;
-  // A kid with nothing saved starts on the suggestions; one with a routine starts on what's saved.
-  const seg = !manage ? 'blank' : (mode ?? (items.length ? 'blank' : 'suggested'));
   const add = (q: string) => router.push(`/parent/care/item?kidId=${kid.id}${q}`);
 
-  const rows: Row[] = items.map((i) => ({ key: i.id, type: i.type, title: itemTitle(i), detail: detailLabel(i), starts: i.starts, ends: i.ends, days: i.days, every: i.every_minutes ?? null, open: manage ? () => router.push(`/parent/care/item?id=${i.id}`) : undefined }));
-  if (seg === 'suggested') {
-    const have = new Set(items.map((i) => itemTitle(i).toLowerCase()));
-    for (const s of suggestedRoutine(months))
-      if (!have.has(s.title.toLowerCase()))
-        rows.push({ key: `s-${s.title}`, type: s.type, title: s.title, detail: '', starts: null, ends: null, days: EVERY_DAY, every: s.every_minutes ?? null, open: () => add(`&type=${s.type}&title=${encodeURIComponent(s.title)}${s.every_minutes ? `&every=${s.every_minutes}` : ''}`) });
-  }
+  const rows: Row[] = items.map((i) => ({ key: i.id, type: i.type, title: itemTitle(i), detail: detailLabel(i), starts: i.starts, ends: i.ends, days: i.days, every: i.every_minutes ?? null, everyone: i.kid_id === null, open: manage ? () => router.push(`/parent/care/item?id=${i.id}`) : undefined }));
 
   return (
     <Screen back gap={8}>
       <ErrorText>{error}</ErrorText>
       <Text style={st.title}>{kid.name}’s day</Text>
-      {manage ? (
-        <View style={st.seg}>
-          <View style={{ flexDirection: 'row', gap: 4 }}>
-            {(
-              [
-                ['suggested', suggestedLabel(months)],
-                ['blank', 'Start blank'],
-              ] as const
-            ).map(([v, label]) => {
-              const on = seg === v;
-              return (
-                <Pressable key={v} accessibilityRole="button" accessibilityState={{ selected: on }} onPress={() => setMode(v)} style={[st.segItem, on && { backgroundColor: '#FFFFFF' }]}>
-                  <Text style={[st.segText, on && st.segTextOn]} numberOfLines={1}>
-                    {label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+      {kid.avoid_foods.trim() ? (
+        <View style={st.avoid}>
+          <Text style={st.avoidTitle}>Food to avoid</Text>
+          <Text style={st.avoidText}>{kid.avoid_foods}</Text>
         </View>
       ) : null}
-      {manage ? <Text style={st.hint}>Tap a time to change it, or ••• for more details.</Text> : null}
+      {manage ? <Text style={st.hint}>Her routine and the family’s to-dos, in one day. Tap ••• to change one.</Text> : null}
       {rows.length ? (
         <View style={st.card}>
           {rows.map((r, i) => (
             <View key={r.key} style={[st.row, i < rows.length - 1 && st.rowLine]}>
               <CareIcon type={r.type} />
               <View style={{ flexDirection: 'column', gap: 4, minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Text style={st.rowTitle}>{r.title}</Text>
+                  {r.everyone ? (
+                    <View style={st.everyone}>
+                      <Text style={st.everyoneText}>Everyone</Text>
+                    </View>
+                  ) : null}
+                  <View style={{ flexGrow: 1 }} />
                   {r.open ? (
                     <Pressable accessibilityRole="button" accessibilityLabel={`More about ${r.title}`} onPress={r.open} hitSlop={8} style={st.more}>
                       <SvgXml xml={MORE} width={20} height={20} style={{ flexShrink: 0 }} />
@@ -147,10 +131,6 @@ export default function KidRoutine() {
 // P20 values
 const st = StyleSheet.create({
   title: { fontFamily: font.display, fontSize: 26, color: color.ink, marginVertical: -4.83 },
-  seg: { padding: 4, backgroundColor: color.muted, borderRadius: 12 },
-  segItem: { flex: 1, minWidth: 0, height: 34, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  segText: { fontFamily: font.bodyMedium, fontSize: 13, color: color.ink2 },
-  segTextOn: { fontFamily: font.bodyBold, color: color.ink },
   hint: { fontFamily: font.body, fontSize: 13, color: color.ink2, lineHeight: 18 },
   card: { paddingHorizontal: 14, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   row: { flexDirection: 'row', gap: 12, paddingVertical: 9 },
@@ -164,4 +144,10 @@ const st = StyleSheet.create({
   sub: { fontFamily: font.body, fontSize: 13, color: color.ink2, flexShrink: 1 },
   add: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 46, borderRadius: 999, borderWidth: 2, borderColor: '#C9D3DD', borderStyle: 'dashed' },
   addText: { fontFamily: font.displayBold, fontSize: 16, color: color.primary },
+  // P20k: food to avoid on top (same card as P7m) and the grey "Everyone" label on whole-family rows.
+  avoid: { gap: 2, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: color.badTint, borderRadius: 12 },
+  avoidTitle: { fontFamily: font.bodyBold, fontSize: 14, color: color.badInk },
+  avoidText: { fontFamily: font.body, fontSize: 14, color: '#6E2215' },
+  everyone: { height: 22, paddingHorizontal: 8, justifyContent: 'center', backgroundColor: color.muted, borderRadius: 999, flexShrink: 0 },
+  everyoneText: { fontFamily: font.bodyBold, fontSize: 12, color: color.ink2 },
 });

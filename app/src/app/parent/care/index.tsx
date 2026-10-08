@@ -20,16 +20,17 @@ const TABS: { value: PlanTab; label: string }[] = [
   { value: 'routines', label: 'Routines' },
 ];
 
-// Wireframe P7 Care plan, from app/src/wireframes/P7.tsx. Tasks = whole-family items (not food); Meals = meals and
+// Wireframe P7 Care plan, from app/src/wireframes/P7.tsx. Tasks = whole-family to-dos (not food); Meals = meals and
 // bottles (family and kids); Routines = one row per kid -> P20. The Requirements pill opens P7a. Left out until built: the
 // "Weekday after school" template row with its Templates link, and the "Trip" tags. Row titles carry the type's
 // extras ("Bottle · 4 oz formula", "Tylenol · 5 ml").
 // A read-only member (P7h) reads it: no Requirements pill, no "+ Add task" (the note "Jen manages the care plan."
 // instead), rows open the whole item read-only (P20v) instead of the editor (P20a); Routines rows open the kid's day
 // read-only (P20h).
-// Kid filter: opened for one kid (P55's "Her plan", ?kidId=) it is only that kid's plan (P7k / P7m), with no chips.
-// Opened for the family (Home's Care plan tile) it shows All · Ava · Leo chips under the tabs (two or more kids). A kid: the title reads "Ava’s plan", family rows carry "Everyone", Tasks adds her own non-food
-// items, Meals her meals and bottles, Routines only her row; new items are pre-assigned to her. Food to avoid shows
+// One kid's whole plan is her day (P20k, from P55's "Her plan"), not this screen. Here the All · Ava · Leo chips
+// under the tabs (two or more kids) filter it: the title reads "Ava’s plan", family rows carry "Everyone", Tasks stays
+// the family's to-dos (her naps and bedtime are her routine, never listed twice), Meals adds her meals and bottles,
+// Routines only her row; new items are pre-assigned to her. Food to avoid shows
 // on Meals only (P7m), for the selected kid. The add button reads "+ Add meal" on Meals; Routines has none.
 export default function CarePlan() {
   const { family } = useSession();
@@ -41,8 +42,6 @@ export default function CarePlan() {
   }, [fid]);
   const params = useLocalSearchParams<{ kidId?: string }>();
   const [tab, setTab] = useState<PlanTab>('tasks');
-  // Opened from a kid's profile: that kid's plan only, no switching to All or another kid.
-  const [scoped] = useState(() => !!params.kidId);
 
   if (!data) return error ? <Screen title="Care plan" back><ErrorText>{error}</ErrorText></Screen> : <Loading />;
   const { items, kids } = data;
@@ -83,7 +82,7 @@ export default function CarePlan() {
               );
             })}
           </View>
-          {!scoped && kids.length > 1 ? (
+          {kids.length > 1 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={st.chips} contentContainerStyle={st.chipRow}>
               <Chip label="All" on={!kidId} onPress={() => pick(null)} />
               {kids.map((k) => (

@@ -2,6 +2,7 @@ import { describe, expect, it } from '@jest/globals';
 
 import {
   avoidKids,
+  kidDayItems,
   cleanDetails,
   isEveryone,
   planAdd,
@@ -316,10 +317,19 @@ describe('kid filter (P7 All · Ava · Leo)', () => {
     expect(planItems(all, 'meals', null)).toEqual([famMeal, avaBottle, leoMeal]);
     expect(planItems(all, 'routines', null)).toEqual([]);
   });
-  it('a kid sees the family items plus her own', () => {
-    expect(planItems(all, 'tasks', 'ava')).toEqual([famTask, avaNap]);
+  it('a kid sees the family items plus her own meals; her routine stays off Tasks', () => {
+    expect(planItems(all, 'tasks', 'ava')).toEqual([famTask]);
     expect(planItems(all, 'meals', 'ava')).toEqual([famMeal, avaBottle]);
     expect(planItems(all, 'meals', 'leo')).toEqual([famMeal, leoMeal]);
+  });
+  it("puts a kid's day and the family items in one timeline", () => {
+    const t = (starts: string | null, created_at: string, kid_id: string | null = null) => item({ type: 'nap', starts, created_at, kid_id });
+    const fam = t('16:00', '2026-01-01');
+    const avaLate = t('19:30', '2026-01-02', 'ava');
+    const avaEarly = t('13:00', '2026-01-03', 'ava');
+    const leo = t('12:00', '2026-01-04', 'leo');
+    const anyTime = t(null, '2026-01-05', 'ava');
+    expect(kidDayItems([fam, avaLate, avaEarly, leo, anyTime], 'ava')).toEqual([avaEarly, fam, avaLate, anyTime]);
   });
   it('lists one kid on Routines', () => {
     expect(planKids(kids, 'leo').map((k) => k.id)).toEqual(['leo']);

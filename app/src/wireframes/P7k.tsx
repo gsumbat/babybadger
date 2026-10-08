@@ -40,25 +40,6 @@ export default function WF_P7k() {
       <View style={{ flexDirection: "column", gap: 10, flexGrow: 1, paddingTop: 0, paddingRight: 20, paddingBottom: 12, paddingLeft: 20 }}>
         <View style={{ flexDirection: "column", backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 12, paddingRight: 16, paddingBottom: 12, paddingLeft: 16, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
-            <View style={{ width: 44, flexShrink: 0 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#4B5960" }}>3:15</Text></View>
-            <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
-              <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Pick up Ava</Text>
-              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#6B7980" }}>Weekdays · Lincoln Elementary</Text>
-            </View>
-            <View style={{ flexDirection: "row", gap: 6, flexShrink: 0 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 8, paddingBottom: 0, paddingLeft: 8, backgroundColor: "#DCE7F1", borderRadius: 999 }}>
-                <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#47698A" }}>Trip</Text>
-              </View>
-            </View>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 12, paddingRight: 16, paddingBottom: 12, paddingLeft: 16, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
-            <View style={{ width: 44, flexShrink: 0 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#4B5960" }}>4:00</Text></View>
-            <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
-              <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Homework</Text>
-              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#6B7980" }}>Mon–Thu · reading log, 20 min</Text>
-            </View>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 12, paddingRight: 16, paddingBottom: 12, paddingLeft: 16, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ width: 44, flexShrink: 0 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#4B5960" }}>5:30</Text></View>
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Tidy up toys</Text>

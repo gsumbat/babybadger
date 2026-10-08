@@ -15,8 +15,6 @@ const SVG = [
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #4B5960; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z\"></path><path d=\"M12 10v5M9.5 12.5h5\"></path></svg>",
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z\"></path><path d=\"M8.5 12l2.5 2.5 4.5-4.5\"></path></svg>",
   "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #4B5960; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M9 6l6 6-6 6\"></path></svg>",
-  "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"12\" cy=\"12\" r=\"9\"></circle><path d=\"M12 7v5l3 2\"></path></svg>",
-  "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #4B5960; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M9 6l6 6-6 6\"></path></svg>",
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"9\" cy=\"8\" r=\"3.5\"></circle><path d=\"M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18.5 14.8c1.8.7 3 2.3 3 4.7\"></path></svg>",
   "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #4B5960; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M9 6l6 6-6 6\"></path></svg>",
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #34526E; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"9\" cy=\"8\" r=\"3.5\"></circle><path d=\"M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18.5 14.8c1.8.7 3 2.3 3 4.7\"></path></svg>"
@@ -57,7 +55,7 @@ export default function WF_P55h() {
             <SvgXml xml={SVG[2]} width={20} height={20} />
             <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E" }}>Message Ava</Text>
           </View>
-          <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, height: 64, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1 }}>{/* -> P7k-AvaPlan.dc.html */}
+          <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, height: 64, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1 }}>{/* -> P20k-AvaDay.dc.html */}
             <SvgXml xml={SVG[3]} width={20} height={20} />
             <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E" }}>Her plan</Text>
           </View>
@@ -77,25 +75,15 @@ export default function WF_P55h() {
             </View>
             <SvgXml xml={SVG[6]} width={18} height={18} />
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 58, paddingTop: 8, paddingRight: 0, paddingBottom: 8, paddingLeft: 0, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>{/* -> P20-ChildRoutine.dc.html */}
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 12 }}>
-              <SvgXml xml={SVG[7]} width={20} height={20} />
-            </View>
-            <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
-              <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Routine</Text>
-              <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>School 8–3 · Soccer Thu 4:30 · Bed 8:00</Text>
-            </View>
-            <SvgXml xml={SVG[8]} width={18} height={18} />
-          </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 58, paddingTop: 8, paddingRight: 0, paddingBottom: 8, paddingLeft: 0 }}>{/* -> P21-ChildSitters.dc.html */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 12 }}>
-              <SvgXml xml={SVG[9]} width={20} height={20} />
+              <SvgXml xml={SVG[7]} width={20} height={20} />
             </View>
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Who looks after Ava</Text>
               <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Maya, Priya · school pick-up allowed</Text>
             </View>
-            <SvgXml xml={SVG[10]} width={18} height={18} />
+            <SvgXml xml={SVG[8]} width={18} height={18} />
           </View>
         </View>
         <View style={{ flexDirection: "column", gap: 8, paddingTop: 14, paddingRight: 14, paddingBottom: 14, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
@@ -110,7 +98,7 @@ export default function WF_P55h() {
           </View>
         </View>
         <View style={{ flexDirection: "row", gap: 12, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
-          <SvgXml xml={SVG[11]} width={22} height={22} />
+          <SvgXml xml={SVG[9]} width={22} height={22} />
           <Text style={{ fontFamily: font.body, fontSize: 13, color: "#1B2328", lineHeight: 18, flexShrink: 1 }}>Jen manages Ava’s profile.</Text>
         </View>
       </View>

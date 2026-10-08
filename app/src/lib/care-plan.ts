@@ -385,12 +385,18 @@ export function planKidId(kids: Pick<Kid, 'id'>[], param: string | null | undefi
   return param && kids.some((k) => k.id === param) ? param : null;
 }
 
-/** P7 rows for a tab. Tasks: family items that aren't food (All), plus the kid's own non-food items (a kid).
- * Meals: every meal and bottle (All), or the family's and the kid's. Routines has no item rows. */
+/** P7 rows for a tab. Tasks: only the whole-family to-dos that aren't food (a kid's naps, bedtime and medicine are
+ * her routine, on Routines, never here too). Meals: every meal and bottle (All), or the family's and the kid's.
+ * Routines has no item rows. */
 export function planItems<T extends Pick<CareItem, 'kid_id' | 'type'>>(items: T[], tab: PlanTab, kidId: string | null): T[] {
   if (tab === 'routines') return [];
-  const food = tab === 'meals';
-  return items.filter((i) => isFood(i.type) === food && (kidId ? i.kid_id === null || i.kid_id === kidId : food || i.kid_id === null));
+  if (tab === 'tasks') return items.filter((i) => !isFood(i.type) && i.kid_id === null);
+  return items.filter((i) => isFood(i.type) && (!kidId || i.kid_id === null || i.kid_id === kidId));
+}
+
+/** A kid's day (P20, "Her plan"): her own items and the whole-family ones, one list in time order. */
+export function kidDayItems<T extends Pick<CareItem, 'kid_id' | 'starts' | 'created_at'>>(items: T[], kidId: string): T[] {
+  return sortItems(items.filter((i) => i.kid_id === null || i.kid_id === kidId));
 }
 
 /** The kids listed: one row per kid on Routines, or only the selected kid. */

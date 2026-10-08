@@ -31,6 +31,7 @@ import WF_P20e from './P20e';
 import WF_P20f from './P20f';
 import WF_P20g from './P20g';
 import WF_P20h from './P20h';
+import WF_P20k from './P20k';
 import WF_P20v from './P20v';
 import WF_P21 from './P21';
 import WF_P21b from './P21b';
@@ -278,6 +279,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P20f: WF_P20f,
   P20g: WF_P20g,
   P20h: WF_P20h,
+  P20k: WF_P20k,
   P20v: WF_P20v,
   P21: WF_P21,
   P21b: WF_P21b,
