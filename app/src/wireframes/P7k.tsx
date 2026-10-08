@@ -35,23 +35,6 @@ export default function WF_P7k() {
               <View style={{ height: 38, backgroundColor: "transparent", borderRadius: 9, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0, justifyContent: "center" }}><Text style={{ fontFamily: font.bodyMedium, fontSize: 15, color: "#4B5960" }}>Routines</Text></View>
             </View>
           </View>
-          <View style={{ flexDirection: "row", gap: 8, paddingTop: 0, paddingRight: 20, paddingBottom: 0, paddingLeft: 20, marginRight: -20, marginLeft: -20 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>{/* -> P7-CarePlan.dc.html */}
-              <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>All</Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A" }}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 10 }}>
-                <Text style={{ fontFamily: font.displayBold, fontSize: 9, color: "#FFFFFF" }}>A</Text>
-              </View>
-              <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#34526E" }}>Ava</Text>
-            </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>{/* -> P7m-PlanMeals.dc.html */}
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, flexShrink: 0, backgroundColor: "#8676B3", borderRadius: 10 }}>
-                <Text style={{ fontFamily: font.displayBold, fontSize: 9, color: "#FFFFFF" }}>L</Text>
-              </View>
-              <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Leo</Text>
-            </View>
-          </View>
         </View>
       </View>
       <View style={{ flexDirection: "column", gap: 10, flexGrow: 1, paddingTop: 0, paddingRight: 20, paddingBottom: 12, paddingLeft: 20 }}>
