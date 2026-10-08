@@ -3,7 +3,8 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { Alert, Linking, Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
-import { KidDot, kidSub } from '@/components/bits';
+import { KidDot } from '@/components/bits';
+import { ageLabel } from '@/lib/kid-profile';
 import { MembersNote } from '@/components/familyMembers';
 import { LockedMap, PaymentIssueBanner } from '@/components/billing';
 import { LiveMap } from '@/components/LiveMap';
@@ -516,10 +517,10 @@ function Soon({ shift, minutes, sitter, kids }: { shift: Shift; minutes: number;
   );
 }
 
-/** P4c / P4n below the card: the location note, KIDS, TODAY'S PLAN (Edit opens this shift's tasks, P5e) and food to avoid. */
+/** P4c / P4n below the card: the location note, KIDS and TODAY'S PLAN (Edit opens this shift's tasks, P5e). Food to avoid
+ * is for the sitter (her shift page); parents wrote it, so Home doesn't repeat it. */
 function BeforeClockIn({ shift, bundle, sitter, kids }: { shift: Shift; bundle: ShiftBundle | null; sitter: string; kids: ReactNode }) {
   const manage = useCanManage();
-  const avoid = (bundle?.kids ?? []).filter((k) => k.avoid_foods || k.allergies);
   return (
     <>
       <View style={st.note}>
@@ -541,14 +542,6 @@ function BeforeClockIn({ shift, bundle, sitter, kids }: { shift: Shift; bundle: 
           </View>
         </>
       )}
-      {avoid.map((k) => (
-        <View key={k.id} style={st.avoid}>
-          <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: color.badInk }}>{k.name} · food to avoid</Text>
-          <Text style={{ fontFamily: font.body, fontSize: 13, color: '#6E2215' }}>
-            {[k.avoid_foods, k.allergies && `allergic to ${k.allergies}`].filter(Boolean).join(' · ')} · shown to {sitter} at clock-in
-          </Text>
-        </View>
-      ))}
     </>
   );
 }
@@ -701,7 +694,8 @@ function Kids({ kids, add = true }: { kids: Kid[]; add?: boolean }) {
             <KidDot kid={k} />
             <View style={{ flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: color.ink }}>{k.name}</Text>
-              {kidSub(k) ? <Text style={[st.sub12, { lineHeight: 17, marginTop: 2 }]}>{kidSub(k)}</Text> : null}
+              {/* Age only: food to avoid is for the sitter (parents wrote it). */}
+              {k.birthdate ? <Text style={[st.sub12, { lineHeight: 17, marginTop: 2 }]}>{ageLabel(k.birthdate)}</Text> : null}
             </View>
             <Icon name="chevron-right" size={18} tint={color.ink2} />
           </Pressable>
@@ -759,7 +753,6 @@ const st = StyleSheet.create({
   note: { paddingVertical: 10, paddingHorizontal: 14, backgroundColor: color.primaryTint, borderRadius: 12 },
   noteText: { fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.primaryStrong },
   planItem: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44 },
-  avoid: { gap: 2, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: color.badTint, borderRadius: 12 },
   // P4n: amber (warn) card, white pill buttons.
   lateCard: { gap: 12, padding: 16, backgroundColor: color.warnTint, borderRadius: 20 },
   lateTitle: { fontFamily: font.displayBold, fontSize: 19, color: color.ink, marginVertical: -3.72 },

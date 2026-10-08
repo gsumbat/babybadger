@@ -111,10 +111,6 @@ export default function WF_P4n() {
             </View>
           </View>
         </View>
-        <View style={{ flexDirection: "column", gap: 2, paddingTop: 10, paddingRight: 14, paddingBottom: 10, paddingLeft: 14, backgroundColor: "#F6DCD6", borderRadius: 12 }}>
-          <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#A1321F" }}>Leo · food to avoid</Text>
-          <Text style={{ fontFamily: font.body, fontSize: 13, color: "#6E2215" }}>Shown to Maya at clock-in</Text>
-        </View>
         <View style={{}}><Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#47698A", textAlign: "center", textDecorationLine: "underline" }}>Prototype: she clocks in ›</Text></View>
       </View>
       <View style={{ flexDirection: "column", gap: 8, marginTop: "auto", paddingTop: 0, paddingRight: 20, paddingBottom: 14, paddingLeft: 20 }}>

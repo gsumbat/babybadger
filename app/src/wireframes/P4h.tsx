@@ -109,10 +109,6 @@ export default function WF_P4h() {
             </View>
           </View>
         </View>
-        <View style={{ flexDirection: "column", gap: 2, paddingTop: 10, paddingRight: 14, paddingBottom: 10, paddingLeft: 14, backgroundColor: "#F6DCD6", borderRadius: 12 }}>
-          <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#A1321F" }}>Leo · food to avoid</Text>
-          <Text style={{ fontFamily: font.body, fontSize: 13, color: "#6E2215" }}>Shown to Maya at clock-in</Text>
-        </View>
         <View style={{ flexDirection: "row", gap: 10 }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, height: 50, flexGrow: 1, flexBasis: 0, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1 }}>{/* -> P10-Messages.dc.html */}
             <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#47698A" }}>Message Maya</Text>
