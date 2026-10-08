@@ -3,25 +3,25 @@ import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { OnShift, Thread, ThreadChips } from '@/components/messages';
+import { OnShift, ThreadChips } from '@/components/messages';
+import { ParentThread } from '@/components/threads';
 import { Empty, ErrorText, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { firstName, timeOf } from '@/lib/format';
-import { buildThread, messagesApi, threadKey, useThread, useUnread } from '@/lib/messages';
+import { threadKey, useUnread } from '@/lib/messages';
 import { useSession } from '@/lib/session';
-import { useCanManage } from '@/lib/use-family-role';
 import { color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
-// Wireframe P10 (app/src/wireframes/P10.tsx): the family's thread with one sitter. With several signed sitters,
-// S37's chip row switches between them (P10 draws only one thread). Opened as a tab, so no back button.
-// `?sitter=` (push alerts) opens that sitter's thread. A read-only member (P10r) has no "Running late" quick reply
-// (only full access books and moves shifts).
+// Wireframe P10 (app/src/wireframes/P10.tsx) as a tab: the family's thread with one sitter. With several signed
+// sitters, S37's chip row switches between them (P10 draws only one thread). Opened as a tab, so no back button; the
+// stacked P10 with its back button is `parent/thread/[sitterId]` (pushed by the trip, request, log and sitter profile
+// "Message" links). `?sitter=` (push alerts) opens that sitter's thread here. The thread itself (quick replies, read
+// markers, P10r: no "Running late" for a read-only member) is components/threads ParentThread.
 const DOTS = ['#2F6FD6', '#D9822B', '#8676B3'];
 
 export default function Messages() {
   const { session, family } = useSession();
-  const manage = useCanManage();
   const uid = session!.user.id;
   const params = useLocalSearchParams<{ sitter?: string }>();
   const { data: sitters, error } = useQuery(async () => (family ? api.familySitters(family.id) : []), [family?.id]);
@@ -30,10 +30,7 @@ export default function Messages() {
   const [picked, setPicked] = useState<{ id: string; param?: string }>();
   const wanted = picked && picked.param === params.sitter ? picked.id : params.sitter;
   const chosen = active.find((s) => s.sitter_id === wanted) ?? active[0];
-  const { thread, error: threadError, add } = useThread(family?.id, chosen?.sitter_id);
   const { counts } = useUnread(active.length > 1);
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState('');
   const { top } = useSafeAreaInsets();
 
   if (!sitters && !error) return <Loading />;
@@ -48,68 +45,43 @@ export default function Messages() {
     );
 
   const name = firstName(chosen.profile?.full_name);
-  const onShift = thread?.shifts.find((s) => s.status === 'active');
-  const items = thread ? buildThread(thread.messages, thread.shifts, thread.reads, (m) => m.author_id !== chosen.sitter_id) : [];
-
-  async function send(body: string) {
-    setBusy(true);
-    setErr('');
-    try {
-      add(await messagesApi.send(family!.id, chosen!.sitter_id, uid, body));
-      return true;
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
-      return false;
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const person = (
-    <View style={st.person}>
-      <View style={st.avatar}>
-        <Text style={st.avatarText}>{name.charAt(0).toUpperCase()}</Text>
-      </View>
-      <View style={{ flex: 1, minWidth: 0 }}>
-        <Text style={st.name}>{name}</Text>
-        {onShift ? <OnShift>{`On shift until ${timeOf(onShift.ends_at)}`}</OnShift> : null}
-      </View>
-    </View>
-  );
-
-  const header =
-    active.length > 1 ? (
-      <View style={[st.headerStack, { paddingTop: top + 16 }]}>
-        <ThreadChips
-          chips={active.map((s, i) => ({
-            key: s.sitter_id,
-            label: firstName(s.profile?.full_name),
-            dot: DOTS[i % DOTS.length],
-            unread: s.sitter_id === chosen.sitter_id ? 0 : (counts[threadKey(family.id, s.sitter_id)] ?? 0),
-            on: s.sitter_id === chosen.sitter_id,
-          }))}
-          onPick={(id) => setPicked({ id, param: params.sitter })}
-        />
-        {person}
-      </View>
-    ) : (
-      <View style={[st.header, { paddingTop: top + 12 }]}>{person}</View>
-    );
-
   return (
-    <Thread
-      side="parent"
-      header={header}
-      items={items}
-      clockedIn={`${name} clocked in`}
-      placeholder={`Message ${name}`}
-      quick={[
-        { label: 'Ask for a photo', onPress: () => send('Can you send a photo?') },
-        ...(manage ? [{ label: 'Running late', onPress: () => send('Running late') }] : []),
-      ]}
-      onSend={send}
-      busy={busy}
-      error={err || threadError}
+    <ParentThread
+      key={chosen.sitter_id}
+      familyId={family.id}
+      sitterId={chosen.sitter_id}
+      sitterName={name}
+      uid={uid}
+      header={({ onShift }) => {
+        const person = (
+          <View style={st.person}>
+            <View style={st.avatar}>
+              <Text style={st.avatarText}>{name.charAt(0).toUpperCase()}</Text>
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={st.name}>{name}</Text>
+              {onShift ? <OnShift>{`On shift until ${timeOf(onShift.ends_at)}`}</OnShift> : null}
+            </View>
+          </View>
+        );
+        return active.length > 1 ? (
+          <View style={[st.headerStack, { paddingTop: top + 16 }]}>
+            <ThreadChips
+              chips={active.map((s, i) => ({
+                key: s.sitter_id,
+                label: firstName(s.profile?.full_name),
+                dot: DOTS[i % DOTS.length],
+                unread: s.sitter_id === chosen.sitter_id ? 0 : (counts[threadKey(family.id, s.sitter_id)] ?? 0),
+                on: s.sitter_id === chosen.sitter_id,
+              }))}
+              onPick={(id) => setPicked({ id, param: params.sitter })}
+            />
+            {person}
+          </View>
+        ) : (
+          <View style={[st.header, { paddingTop: top + 12 }]}>{person}</View>
+        );
+      }}
     />
   );
 }

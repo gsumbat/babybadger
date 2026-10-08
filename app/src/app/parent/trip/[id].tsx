@@ -127,7 +127,7 @@ export default function TripView() {
             </>
           ) : (
             <>
-              <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/messages?sitter=${trip.sitter_id}`)} style={st.btn}>
+              <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/thread/${trip.sitter_id}`)} style={st.btn}>
                 <Text style={st.btnText}>Message {sitter}</Text>
               </Pressable>
               {/* "Call" needs the sitter's phone number (not stored yet): the slot stays empty. */}

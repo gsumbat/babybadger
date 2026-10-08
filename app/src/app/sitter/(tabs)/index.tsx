@@ -1,16 +1,14 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
 import { RequestRow } from '@/components/poolRequest';
-import { RunningLateSheet } from '@/components/timing';
 import { ErrorText, HomeHeader, Icon, type IconName, initialsOf, Screen } from '@/components/ui';
 import { api, useQuery, useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
 import { familyPossessive, sitterRulesState } from '@/lib/house-rules';
 import { inviteApi } from '@/lib/invites';
-import { startSharing } from '@/lib/location-sharing';
 import { availabilityApi } from '@/lib/availability';
 import { cardReminders, sitterCredentials } from '@/lib/credentials';
 import { MARKETPLACE } from '@/lib/features';
@@ -18,28 +16,29 @@ import { familyRequirements } from '@/lib/requirements';
 import { calendarFit, requestWindow, requestsApi, sitterRowSub, sitterRowTitle, timeLeft } from '@/lib/pool-requests';
 import { askedLine, CREDENTIAL_KINDS, requirementRequestsApi, waitingOnHer } from '@/lib/requirement-requests-api';
 import { useSession } from '@/lib/session';
-import { clockInState, formatClock } from '@/lib/shift-logic';
-import { errorText, supabase } from '@/lib/supabase';
-import { checkClockInZone } from '@/lib/trips';
+import { formatClock } from '@/lib/shift-logic';
+import { spanLabel } from '@/lib/shift-page-logic';
 import type { Shift } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframes S3 (shift today), S3b (no shift today) and S3d (nothing booked), translated from their HTML
-// (app/src/wireframes/S3*.tsx). "Running late?" opens S21 before clock-in. Needs you, in the board's order (S3f):
+// (app/src/wireframes/S3*.tsx). Home shows shifts for information only: the Today card (S3 / S3e / S3f, no buttons)
+// and S3b's next-shift card open the shift page (S4b), where Clock in, Running late? (S21), Family details and
+// Message live. While she's on shift the card reads "On shift · 01:12:45 · sharing location". Needs you, in the
+// board's order (S3f):
 // new family invites sent to her email (S0e, open S1); what families asked her to share ("The Lee family asked for: …",
 // S53); her cards that expire within 30 days or have expired ("Infant CPR expires in 21 days" · "Renew and share the
 // new card · Lee family requires it", S41); pool requests waiting for her answer ("Lee family asks for Sat 6 – 10 PM",
 // S33 / S20); house rules (S42) and location notices. Stats: only the hours booked; earnings, payout and the "unpaid
 // invoice" row wait for in-app payments (canvas S3p). TOOLS: Availability, Time off (S11), New invoice ("Soon"),
 // Hours and pay (S7), Credentials (S14), My details, Requests (one waiting shift request opens it, otherwise the
-// calendar); "Get found" (S35) only with MARKETPLACE. Clock in checks the home zone first (S22 when she isn't there).
+// calendar); "Get found" (S35) only with MARKETPLACE.
 // Times follow the wireframe: "3:00 – 7:00 PM" on the today card, "7:30 – 10 PM" elsewhere.
 export default function SitterHome() {
   const { session, profile, sitterLinks } = useSession();
   const uid = session!.user.id;
-  const { data: shifts, error, reload } = useQuery(() => api.sitterShifts(uid), [uid]);
-  const [busy, setBusy] = useState<string>();
+  const { data: shifts, error } = useQuery(() => api.sitterShifts(uid), [uid]);
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -156,29 +155,6 @@ export default function SitterHome() {
   const inWeek = (shifts ?? []).filter((s) => s.status !== 'cancelled' && +new Date(s.starts_at) >= weekFrom && +new Date(s.starts_at) < weekTo);
   const bookedH = Math.round(inWeek.reduce((m, s) => m + (+new Date(s.ends_at) - +new Date(s.starts_at)) / 36e5, 0));
 
-  async function clockIn(s: Shift) {
-    setBusy(s.id);
-    // Clock-in zone (migrations 16-17): outside the shift's home, S22 explains and offers "Clock in when I arrive".
-    // No location (web, permission off) or no home on the map: allowed, as before.
-    const zone = await checkClockInZone(s).catch(() => null);
-    if (zone?.kind === 'away') {
-      setBusy(undefined);
-      return router.push(`/sitter/clockin/${s.id}`);
-    }
-    const { error: e } = await supabase.rpc('clock_in', { p_shift: s.id });
-    if (e) {
-      setBusy(undefined);
-      // Refused until she agrees to the family's current house rules: open them (S42).
-      if (/house rules/i.test(e.message)) return router.push(`/sitter/rules/${s.family_id}`);
-      return Alert.alert('Can’t clock in yet', errorText(e));
-    }
-    const mode = await startSharing(s.id);
-    setBusy(undefined);
-    if (mode === 'denied') Alert.alert('Location is off', 'The family can’t see the map until you allow location for BabyBadger in Settings.');
-    router.push(`/sitter/shift/${s.id}`);
-    reload();
-  }
-
   return (
     <Screen
       gap={10}
@@ -194,10 +170,10 @@ export default function SitterHome() {
       }>
       <ErrorText>{error}</ErrorText>
 
-      {focus && <TodayCard shift={focus} family={famName(focus.family_id)} then={then} thenFamily={then ? famName(then.family_id) : ''} now={now} busy={busy === focus.id} onClockIn={() => clockIn(focus)} onCancelled={reload} />}
+      {focus && <TodayCard shift={focus} family={famName(focus.family_id)} then={then} thenFamily={then ? famName(then.family_id) : ''} now={now} />}
 
       {!focus && next && (
-        <Pressable accessibilityRole="button" onPress={() => router.navigate('/sitter/calendar')} style={st.nextCard}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Open the next shift" onPress={() => router.push(`/sitter/shift/${next.id}`)} style={st.nextCard}>
           <View style={st.dateTile}>
             <Text style={st.dateDow}>{new Date(next.starts_at).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase()}</Text>
             <Text style={st.dateNum}>{new Date(next.starts_at).getDate()}</Text>
@@ -287,14 +263,7 @@ export default function SitterHome() {
 }
 
 const MERIDIEM = /\s?([AP]M)$/i;
-/** "3:00 – 7:00 PM" (zeros) or "7:30 – 10 PM": the shared AM/PM is written once. */
-function span(start: string, end: string, zeros = false) {
-  const clock = (iso: string) => (zeros ? timeOf(iso) : timeOf(iso).replace(':00', ''));
-  const a = clock(start);
-  const b = clock(end);
-  const same = a.match(MERIDIEM)?.[1] === b.match(MERIDIEM)?.[1];
-  return `${same ? a.replace(MERIDIEM, '') : a} – ${b}`;
-}
+const span = spanLabel;
 
 function inDays(iso: string, now: number) {
   const a = new Date(now);
@@ -364,74 +333,44 @@ function NeedRow({ icon, tint = [color.warnTint, color.warnInk], title, sub, las
   );
 }
 
-function TodayCard({ shift, family, then, thenFamily, now, busy, onClockIn, onCancelled }: { shift: Shift; family: string; then?: Shift; thenFamily: string; now: number; busy: boolean; onClockIn: () => void; onCancelled: () => void }) {
+/** S3 Today card: the whole card opens the shift page (S4b before clock-in, S4 on shift). Information only: the status
+ * line ("At their home · 4 tasks, first 3:15"; S3e "Told the family · 15 min late"; on shift "On shift · 01:12:45 ·
+ * sharing location") and "Then · …". */
+function TodayCard({ shift, family, then, thenFamily, now }: { shift: Shift; family: string; then?: Shift; thenFamily: string; now: number }) {
   const { bundle } = useShiftLive(shift.id);
-  const [lateOpen, setLateOpen] = useState(false);
-  const [sentLate, setSentLate] = useState<number>();
-  const lateMin = sentLate ?? (shift as Shift & { late_minutes?: number | null }).late_minutes ?? undefined;
+  const lateMin = (shift as Shift & { late_minutes?: number | null }).late_minutes ?? undefined;
   const live = shift.status === 'active';
-  const ci = clockInState(shift, new Date(now));
   const tasks = bundle?.tasks ?? [];
   const firstDue = tasks.find((t) => t.due_at)?.due_at;
   const secs = shift.clock_in_at ? Math.max(0, Math.floor((now - +new Date(shift.clock_in_at)) / 1000)) : 0;
   const sameDay = !!then && new Date(then.starts_at).toDateString() === new Date(shift.starts_at).toDateString();
-  // Before clock-in opens the button explains itself instead of adding a line under it (not in wireframe S3).
-  const press = live
-    ? () => router.push(`/sitter/shift/${shift.id}`)
-    : ci.kind === 'open'
-      ? onClockIn
-      : ci.kind === 'too_early'
-        ? () => Alert.alert('Clock-in opens at ' + timeOf(ci.opensAt), 'Your location isn’t shared before then.')
-        : undefined;
   return (
-    <View style={st.today}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+    <Pressable accessibilityRole="button" accessibilityLabel={live ? 'Open your shift' : 'Open today’s shift'} onPress={() => router.push(`/sitter/shift/${shift.id}`)} style={({ pressed }) => [st.today, pressed && { opacity: 0.9 }]}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
         <Text style={st.family} numberOfLines={1}>
           {family}
         </Text>
-        <Text style={st.time}>
-          {span(shift.starts_at, shift.ends_at, true)}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 }}>
+          <Text style={st.time}>{span(shift.starts_at, shift.ends_at, true)}</Text>
+          <Icon name="chevron-right" size={18} tint={color.ink2} />
+        </View>
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <View style={[st.greenDot, lateMin && !live ? { backgroundColor: color.warn } : null]} />
+        <Text style={[st.okText, lateMin && !live ? { color: color.warnInk } : null]}>
+          {/* S3e: after "Tell the family" (S21, on the shift page) the line confirms it until she clocks in. */}
+          {!live && lateMin ? `Told the family · ${lateMin} min late` : live ? `On shift · ${formatClock(Math.floor(secs / 60), secs % 60)} · sharing location` : [tasks.length ? `${tasks.length} tasks` : bundle?.kids.map((k) => k.name).join(' and '), firstDue ? `first ${timeOf(firstDue).replace(MERIDIEM, '')}` : ''].filter(Boolean).join(', ')}
         </Text>
       </View>
-      {/* S3: status on the left, "Running late?" (S21) on the right until she clocks in. */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1 }}>
-          <View style={[st.greenDot, lateMin && !live ? { backgroundColor: color.warn } : null]} />
-          <Text style={[st.okText, lateMin && !live ? { color: color.warnInk } : null]}>
-            {/* S3e: after "Tell the family" the line confirms it until she clocks in. */}
-            {!live && lateMin ? `Told the family · ${lateMin} min late` : live ? `On shift · ${formatClock(Math.floor(secs / 60), secs % 60)} · sharing location` : [tasks.length ? `${tasks.length} tasks` : bundle?.kids.map((k) => k.name).join(' and '), firstDue ? `first ${timeOf(firstDue).replace(MERIDIEM, '')}` : ''].filter(Boolean).join(', ')}
-          </Text>
-        </View>
-        {!live && ci.kind !== 'ended' && (
-          <Text accessibilityRole="button" numberOfLines={1} onPress={() => setLateOpen(true)} style={st.lateLink}>
-            Running late?
-          </Text>
-        )}
-      </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Pressable accessibilityRole="button" onPress={press} style={st.clockIn}>
-          {busy ? <ActivityIndicator color="#FFFFFF" /> : <Icon name="clock" size={20} tint="#FFFFFF" strokeWidth={2} />}
-          <Text style={st.clockInText}>{live ? 'Open shift' : 'Clock in'}</Text>
-        </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Family details" onPress={() => router.push(`/sitter/family/${shift.family_id}`)} style={st.round}>
-          <Icon name="list" size={22} />
-        </Pressable>
-        <Pressable accessibilityRole="button" accessibilityLabel="Messages" onPress={() => router.navigate('/sitter/messages')} style={st.round}>
-          <Icon name="message-square" size={22} />
-        </Pressable>
-      </View>
-      {!live && <RunningLateSheet open={lateOpen} onClose={() => setLateOpen(false)} onCancelled={onCancelled} onSent={setSentLate} shift={shift} family={family} tasks={tasks} />}
       {then && (
         <View style={st.then}>
           <Text style={st.thenText}>
             <Text style={{ fontFamily: font.bodyBold }}>Then</Text> · {[thenFamily.replace(/^The /, ''), sameDay ? then.note : dayOf(then.starts_at)].filter(Boolean).join(', ')}
           </Text>
-          <Text style={st.thenTime}>
-            {span(then.starts_at, then.ends_at)}
-          </Text>
+          <Text style={st.thenTime}>{span(then.starts_at, then.ends_at)}</Text>
         </View>
       )}
-    </View>
+    </Pressable>
   );
 }
 
@@ -442,10 +381,6 @@ const st = StyleSheet.create({
   time: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink, flexShrink: 1 },
   greenDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: color.ok },
   okText: { fontFamily: font.bodySemi, fontSize: 13, color: color.okInk, flexShrink: 1 },
-  lateLink: { fontFamily: font.bodyBold, fontSize: 13, color: color.primary, textDecorationLine: 'underline', flexShrink: 0 },
-  clockIn: { flexGrow: 1, flexShrink: 1, height: 48, borderRadius: 999, backgroundColor: color.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  clockInText: { fontFamily: font.displayBold, fontSize: 17, color: '#FFFFFF' },
-  round: { width: 48, height: 48, borderRadius: 24, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
   then: { flexDirection: 'row', justifyContent: 'space-between', paddingTop: 8, borderTopWidth: 1, borderTopColor: color.divider },
   thenText: { fontFamily: font.body, fontSize: 13, color: color.ink, flexShrink: 1 },
   thenTime: { fontFamily: font.body, fontSize: 13, color: color.ink2, flexShrink: 1 },

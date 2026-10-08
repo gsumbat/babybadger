@@ -28,7 +28,8 @@ export const CHEVRON_S37 = '<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" fill
 
 export type QuickReply = { label: string; onPress: () => void };
 
-/** Whole thread screen: header, messages, quick replies and composer. Sits above the tab bar. */
+/** Whole thread screen: header, messages, quick replies and composer. Sits above the tab bar, or with `stacked` (a
+ * pushed screen, S37t / P10 opened from a shift) at the bottom of the screen above the home indicator. */
 export function Thread({
   side,
   header,
@@ -39,6 +40,7 @@ export function Thread({
   onSend,
   busy,
   error,
+  stacked,
 }: {
   side: Side;
   header: ReactNode;
@@ -50,9 +52,10 @@ export function Thread({
   onSend: (text: string) => Promise<boolean>;
   busy?: boolean;
   error?: string;
+  stacked?: boolean;
 }) {
   const insets = useSafeAreaInsets();
-  const lift = tabBarHeight(insets.bottom) - KEYBOARD_TOOLBAR;
+  const lift = (stacked ? insets.bottom : tabBarHeight(insets.bottom)) - KEYBOARD_TOOLBAR;
   const scroll = useRef<Reanimated.ScrollView>(null);
   const [text, setText] = useState('');
   const p = side === 'parent';
@@ -118,7 +121,7 @@ export function Thread({
         })}
       </KeyboardChatScrollView>
       <KeyboardStickyView offset={{ closed: 0, opened: lift }}>
-        <View style={st.footer}>
+        <View style={[st.footer, stacked && { paddingBottom: 12 + insets.bottom }]}>
           <ErrorText>{error}</ErrorText>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} keyboardShouldPersistTaps="handled">
             {quick.map((q) => (

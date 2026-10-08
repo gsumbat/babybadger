@@ -17,8 +17,8 @@ import { errorText } from '@/lib/supabase';
 import { clockInShift, currentPosition, distanceLabel, homeTitle, placesOrEmpty, tripsApi, useAwayRequest, zoneLine } from '@/lib/trips';
 import { cardShadow, color, font } from '@/theme';
 
-// Wireframe S22 "Clock-in blocked", translated from its HTML (app/src/wireframes/S22.tsx). Opened from S3's Clock in
-// when she's outside the shift's home zone (migration 16 places, radius_ft). "Clock in when I arrive" watches her
+// Wireframe S22 "Clock-in blocked", translated from its HTML (app/src/wireframes/S22.tsx). Opened from the shift page's
+// Clock in (S4b) when she's outside the shift's home zone (migration 16 places, radius_ft). "Clock in when I arrive" watches her
 // position while this screen is open and clocks her in at the door. "Starting somewhere else?" asks the parents
 // (migration 17); once one says yes she can clock in here. Running late opens S21.
 // Not drawn: the waiting / yes / no lines on "Starting somewhere else?" and the yes-state tap that clocks in.
@@ -53,7 +53,9 @@ export default function ClockInBlocked() {
     try {
       const mode = await clockInShift(shift.id);
       if (mode === 'denied') Alert.alert('Location is off', 'The family can’t see the map until you allow location for BabyBadger in Settings.');
-      router.replace(`/sitter/shift/${shift.id}`);
+      // Back to the shift page (S4b), which now shows the shift running (S4).
+      if (router.canGoBack()) router.back();
+      else router.replace(`/sitter/shift/${shift.id}`);
     } catch (e) {
       clocking.current = false;
       if (/house rules/i.test(errorText(e))) return router.push(`/sitter/rules/${shift.family_id}`);
@@ -100,10 +102,10 @@ export default function ClockInBlocked() {
 
   if (!bundle || !places) return error ? <Screen title="Clock in" back><ErrorText>{error}</ErrorText></Screen> : <Loading />;
   if (!home || home.lat == null || home.lng == null) {
-    // No home with a map position: nothing to check (S3 clocks in directly); only reached from an old link.
+    // No home with a map position: nothing to check (S4b clocks in directly); only reached from an old link.
     return (
       <Screen title="Clock in" back>
-        <Text style={st.body}>This family hasn’t saved their home on the map yet, so you can clock in from Home.</Text>
+        <Text style={st.body}>This family hasn’t saved their home on the map yet, so you can clock in from the shift page.</Text>
       </Screen>
     );
   }

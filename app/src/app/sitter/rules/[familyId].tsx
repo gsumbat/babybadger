@@ -59,7 +59,7 @@ export default function SitterHouseRules() {
       footer={
         <View style={{ gap: 2 }}>
           <Button label="Agree and continue" onPress={accept} busy={busy} disabled={!agree} />
-          <Pressable accessibilityRole="button" onPress={() => router.push(`/sitter/messages?family=${familyId}`)} style={st.ask}>
+          <Pressable accessibilityRole="button" onPress={() => router.push(`/sitter/thread/${familyId}`)} style={st.ask}>
             <Text style={st.askText}>Ask {parent} about a rule</Text>
           </Pressable>
         </View>

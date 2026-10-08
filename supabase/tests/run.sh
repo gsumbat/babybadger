@@ -47,4 +47,5 @@ $P -d t -f migrations/20261006000029_sitter_growth.sql
 $P -d t -f migrations/20261006000030_family_members.sql
 $P -d t -f migrations/20261006000031_requirement_requests.sql
 $P -d t -f migrations/20261006000032_family_seats.sql
+$P -d t -f migrations/20261006000033_parent_phone.sql
 $P -d t -f tests/rls_scenarios.sql

@@ -45,7 +45,8 @@ function TimeChip({ label, on, onPress }: { label: string; on: boolean; onPress?
 }
 
 /** S21's bottom sheet: dimmed screen behind, white sheet with a grabber. */
-function Sheet({ open, onClose, children }: { open: boolean; onClose: () => void; children: ReactNode }) {
+/** The bottom sheet of S21 / P12p: dimmed background, white sheet with a grabber. */
+export function Sheet({ open, onClose, children }: { open: boolean; onClose: () => void; children: ReactNode }) {
   return (
     <Modal visible={open} transparent animationType="fade" onRequestClose={onClose}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>

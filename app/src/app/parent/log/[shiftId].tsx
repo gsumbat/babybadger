@@ -90,7 +90,7 @@ export default function ShiftLog() {
   }
 
   const message = (
-    <Button label={`Message ${name}`} kind="tonal" onPress={() => router.push({ pathname: '/parent/messages', params: { sitter: shift.sitter_id } })} style={st.half} />
+    <Button label={`Message ${name}`} kind="tonal" onPress={() => router.push(`/parent/thread/${shift.sitter_id}`)} style={st.half} />
   );
   return (
     <Screen

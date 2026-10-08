@@ -2,6 +2,7 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { hasDetails, normalizeCareItem } from './care-plan';
+import type { FamilyContact } from './family-page-logic';
 import { supabase } from './supabase';
 import type { CareItemInput, Invite, Kid, LocationPoint, LogEntry, Profile, Shift, SitterLink, Task } from './types';
 
@@ -88,6 +89,19 @@ export const api = {
     const links = must(await supabase.from('family_parents').select('user_id').eq('family_id', familyId)) as { user_id: string }[];
     const ids = links.map((l) => l.user_id);
     return ids.length ? (must(await supabase.from('profiles').select('id, full_name, role').in('id', ids)) as Profile[]) : [];
+  },
+  /** The family's adults with their phones (S10 PARENTS; migration 33): for family members and sitters who signed the
+   * notice. Throws before migration 33 runs. */
+  async familyContacts(familyId: string) {
+    return must(await supabase.rpc('family_contacts', { p_family: familyId })) as FamilyContact[];
+  },
+  /** Settings › Account › Phone (P12b / P12p, migration 33): her own number, null when none. */
+  async myPhone() {
+    return (must(await supabase.rpc('my_phone')) as string | null) ?? null;
+  },
+  /** Saves (or clears with '') her number; the database checks it looks like a phone number. */
+  async setMyPhone(phone: string) {
+    return (must(await supabase.rpc('set_my_phone', { p_phone: phone })) as string | null) ?? null;
   },
   /** Care plan (P7): every item in the family, whole-family tasks and each kid's day. */
   async careItems(familyId: string) {

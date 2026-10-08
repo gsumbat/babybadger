@@ -95,7 +95,7 @@ export default function SitterProfile() {
       footer={
         <>
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <Button label="Message" kind={parent ? 'tonal' : undefined} onPress={() => router.push('/parent/messages')} style={parent ? st.half : { flex: 1 }} />
+            <Button label="Message" kind={parent ? 'tonal' : undefined} onPress={() => router.push(`/parent/thread/${id}`)} style={parent ? st.half : { flex: 1 }} />
             {parent ? <Button label="Book a shift" onPress={() => router.push({ pathname: '/parent/shift/new', params: { sitter: id } })} style={st.half} /> : null}
           </View>
           {parent ? (

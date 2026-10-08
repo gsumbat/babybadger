@@ -1,25 +1,27 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 
-import { SafetyBox, TaskRows } from '@/components/bits';
-import { ExtendRequestCard } from '@/components/timing';
+import { kidShade, SafetyBox, TaskRows } from '@/components/bits';
+import { ExtendRequestCard, RunningLateSheet } from '@/components/timing';
 import { LogTimeline } from '@/components/LogTimeline';
 import { Banner, Button, Card, ChoicePill, ErrorText, Field, Icon, type IconName, Loading, Screen } from '@/components/ui';
-import { api, useQuery, useShiftLive } from '@/lib/data';
+import { api, type ShiftBundle, useQuery, useShiftLive } from '@/lib/data';
 import { firstName, timeOf } from '@/lib/format';
-import { rulesApi, shiftRuleRows } from '@/lib/house-rules';
+import { type HouseRule, rulesApi, rulesLabel, shiftRuleRows, sitterRulesState } from '@/lib/house-rules';
+import { ageInMonths, ageLabel } from '@/lib/kid-profile';
 import { lovedLogs, openPhotoRequest, shortClock, useShiftReactions } from '@/lib/shift-log';
 import { type SharingMode, startSharing, stopSharing } from '@/lib/location-sharing';
 import { useSession } from '@/lib/session';
 import { formatClock, workedMinutes } from '@/lib/shift-logic';
 import { timingApi, usePendingExtension } from '@/lib/shift-timing';
-import { isOpenTrip, placesOrEmpty, tripDest, tripsApi, useShiftTrips } from '@/lib/trips';
+import { checkClockInZone, clockInShift, isOpenTrip, placesOrEmpty, tripDest, tripsApi, useShiftTrips } from '@/lib/trips';
+import { canReportLate, clockInButton, clockInStep, shiftDayLabel, spanLabel } from '@/lib/shift-page-logic';
 import { nextShiftAfter } from '@/lib/shift-timing-logic';
 import { errorText, supabase } from '@/lib/supabase';
-import type { LogKind } from '@/lib/types';
+import type { Kid, LogKind } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
@@ -40,7 +42,8 @@ const BELL = '<svg viewBox="0 0 24 24" fill="none" stroke="#7A4E0E" stroke-width
 // Checkbox tick from the wireframes (2.6 stroke).
 const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-// Wireframes S4 (on shift) and S9 (wrap up the shift).
+// Wireframes S4b / S4c (before the shift: Clock in lives here), S4 (on shift) and S9 (wrap up the shift). Home (S3)
+// only shows the shift and opens this page. Completed and cancelled shifts keep a plain banner screen (not drawn).
 export default function SitterShift() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { sitterLinks } = useSession();
@@ -121,10 +124,13 @@ export default function SitterShift() {
         : router.push({ pathname: '/sitter/trip/[shiftId]', params: { shiftId: shift.id } })
       : router.push({ pathname: '/sitter/log/[shiftId]', params: { shiftId: shift.id, kind } });
 
+  // Before clock-in: S4b / S4c on this same route (clock in only happens here; Home just opens it).
+  if (shift.status === 'scheduled') return <BeforeShift bundle={bundle} family={family} parent={parent} rules={rules ?? []} reload={reload} />;
+
   if (shift.status !== 'active')
     return (
       <Screen title={family} subtitle={`${timeOf(shift.starts_at)} – ${timeOf(shift.ends_at)}`} back>
-        <Banner icon="info">{shift.status === 'completed' ? `Shift ended at ${timeOf(shift.clock_out_at!)}. Location sharing is off.` : shift.status === 'scheduled' ? 'Clock in from Home, up to 15 minutes before the start. Your location isn’t shared before then.' : 'This shift was cancelled.'}</Banner>
+        <Banner icon="info">{shift.status === 'completed' ? `Shift ended at ${timeOf(shift.clock_out_at!)}. Location sharing is off.` : 'This shift was cancelled.'}</Banner>
         <SafetyBox kids={kids} />
         {tasks.length > 0 && (
           <Card style={{ paddingVertical: 8 }}>
@@ -327,6 +333,171 @@ export default function SitterShift() {
   );
 }
 
+// S4b list icon (Family details tile) and the S4b clock (Running late? tile, Clock in button), from the wireframe.
+const LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h0M4.5 12h0M4.5 18h0"/></svg>';
+const MESSAGE = '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>';
+const CLOCK = (stroke: string, width = '1.8') => `<svg viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`;
+const SHIELD = '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/></svg>';
+
+/** "Ava, 7" (years), "Mia, 8 mos" under a year (S4b kid rows). */
+function kidAge(k: Kid) {
+  if (!k.birthdate) return k.name;
+  const m = ageInMonths(k.birthdate);
+  return `${k.name}, ${m < 12 ? ageLabel(k.birthdate) : Math.floor(m / 12)}`;
+}
+
+/** Wireframe S4b "Before the shift" (S4c: too early), translated from its HTML (app/src/wireframes/S4b.tsx, S4c.tsx).
+ * Header "Today · The Lee family", the time, the kids; tiles Family details (S10), Message (that family's thread),
+ * Running late? (S21 sheet, until the shift's time has passed); location note; Jen's tasks read-only with times; house
+ * rules (S42), food to avoid, the kids. Clock in: disabled with "Clock in opens at 2:45 PM" / "… on Sat at 9:45 AM"
+ * before the window; otherwise house rules that changed first (S42), then the home zone (S22 when she's away), then
+ * the clock-in, and this same route turns into S4. Not drawn: "agree before you clock in" on the rules strip when they
+ * changed, and the footer line once the shift's time has passed without a clock-in. */
+function BeforeShift({ bundle, family, parent, rules, reload }: { bundle: ShiftBundle; family: string; parent: string; rules: HouseRule[]; reload: () => void }) {
+  const { session } = useSession();
+  const uid = session!.user.id;
+  const { shift, tasks, kids } = bundle;
+  const insets = useSafeAreaInsets();
+  const [now, setNow] = useState(() => new Date());
+  const [busy, setBusy] = useState(false);
+  const [lateOpen, setLateOpen] = useState(false);
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 15_000);
+    return () => clearInterval(t);
+  }, []);
+  const { data: rulesState } = useQuery(() => sitterRulesState(shift.family_id, uid), [shift.family_id, uid]);
+  const button = clockInButton(shift, now);
+  const late = canReportLate(shift, now);
+  const avoid = kids.filter((k) => k.avoid_foods || k.allergies);
+
+  async function clockIn() {
+    setBusy(true);
+    try {
+      const rulesDue = (await sitterRulesState(shift.family_id, uid)).needsAgreement;
+      // Clock-in zone (migrations 16-17): no location (web, permission off) or no home on the map = allowed.
+      const zone = rulesDue ? null : await checkClockInZone(shift).catch(() => null);
+      const step = clockInStep({ rulesDue, away: zone?.kind === 'away' });
+      if (step === 'rules') return router.push(`/sitter/rules/${shift.family_id}`);
+      if (step === 'away') return router.push(`/sitter/clockin/${shift.id}`);
+      const mode = await clockInShift(shift.id);
+      if (mode === 'denied') Alert.alert('Location is off', 'The family can’t see the map until you allow location for BabyBadger in Settings.');
+      reload();
+    } catch (e) {
+      // The database refuses until she agrees to the family's current house rules: open them (S42).
+      if (/house rules/i.test(errorText(e))) return router.push(`/sitter/rules/${shift.family_id}`);
+      Alert.alert('Can’t clock in yet', errorText(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const tiles: { key: string; label: string; xml: string; onPress: () => void }[] = [
+    { key: 'family', label: 'Family details', xml: LIST, onPress: () => router.push(`/sitter/family/${shift.family_id}`) },
+    { key: 'message', label: 'Message', xml: MESSAGE, onPress: () => router.push(`/sitter/thread/${shift.family_id}`) },
+    ...(late ? [{ key: 'late', label: 'Running late?', xml: CLOCK('#47698A'), onPress: () => setLateOpen(true) }] : []),
+  ];
+  const on = button.kind === 'open';
+
+  return (
+    <Screen
+      bleedTop
+      gap={10}
+      footer={
+        <View style={{ gap: 8 }}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !on, busy }}
+            onPress={on && !busy ? clockIn : undefined}
+            style={({ pressed }) => [st.clockIn, !on && st.clockInOff, pressed && on && { opacity: 0.85 }]}>
+            {busy ? <ActivityIndicator color="#FFFFFF" /> : <SvgXml xml={CLOCK(on ? '#FFFFFF' : color.quiet, '2')} width={20} height={20} style={{ flexShrink: 0 }} />}
+            <Text style={[st.clockInText, !on && { color: color.quiet }]}>Clock in</Text>
+          </Pressable>
+          {button.kind === 'too_early' || button.kind === 'ended' ? <Text style={st.opens}>{button.line}</Text> : null}
+        </View>
+      }>
+      <View style={[st.top, { paddingTop: insets.top + 16 }]}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/sitter'))} style={st.topBack}>
+            <Icon name="chevron-left" size={20} tint="#FFFFFF" strokeWidth={2} />
+          </Pressable>
+          <Text style={st.topSmall} numberOfLines={1}>
+            {shiftDayLabel(shift.starts_at, now)} · {family}
+          </Text>
+        </View>
+        <Text style={st.span}>{spanLabel(shift.starts_at, shift.ends_at, true)}</Text>
+        <Text style={st.topSub}>{kids.map((k) => k.name).join(' and ') || 'Kids'}</Text>
+      </View>
+      <View style={st.tiles}>
+        {tiles.map((t) => (
+          <Pressable key={t.key} accessibilityRole="button" onPress={t.onPress} style={({ pressed }) => [st.tile, pressed && { opacity: 0.85 }]}>
+            <SvgXml xml={t.xml} width={24} height={24} style={{ flexShrink: 0 }} />
+            <Text style={st.tileText}>{t.label}</Text>
+          </Pressable>
+        ))}
+      </View>
+      <View style={st.note}>
+        <SvgXml xml={SHIELD} width={20} height={20} style={{ flexShrink: 0 }} />
+        <Text style={st.noteText}>Your location isn’t shared until you clock in.</Text>
+      </View>
+      {tasks.length > 0 && (
+        <View style={[st.taskCard, { paddingBottom: 12 }]}>
+          <View style={st.taskHead}>
+            <Text style={st.taskHeadTitle}>Tasks from {parent}</Text>
+            <Text style={st.taskHeadCount}>
+              {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+            </Text>
+          </View>
+          {tasks.map((t) => (
+            <View key={t.id} style={st.taskRow}>
+              <View style={st.boxOff} />
+              <View style={{ flexShrink: 1 }}>
+                <Text style={st.taskTitle}>{t.title}</Text>
+                {t.due_at ? <Text style={st.taskSub}>{timeOf(t.due_at)}</Text> : null}
+              </View>
+            </View>
+          ))}
+          <View style={st.tickNote}>
+            <Text style={st.tickNoteText}>You can tick them off after you clock in.</Text>
+          </View>
+        </View>
+      )}
+      {rules.length > 0 && (
+        <Pressable accessibilityRole="button" onPress={() => router.push(`/sitter/rules/${shift.family_id}`)} style={st.rules}>
+          <SvgXml xml={BELL} width={20} height={20} style={{ flexShrink: 0 }} />
+          <Text style={st.rulesText}>
+            <Text style={st.rulesBold}>House rules</Text> · {rulesState?.needsAgreement ? 'agree before you clock in' : rulesLabel(rules.length)}
+          </Text>
+          <Icon name="chevron-right" size={18} tint={color.warnInk} />
+        </Pressable>
+      )}
+      {avoid.map((k) => (
+        <View key={k.id} style={st.avoid}>
+          <Text style={st.avoidText}>
+            <Text style={st.avoidBold}>{k.name} · food to avoid: </Text>
+            {[k.avoid_foods, k.allergies && `allergic to ${k.allergies}`].filter(Boolean).join(' · ')}
+          </Text>
+        </View>
+      ))}
+      {kids.length > 0 && (
+        <View style={st.kidsCard}>
+          {kids.map((k, i) => (
+            <View key={k.id} style={[st.kidRow, i < kids.length - 1 && st.kidLine]}>
+              <View style={[st.kidDot, { backgroundColor: kidShade(k.color) }]}>
+                <Text style={st.kidLetter}>{k.name[0]?.toUpperCase()}</Text>
+              </View>
+              <View style={{ flexShrink: 1 }}>
+                <Text style={st.kidName}>{kidAge(k)}</Text>
+                {((sub) => (sub ? <Text style={st.kidSub}>{sub}</Text> : null))([k.health_notes, k.comfort_item && `comfort: ${k.comfort_item}`, k.notes].filter(Boolean).join(' · '))}
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+      {late && <RunningLateSheet open={lateOpen} onClose={() => setLateOpen(false)} onCancelled={() => router.replace('/sitter')} shift={shift} family={family} tasks={tasks} />}
+    </Screen>
+  );
+}
+
 const st = StyleSheet.create({
   // values below come from wireframe S4
   top: { backgroundColor: color.primary, marginHorizontal: -20, marginTop: -4, paddingHorizontal: 20, paddingBottom: 56, gap: 6 },
@@ -367,6 +538,25 @@ const st = StyleSheet.create({
   clockOut: { height: 52, borderRadius: 999, borderWidth: 1.5, borderColor: color.primary, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   clockOutText: { fontFamily: font.displayBold, fontSize: 17, color: color.primary },
   cardTitle: { fontFamily: font.bodyBold, fontSize: 16, color: color.ink },
+  // S4b / S4c values
+  topBack: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255, 255, 255, 0.18)', alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  span: { fontFamily: font.display, fontSize: 36, color: '#FFFFFF', marginVertical: -6.84 },
+  note: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: color.primaryTint, borderRadius: 12 },
+  noteText: { fontFamily: font.body, fontSize: 14, color: color.primaryStrong, flexShrink: 1 },
+  boxOff: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: '#DDE3EA', backgroundColor: color.canvas, flexShrink: 0 },
+  tickNote: { paddingTop: 6, borderTopWidth: 1, borderTopColor: color.divider },
+  tickNoteText: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
+  kidsCard: { paddingVertical: 4, paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
+  kidRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52 },
+  kidLine: { borderBottomWidth: 1, borderBottomColor: color.divider },
+  kidDot: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  kidLetter: { fontFamily: font.bodyBold, fontSize: 15, color: '#FFFFFF' },
+  kidName: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
+  kidSub: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
+  clockIn: { height: 52, borderRadius: 999, backgroundColor: color.primary, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+  clockInOff: { backgroundColor: '#DDE3EA' },
+  clockInText: { fontFamily: font.displayBold, fontSize: 17, color: '#FFFFFF' },
+  opens: { fontFamily: font.body, fontSize: 13, color: color.ink2, textAlign: 'center' },
   // S9 values
   workedCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   workedLabel: { fontFamily: font.body, fontSize: 13, color: color.ink2 },

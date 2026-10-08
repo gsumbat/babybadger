@@ -94,7 +94,7 @@ export default function RequestScreen() {
         gap={14}
         footer={
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <PillButton kind="tint" label={`Message ${first}`} onPress={() => router.push({ pathname: '/parent/messages', params: { sitter: sid } })} />
+            <PillButton kind="tint" label={`Message ${first}`} onPress={() => router.push(`/parent/thread/${sid}`)} />
             <PillButton label="Done" onPress={() => router.navigate('/parent/calendar')} />
           </View>
         }>

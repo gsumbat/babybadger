@@ -3118,4 +3118,98 @@ do $$ begin
 end $$;
 reset role;
 
+-- 33. Parent phones (migration 33): nobody reads profiles.phone from the table; family_contacts gives the family's
+-- adults (with phones) to its members (full access and read only) and to sitters who signed the notice, no one else.
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a3301', 'pam33@example.com'),
+  ('00000000-0000-0000-0000-0000000a3302', 'sky33@example.com'),
+  ('00000000-0000-0000-0000-0000000a3303', 'nia33@example.com'),
+  ('00000000-0000-0000-0000-0000000a3304', 'gus33@example.com'),
+  ('00000000-0000-0000-0000-0000000a3305', 'dan33@example.com');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3301');
+insert into ctx values ('fam33', (select public.create_family('The Pine family', 'Pam Pine')::text));
+insert into ctx values ('code33a', (select public.create_invite((select v::uuid from ctx where k = 'fam33'), 'Sky')));
+insert into ctx values ('code33b', (select public.create_invite((select v::uuid from ctx where k = 'fam33'), 'Nia')));
+do $$ begin
+  if public.set_my_phone(' (813) 555-0142 ') <> '(813) 555-0142' then raise exception 'FAIL set phone'; end if;
+  if public.my_phone() <> '(813) 555-0142' then raise exception 'FAIL my_phone'; end if;
+  perform pg_temp.must_fail($q$select public.set_my_phone('call me')$q$, 'Enter a phone number%');
+  perform pg_temp.must_fail($q$select public.set_my_phone('12345')$q$, 'Enter a phone number%');
+  perform pg_temp.must_fail($q$select public.set_my_phone('+1 813 555 0142 0000 99')$q$, 'Enter a phone number%');
+  -- the column itself isn't readable, not even her own; the rest of the row is
+  perform pg_temp.must_fail($q$select phone from profiles where id = auth.uid()$q$, 'permission denied%');
+  perform pg_temp.must_fail($q$select * from profiles where id = auth.uid()$q$, 'permission denied%');
+  if (select full_name from profiles where id = auth.uid()) <> 'Pam Pine' then raise exception 'FAIL profile columns lost'; end if;
+end $$;
+-- Sky accepts and signs; Nia only accepts (no notice yet)
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3302');
+select public.accept_invite((select v from ctx where k = 'code33a'), 'Sky Lane');
+select public.sign_consent((select v::uuid from ctx where k = 'fam33'), 'Sky Lane', 'notice-1.0', 'terms-1.0');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3303');
+select public.accept_invite((select v from ctx where k = 'code33b'), 'Nia Ross');
+-- Dan joins as a read-only member (helper) with his own phone; Gus is in no family
+reset role;
+insert into profiles (id, full_name, role) values ('00000000-0000-0000-0000-0000000a3305', 'Dan Pine', 'parent') on conflict (id) do update set full_name = excluded.full_name;
+insert into family_parents (family_id, user_id, role, relation) select v::uuid, '00000000-0000-0000-0000-0000000a3305', 'helper', 'Dad' from ctx where k = 'fam33';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3305');
+select public.set_my_phone('813.555.0199');
+do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam33'); n int; begin
+  -- read-only member: sees both adults, owner first
+  select count(*) into n from public.family_contacts(fid);
+  if n <> 2 then raise exception 'FAIL helper sees % contacts', n; end if;
+  if (select full_name || '|' || phone from public.family_contacts(fid) limit 1) <> 'Pam Pine|(813) 555-0142' then raise exception 'FAIL owner first'; end if;
+  perform pg_temp.must_fail($q$select phone from profiles$q$, 'permission denied%');
+end $$;
+-- full-access member (the owner) sees Dan's phone too
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3301');
+do $$ begin
+  if (select phone from public.family_contacts((select v::uuid from ctx where k = 'fam33')) where relation = 'Dad') <> '813.555.0199' then raise exception 'FAIL owner reads Dan''s phone'; end if;
+end $$;
+-- the signed sitter gets names, relations and phones; she still can't read the column
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3302');
+do $$ declare fid uuid := (select v::uuid from ctx where k = 'fam33'); begin
+  if (select string_agg(full_name || ':' || coalesce(phone, '-'), ',') from public.family_contacts(fid)) <> 'Pam Pine:(813) 555-0142,Dan Pine:813.555.0199' then
+    raise exception 'FAIL sitter contacts %', (select string_agg(full_name || ':' || coalesce(phone, '-'), ',') from public.family_contacts(fid)); end if;
+  perform pg_temp.must_fail($q$select phone from profiles where id = '00000000-0000-0000-0000-0000000a3301'$q$, 'permission denied%');
+  if (select full_name from profiles where id = '00000000-0000-0000-0000-0000000a3301') <> 'Pam Pine' then raise exception 'FAIL sitter lost parent names'; end if;
+  -- not for a family she doesn't sit for
+  perform pg_temp.must_fail(format('select * from public.family_contacts(%L)', (select v from ctx where k = 'fam30')), 'not allowed');
+end $$;
+-- the sitter who hasn't signed the notice, a stranger and signed-out callers get nothing
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3303');
+do $$ begin
+  perform pg_temp.must_fail(format('select * from public.family_contacts(%L)', (select v from ctx where k = 'fam33')), 'not allowed');
+  perform pg_temp.must_fail($q$select phone from profiles$q$, 'permission denied%');
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3304');
+do $$ begin
+  perform pg_temp.must_fail(format('select * from public.family_contacts(%L)', (select v from ctx where k = 'fam33')), 'not allowed');
+  perform pg_temp.must_fail($q$select public.family_contacts(null)$q$, 'not allowed');
+end $$;
+reset role;
+set role anon;
+do $$ begin
+  begin perform public.family_contacts((select v::uuid from ctx where k = 'fam33')); raise exception 'FAIL anon reads contacts'; exception when insufficient_privilege then null; end;
+  begin perform public.set_my_phone('8135550142'); raise exception 'FAIL anon sets a phone'; exception when insufficient_privilege then null; end;
+end $$;
+reset role;
+-- a removed sitter loses them
+update family_sitters set status = 'removed' where sitter_id = '00000000-0000-0000-0000-0000000a3302';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3302');
+do $$ begin
+  perform pg_temp.must_fail(format('select * from public.family_contacts(%L)', (select v from ctx where k = 'fam33')), 'not allowed');
+end $$;
+-- clearing works
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3301');
+do $$ begin
+  if public.set_my_phone('  ') is not null then raise exception 'FAIL clear phone'; end if;
+end $$;
+do $$ begin
+  if public.my_phone() is not null then raise exception 'FAIL phone still there'; end if;
+end $$;
+reset role;
+
 select 'ALL RLS SCENARIOS PASSED' as result;
