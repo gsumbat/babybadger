@@ -13,6 +13,7 @@ import { inviteApi } from '@/lib/invites';
 import { startSharing } from '@/lib/location-sharing';
 import { availabilityApi } from '@/lib/availability';
 import { calendarFit, requestWindow, requestsApi, sitterRowSub, sitterRowTitle, timeLeft } from '@/lib/pool-requests';
+import { askedLine, requirementRequestsApi, waitingOnHer } from '@/lib/requirement-requests-api';
 import { useSession } from '@/lib/session';
 import { clockInState, formatClock } from '@/lib/shift-logic';
 import { errorText, supabase } from '@/lib/supabase';
@@ -22,7 +23,7 @@ import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframes S3 (shift today), S3b (no shift today) and S3d (nothing booked), translated from their HTML
-// (app/src/wireframes/S3*.tsx). "Running late?" opens S21 before clock-in. Needs you lists pool requests waiting for her answer (S3's "Lee family asks for Sat 6 – 10 PM" row, opens S33 / S20). New family invites sent to her email (S0e) are listed first and open S1. Left out until built: other Needs-you items, earnings and
+// (app/src/wireframes/S3*.tsx). "Running late?" opens S21 before clock-in. Needs you lists pool requests waiting for her answer (S3's "Lee family asks for Sat 6 – 10 PM" row, opens S33 / S20). New family invites sent to her email (S0e) are listed first and open S1; then what families asked her to share (S3f's "The Lee family asked for: …" row, opens S53). Left out until built: other Needs-you items, earnings and
 // payout and most tools. Clock in checks the home zone first (S22 when she isn't there yet). Availability and Time off (tools, S3d's "Set your availability") open S11.
 // Times follow the wireframe: "3:00 – 7:00 PM" on the today card, "7:30 – 10 PM" elsewhere.
 export default function SitterHome() {
@@ -55,7 +56,10 @@ export default function SitterHome() {
   // New family invites sent to her email (S0e, migration 28): listed until she answers; each opens S1 (/i/<token>).
   const { data: invites } = useQuery(() => inviteApi.mine(), [uid]);
   const newInvites = invites ?? [];
-  const needCount = newInvites.length + asks.length + needsConsent.length + needsRules.length;
+  // What families asked her to share (S53, migration 31): one row per family, "The Lee family asked for: …".
+  const { data: reqGroups } = useQuery(() => requirementRequestsApi.mine(), [uid]);
+  const famAsks = (reqGroups ?? []).map((g) => ({ g, open: waitingOnHer(g.requests) })).filter((x) => x.open.length);
+  const needCount = newInvites.length + famAsks.length + asks.length + needsConsent.length + needsRules.length;
   const active = shifts?.find((s) => s.status === 'active');
   const upcoming = (shifts ?? []).filter((s) => s.status === 'scheduled' && new Date(s.ends_at).getTime() > now);
   const next = upcoming[0];
@@ -170,7 +174,7 @@ export default function SitterHome() {
                 key={`inv-${inv.link_token}`}
                 accessibilityRole="button"
                 onPress={() => router.push({ pathname: '/i/[token]', params: { token: inv.link_token } })}
-                style={[st.needRow, (i < newInvites.length - 1 || asks.length + needsRules.length + needsConsent.length > 0) && st.line]}>
+                style={[st.needRow, (i < newInvites.length - 1 || famAsks.length + asks.length + needsRules.length + needsConsent.length > 0) && st.line]}>
                 <View style={[st.needIcon, { backgroundColor: color.primaryTint }]}>
                   <Icon name="users" size={20} tint={color.primaryStrong} />
                 </View>
@@ -179,6 +183,24 @@ export default function SitterHome() {
                   <Text style={st.needSub} numberOfLines={1}>
                     {inv.family_name}
                     {inv.kids ? ` · ${inv.kids}` : ''} · Tap to review
+                  </Text>
+                </View>
+                <Icon name="chevron-right" size={18} tint={color.ink2} />
+              </Pressable>
+            ))}
+            {famAsks.map(({ g, open }, i) => (
+              <Pressable
+                key={`ask-${g.family_id}`}
+                accessibilityRole="button"
+                onPress={() => router.push('/sitter/requests')}
+                style={[st.needRow, (i < famAsks.length - 1 || asks.length + needsRules.length + needsConsent.length > 0) && st.line]}>
+                <View style={[st.needIcon, { backgroundColor: color.warnTint }]}>
+                  <Icon name="file-text" size={20} tint={color.warnInk} />
+                </View>
+                <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
+                  <Text style={st.needTitle}>{askedLine(g.family_name, open.map((q) => q.title))}</Text>
+                  <Text style={st.needSub} numberOfLines={1}>
+                    Share what you have · Tap to answer
                   </Text>
                 </View>
                 <Icon name="chevron-right" size={18} tint={color.ink2} />

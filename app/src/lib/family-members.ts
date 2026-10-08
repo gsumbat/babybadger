@@ -57,6 +57,75 @@ export function can(role: MemberRole | null | undefined, action: FamilyAction) {
   return true;
 }
 
+/** Parent-only screens can be changed by this role (kids, the care plan, rules, places, bookings, sitters). */
+export function canManage(role: MemberRole | null | undefined) {
+  return can(role, 'edit_family');
+}
+
+// ---------------------------------------------------------------- read-only screens for a family helper
+/** The parents' first names, in order ("Jen", "Sam"). */
+export function parentFirstNames(members: Pick<Member, 'role' | 'name'>[]) {
+  return members.filter((m) => m.role === 'parent').map((m) => first(m.name)).filter(Boolean);
+}
+
+/**
+ * The calm read-only line a helper sees where a parent has an Add or Edit button: "Jen manages the care plan.",
+ * "Jen and Sam manage the care plan." Without names (not loaded yet, or no parent found): "Only parents can change this."
+ */
+export function managedByLine(parents: string[], what: string) {
+  const n = parents.map((x) => x.trim()).filter(Boolean);
+  if (!n.length) return 'Only parents can change this.';
+  const who = n.length === 1 ? n[0] : `${n.slice(0, -1).join(', ')} and ${n[n.length - 1]}`;
+  return `${who} ${n.length === 1 ? 'manages' : 'manage'} ${what}.`;
+}
+
+/** A helper looking at a request only a parent answers (P8h trip, P9 clock-in away): "Jen will answer.", "Jen or Sam will answer." */
+export function willAnswerLine(parents: string[]) {
+  const n = parents.map((x) => x.trim()).filter(Boolean);
+  if (!n.length) return 'A parent will answer.';
+  const who = n.length === 1 ? n[0] : `${n.slice(0, -1).join(', ')} or ${n[n.length - 1]}`;
+  return `${who} will answer.`;
+}
+
+/**
+ * Routes only a parent opens (they're behind Stack.Protected in parent/_layout; the database refuses the writes too).
+ * Each maps to the read-only screen a helper lands on instead, e.g. from a push. Order matters: first match wins.
+ */
+const PARENT_ONLY: { test: RegExp; to: (m: RegExpExecArray, query: URLSearchParams) => string }[] = [
+  { test: /^\/parent\/kid\/new$/, to: (_m, q) => (q.get('id') ? `/parent/kid/${q.get('id')}` : '/parent') },
+  { test: /^\/parent\/care\/item$/, to: () => '/parent/care' },
+  { test: /^\/parent\/places\/(new|[^/]+)$/, to: () => '/parent/places' },
+  { test: /^\/parent\/rules\/(add|rule)$/, to: () => '/parent/rules' },
+  { test: /^\/parent\/shift\/new$/, to: () => '/parent/calendar' },
+  { test: /^\/parent\/(invite|invite\/[^/]+|sitter-list|pool|pool-ask|pool-week|request\/[^/]+|requirements|requirements\/[^/]+)$/, to: () => '/parent/sitters' },
+  { test: /^\/parent\/members\/invite$/, to: () => '/parent/members' },
+  { test: /^\/parent\/(plans|trial-started|subscription|cancel)$/, to: () => '/parent/settings' },
+  { test: /^\/parent\/setup$/, to: () => '/parent' },
+];
+
+function splitUrl(url: string) {
+  const i = url.indexOf('?');
+  const path = (i < 0 ? url : url.slice(0, i)).replace(/\/+$/, '') || '/';
+  return { path, query: new URLSearchParams(i < 0 ? '' : url.slice(i + 1)) };
+}
+
+/** Is this a parent-only screen ("/parent/care/item?id=…", "/parent/request/abc")? */
+export function isParentOnlyRoute(url: string) {
+  const { path } = splitUrl(url);
+  return PARENT_ONLY.some((r) => r.test.test(path));
+}
+
+/** Where a tap on a push (data.url) takes this role: the url itself, or a helper's read-only screen for a parent-only one. */
+export function routeForRole(url: string, role: MemberRole | null | undefined) {
+  if (canManage(role)) return url;
+  const { path, query } = splitUrl(url);
+  for (const r of PARENT_ONLY) {
+    const m = r.test.exec(path);
+    if (m) return r.to(m, query);
+  }
+  return url;
+}
+
 // ---------------------------------------------------------------- members and invites (family_members RPC)
 export type Member = {
   user_id: string;

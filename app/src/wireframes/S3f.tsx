@@ -13,6 +13,8 @@ const SVG = [
   "<svg width=\"22\" height=\"22\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M4 5h16v11H9l-5 4z\"></path></svg>",
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #34526E; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"9\" cy=\"8\" r=\"3.5\"></circle><path d=\"M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5M16 4.8a3.5 3.5 0 0 1 0 6.4M18.5 14.8c1.8.7 3 2.3 3 4.7\"></path></svg>",
   "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #4B5960; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M9 6l6 6-6 6\"></path></svg>",
+  "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #7A4E0E; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M7 3h7l4 4v14H7z\"></path><path d=\"M14 3v4h4M10 12h5M10 16h5\"></path></svg>",
+  "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #4B5960; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M9 6l6 6-6 6\"></path></svg>",
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #7A4E0E; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><circle cx=\"12\" cy=\"9\" r=\"5.5\"></circle><path d=\"M8.5 13.5L7 21l5-2.5 5 2.5-1.5-7.5\"></path></svg>",
   "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #4B5960; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M9 6l6 6-6 6\"></path></svg>",
   "<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" style=\"flex-shrink: 0; fill: none; stroke: #47698A; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"></rect><path d=\"M3 10h18M8 3v4M16 3v4\"></path></svg>",
@@ -75,7 +77,7 @@ export default function WF_S3f() {
         </View>
         <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>NEEDS YOU</Text>
-          <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", flexShrink: 1 }}>4</Text>
+          <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", flexShrink: 1 }}>5</Text>
         </View>
         <View style={{ paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, flexDirection: "column", ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 54, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>{/* -> S1-Invite.dc.html */}
@@ -88,35 +90,45 @@ export default function WF_S3f() {
             </View>
             <SvgXml xml={SVG[4]} width={18} height={18} />
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 54, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>{/* -> S41-CertDetail.dc.html */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 54, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>{/* -> S53-Requests.dc.html */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#F6E3C6", borderRadius: 12 }}>
               <SvgXml xml={SVG[5]} width={20} height={20} />
+            </View>
+            <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
+              <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328", lineHeight: 19 }}>The Lee family asked for: CPR and First Aid, Infant CPR</Text>
+              <View style={{ overflow: "hidden", flexShrink: 1, minHeight: 0, justifyContent: "center" }}><Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 16 }}>Share what you have · Tap to answer</Text></View>
+            </View>
+            <SvgXml xml={SVG[6]} width={18} height={18} />
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 54, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>{/* -> S41-CertDetail.dc.html */}
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#F6E3C6", borderRadius: 12 }}>
+              <SvgXml xml={SVG[7]} width={20} height={20} />
             </View>
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328", lineHeight: 19 }}>Infant CPR expires in 21 days</Text>
               <View style={{ overflow: "hidden", flexShrink: 1, minHeight: 0, justifyContent: "center" }}><Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 16 }}>Renew to keep your badge · Lee family requires it</Text></View>
             </View>
-            <SvgXml xml={SVG[6]} width={18} height={18} />
+            <SvgXml xml={SVG[8]} width={18} height={18} />
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 54, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>{/* -> S20-ShiftRequest.dc.html */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 12 }}>
-              <SvgXml xml={SVG[7]} width={20} height={20} />
+              <SvgXml xml={SVG[9]} width={20} height={20} />
             </View>
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328", lineHeight: 19 }}>Lee family asks for Sat 6 – 10 PM</Text>
               <View style={{ overflow: "hidden", flexShrink: 1, minHeight: 0, justifyContent: "center" }}><Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 16 }}>Overlaps your time off · answer by Fri</Text></View>
             </View>
-            <SvgXml xml={SVG[8]} width={18} height={18} />
+            <SvgXml xml={SVG[10]} width={18} height={18} />
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 54 }}>{/* -> S32-InvoiceStatus.dc.html */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#E8ECF1", borderRadius: 12 }}>
-              <SvgXml xml={SVG[9]} width={20} height={20} />
+              <SvgXml xml={SVG[11]} width={20} height={20} />
             </View>
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328", lineHeight: 19 }}>Ortiz invoice unpaid for 5 days</Text>
               <View style={{ overflow: "hidden", flexShrink: 1, minHeight: 0, justifyContent: "center" }}><Text numberOfLines={1} style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 16 }}>$75 · send a reminder</Text></View>
             </View>
-            <SvgXml xml={SVG[10]} width={18} height={18} />
+            <SvgXml xml={SVG[12]} width={18} height={18} />
           </View>
         </View>
         <View style={{ flexDirection: "column", backgroundColor: "#FFFFFF", borderRadius: 18, ...cardShadow }}>{/* -> S7-Pay.dc.html */}
@@ -141,39 +153,39 @@ export default function WF_S3f() {
         <View style={{ flexDirection: "column", gap: 8 }}>
           <View style={{ flexDirection: "row", gap: 8 }}>
             <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 62, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 16, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> S11-Availability.dc.html */}
-              <SvgXml xml={SVG[11]} width={22} height={22} />
+              <SvgXml xml={SVG[13]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Availability</Text>
             </View>
             <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 62, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 16, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> S11-Availability.dc.html */}
-              <SvgXml xml={SVG[12]} width={22} height={22} />
+              <SvgXml xml={SVG[14]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Time off</Text>
             </View>
             <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 62, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 16, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> S31-CreateInvoice.dc.html */}
-              <SvgXml xml={SVG[13]} width={22} height={22} />
+              <SvgXml xml={SVG[15]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>New invoice</Text>
             </View>
             <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 62, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 16, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> S7-Pay.dc.html */}
-              <SvgXml xml={SVG[14]} width={22} height={22} />
+              <SvgXml xml={SVG[16]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Hours and pay</Text>
             </View>
           </View>
           <View style={{ flexDirection: "row", gap: 8 }}>
             <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 62, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 16, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> S14-Credentials.dc.html */}
-              <SvgXml xml={SVG[15]} width={22} height={22} />
+              <SvgXml xml={SVG[17]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Credentials</Text>
               <View style={{ width: 9, height: 9, top: 8, right: 10, backgroundColor: "#B7791F", borderRadius: 5, position: "absolute", flexDirection: "column" }}>
               </View>
             </View>
             <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 62, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 16, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> S40-PersonalDetails.dc.html */}
-              <SvgXml xml={SVG[16]} width={22} height={22} />
+              <SvgXml xml={SVG[18]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>My details</Text>
             </View>
             <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 62, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 16, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> S35-GetFound.dc.html */}
-              <SvgXml xml={SVG[17]} width={22} height={22} />
+              <SvgXml xml={SVG[19]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Get found</Text>
             </View>
             <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, height: 62, paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 16, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> S20-ShiftRequest.dc.html */}
-              <SvgXml xml={SVG[18]} width={22} height={22} />
+              <SvgXml xml={SVG[20]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Requests</Text>
             </View>
           </View>

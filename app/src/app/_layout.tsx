@@ -4,7 +4,7 @@ import { useFonts } from 'expo-font';
 import { Stack, usePathname } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { KeyboardProvider, KeyboardToolbar } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -13,6 +13,7 @@ import { InviteHead } from '@/components/inviteLink';
 import { MemberLinkHead } from '@/components/memberLink';
 import { Loading } from '@/components/ui';
 import '@/lib/location-sharing'; // registers the background location task at startup
+import { routeForRole } from '@/lib/family-members';
 import { listenForAlertTaps, registerForPush } from '@/lib/push';
 import { SessionProvider, useSession } from '@/lib/session';
 import { color } from '@/theme';
@@ -20,7 +21,7 @@ import { color } from '@/theme';
 SplashScreen.preventAutoHideAsync();
 
 function Routes() {
-  const { loading, session, profile, family, sitterLinks } = useSession();
+  const { loading, session, profile, family, familyRole, sitterLinks } = useSession();
   const signedIn = !!session;
   const isParent = signedIn && profile?.role === 'parent' && !!family;
   const isSitter = signedIn && profile?.role === 'sitter' && sitterLinks.length > 0;
@@ -32,11 +33,16 @@ function Routes() {
   const familyLink = path.startsWith('/f/');
   const memberLink = path.startsWith('/m/');
 
-  // Once signed in to a family: the system asks to allow notifications, and tapped alerts open their screen.
+  // Once signed in to a family: the system asks to allow notifications, and tapped alerts open their screen (a family
+  // helper's tap on a parent-only screen opens its read-only view instead).
+  const roleRef = useRef(familyRole);
+  useEffect(() => {
+    roleRef.current = familyRole;
+  }, [familyRole]);
   useEffect(() => {
     if (!ready) return;
     void registerForPush();
-    return listenForAlertTaps();
+    return listenForAlertTaps((url) => routeForRole(url, roleRef.current));
   }, [ready]);
 
   const head = inviteLink ? <InviteHead /> : familyLink ? <FamilyLinkHead /> : memberLink ? <MemberLinkHead /> : null;

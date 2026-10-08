@@ -12,12 +12,12 @@ import { AskToStaySheet, WALK_ICON } from '@/components/timing';
 import { ActionGrid, dayPart, ErrorText, HomeHeader, Icon, type IconName, initialsOf, Screen } from '@/components/ui';
 import { takePlansIntro, usePlan } from '@/lib/billing';
 import { api, useQuery, useShiftLive } from '@/lib/data';
-import { membersApi } from '@/lib/family-members-api';
 import { namesLine } from '@/lib/invite-links';
 import { dayOf, firstName, timeOf } from '@/lib/format';
 import { describeLog, parentHomeState, workedMinutes } from '@/lib/shift-logic';
 import { rulesApi } from '@/lib/house-rules';
 import { useSession } from '@/lib/session';
+import { useParentNames } from '@/lib/use-family-role';
 import { type ShiftTiming, usePendingExtension } from '@/lib/shift-timing';
 import { lateText } from '@/lib/shift-timing-logic';
 import { kv } from '@/lib/storage';
@@ -63,11 +63,9 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
   const helper = familyRole === 'helper';
   const fid = family!.id;
   // P4m's note names the parents ("Jen and Sam manage sitters, pay and the plan").
-  const { data: parentNames } = useQuery(async () => {
-    if (!helper) return '';
-    const list = await membersApi.list(fid, profile!.id).catch(() => null);
-    return namesLine((list?.members ?? []).filter((m) => m.role === 'parent').map((m) => firstName(m.name)));
-  }, [fid, helper]);
+  const parents = useParentNames();
+  // "Jen manages …" / "Jen and Sam manage …" / "The parents manage …" (before the names load).
+  const parentNames = parents.length ? `${namesLine(parents)} ${parents.length === 1 ? 'manages' : 'manage'}` : 'The parents manage';
   const { data, error } = useQuery(async () => {
     // care_items arrives with migration 06; until it's run the care plan step just shows as not done.
     // house_rules arrives with migration 09; same fallback.
@@ -185,7 +183,7 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
         </View>
       ) : null}
       {helper && state && !full ? (
-        <MembersNote>{`You’re a family helper. ${parentNames || 'The parents'} manage sitters, pay and the plan.`}</MembersNote>
+        <MembersNote>{`You’re a family helper. ${parentNames} sitters, pay and the plan.`}</MembersNote>
       ) : null}
     </Screen>
   );

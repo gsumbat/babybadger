@@ -1365,9 +1365,10 @@ do $$ begin
     update sitter_credentials set verified_at = now();
     raise exception 'FAIL sitter verified a certificate';
   exception when insufficient_privilege then null; end;
+  -- (migration 31: she may upload her own background check report, but never mark it verified)
   begin
-    insert into sitter_credentials (sitter_id, kind, title) values (auth.uid(), 'background_check', 'Background check');
-    raise exception 'FAIL sitter wrote her own background check';
+    insert into sitter_credentials (sitter_id, kind, title, verified_at) values (auth.uid(), 'background_check', 'Background check', now());
+    raise exception 'FAIL sitter verified her own background check';
   exception when insufficient_privilege then null; end;
   begin
     insert into sitter_credentials (sitter_id, kind, title) values ('00000000-0000-0000-0000-0000000a1904', 'first_aid', 'CPR');
@@ -1420,7 +1421,8 @@ select pg_temp.as_user('00000000-0000-0000-0000-0000000a1901');
 do $$ declare n int; begin
   if not public.sitter_can_be_seen_by('00000000-0000-0000-0000-0000000a1902') then raise exception 'FAIL parent cannot see her sitter'; end if;
   if (select phone from sitter_profiles where sitter_id = '00000000-0000-0000-0000-0000000a1902') <> '(813) 555-0192' then raise exception 'FAIL parent cannot read sitter details'; end if;
-  if (select count(*) from sitter_credentials) <> 3 then raise exception 'FAIL parent cannot read sitter credentials'; end if;
+  -- migration 31: families read verified credentials and the ones shared with them, not the re-uploaded Infant CPR
+  if (select count(*) from sitter_credentials) <> 2 then raise exception 'FAIL parent reads the wrong sitter credentials'; end if;
   if (select count(*) from sitter_languages) <> 3 then raise exception 'FAIL parent cannot read sitter languages (signed + invited)'; end if;
   update sitter_profiles set bio = 'hacked';
   get diagnostics n = row_count;
@@ -1453,7 +1455,7 @@ update family_sitters set status = 'removed' where sitter_id = '00000000-0000-00
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-0000000a1901');
 do $$ begin
-  if (select count(*) from sitter_credentials) <> 3 then raise exception 'FAIL parent lost a removed sitter''s credentials'; end if;
+  if (select count(*) from sitter_credentials) <> 2 then raise exception 'FAIL parent lost a removed sitter''s credentials'; end if;
 end $$;
 reset role;
 
@@ -1616,7 +1618,8 @@ do $$ declare s text; begin
   select string_agg(reason, ',' order by fr.position) into s
     from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), auth.uid()) st
     join family_requirements fr on fr.id = st.requirement_id;
-  if s <> 'missing,missing,missing,unconfirmed,unreviewed' then raise exception 'FAIL first status: %', s; end if;
+  -- migration 31: nothing counts until a parent asks and taps Looks good
+  if s <> 'not_asked,not_asked,missing,not_asked,not_asked' then raise exception 'FAIL first status: %', s; end if;
   if (select count(*) from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), '00000000-0000-0000-0000-0000000a20c1')) <> 0 then
     raise exception 'FAIL sitter reads someone else''s status'; end if;
   begin
@@ -1651,10 +1654,8 @@ do $$ declare s text; e date; begin
   select string_agg(st.reason, ',' order by fr.position) into s
     from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), auth.uid()) st
     join family_requirements fr on fr.id = st.requirement_id;
-  if s <> 'valid,expiring,speaks,confirmed,unreviewed' then raise exception 'FAIL status with credentials: %', s; end if;
-  select st.expires_on into e from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), auth.uid()) st
-    join family_requirements fr on fr.id = st.requirement_id where fr.key = 'cpr_infant';
-  if e <> current_date + 10 then raise exception 'FAIL expiring date: %', e; end if;
+  -- her certificates don't count by themselves (migration 31); her S27 Yes shares Non-smoker
+  if s <> 'not_asked,not_asked,speaks,shared,not_asked' then raise exception 'FAIL status with credentials: %', s; end if;
 end $$;
 
 -- Rae: reads the same status; with Block booking she can't book Nia until the document is reviewed
@@ -1663,7 +1664,7 @@ select public.sign_consent((select v::uuid from ctx where k = 'rfam'), 'Nia Shaw
 select pg_temp.as_user('00000000-0000-0000-0000-0000000a20a1');
 update families set requirement_mode = 'block' where id = (select v::uuid from ctx where k = 'rfam');
 do $$ begin
-  if (select count(*) filter (where met) from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), '00000000-0000-0000-0000-0000000a20b1')) <> 4 then
+  if (select count(*) filter (where met) from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), '00000000-0000-0000-0000-0000000a20b1')) <> 1 then
     raise exception 'FAIL parent sees a different status'; end if;
   if (select count(*) from family_requirement_checks) <> 1 then raise exception 'FAIL parent cannot read answers'; end if;
   begin
@@ -1681,6 +1682,22 @@ do $$ begin
   exception when insufficient_privilege then null; end;
 end $$;
 insert into family_requirement_checks (requirement_id, sitter_id, answer) select v::uuid, '00000000-0000-0000-0000-0000000a20b1', true from ctx where k = 'rdoc';
+-- migration 31: Rae asks for the two certificates, Nia shares them, Rae says Looks good to them and to Non-smoker
+select public.ask_requirements((select v::uuid from ctx where k = 'rfam'), '00000000-0000-0000-0000-0000000a20b1', array['background_check', 'cpr_infant'], null);
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a20b1');
+select public.share_requirement(q.id, (select id from sitter_credentials where kind = q.req_key and sitter_id = auth.uid() and (expires_on is null or expires_on >= current_date)))
+  from requirement_requests q where q.req_key in ('background_check', 'cpr_infant');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a20a1');
+select public.review_requirement(id, true) from requirement_requests where status = 'shared';
+do $$ declare s text; e date; begin
+  select string_agg(st.reason, ',' order by fr.position) into s
+    from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), '00000000-0000-0000-0000-0000000a20b1') st
+    join family_requirements fr on fr.id = st.requirement_id;
+  if s <> 'valid,expiring,speaks,valid,valid' then raise exception 'FAIL status after Looks good: %', s; end if;
+  select st.expires_on into e from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), '00000000-0000-0000-0000-0000000a20b1') st
+    join family_requirements fr on fr.id = st.requirement_id where fr.key = 'cpr_infant';
+  if e <> current_date + 10 then raise exception 'FAIL expiring date: %', e; end if;
+end $$;
 insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by)
   select v::uuid, '00000000-0000-0000-0000-0000000a20b1', now() + interval '1 day', now() + interval '1 day 3 hours', auth.uid() from ctx where k = 'rfam';
 -- New wording on a self-confirmed requirement clears her answer; the stamp keeps family and key
@@ -1690,7 +1707,7 @@ do $$ begin
   if exists (select 1 from family_requirement_checks where requirement_id = (select v::uuid from ctx where k = 'rsmoke')) then
     raise exception 'FAIL answer kept after the wording changed'; end if;
   if (select reason from public.sitter_requirement_status((select v::uuid from ctx where k = 'rfam'), '00000000-0000-0000-0000-0000000a20b1')
-      where requirement_id = (select v::uuid from ctx where k = 'rsmoke')) <> 'unconfirmed' then raise exception 'FAIL not asked again'; end if;
+      where requirement_id = (select v::uuid from ctx where k = 'rsmoke')) <> 'asked' then raise exception 'FAIL not asked again'; end if;
 end $$;
 reset role;
 
@@ -2740,6 +2757,228 @@ set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-0000000a3001');
 do $$ begin
   if public.resend_member_invite((select id from family_member_invites where link_token = (select v from ctx where k = 'tok30ivy'))) < now() + interval '6 days' then raise exception 'FAIL member resend'; end if;
+end $$;
+reset role;
+
+-- 31. Requirement requests (migration 31, P79 / P79b / P79c / S53 / S53b / S53c / S17d). Pat Oak (parent), Hal Oak
+-- (helper), Sky Day (sitter of the Oak and Elm families), Oz Elm (the other family's parent). Only parents ask and
+-- review; the sitter shares her own matching card (or a confirmation) and can't mark it met; the card is readable by the
+-- Oak family only while shared with them; only Looks good counts; pushes go to the sitter / the parents.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a3101', 'pat31@example.com'),
+  ('00000000-0000-0000-0000-0000000a3102', 'sky31@example.com'),
+  ('00000000-0000-0000-0000-0000000a3103', 'hal31@example.com'),
+  ('00000000-0000-0000-0000-0000000a3104', 'oz31@example.com');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3101');
+insert into ctx values ('fam31', (select public.create_family('The Oak family', 'Pat Oak')::text));
+insert into family_requirements (family_id, key, title, details, level, position)
+  select v::uuid, x.key, x.title, x.details::jsonb, 'must', x.pos from ctx,
+    (values ('background_check', 'Background check', '{"within_months": 12}', 0), ('cpr_first_aid', 'CPR and First Aid', '{}', 1),
+            ('cpr_infant', 'Infant CPR', '{}', 2), ('age_18', 'Age 18 or older', '{"proof": "self"}', 3),
+            ('non_smoker', 'Non-smoker', '{"proof": "self"}', 4)) x(key, title, details, pos)
+  where k = 'fam31';
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3104');
+insert into ctx values ('fam31b', (select public.create_family('The Elm family', 'Oz Elm')::text));
+reset role;
+insert into profiles (id, full_name, role) values ('00000000-0000-0000-0000-0000000a3102', 'Sky Day', 'sitter'), ('00000000-0000-0000-0000-0000000a3103', 'Hal Oak', 'parent')
+  on conflict (id) do update set full_name = excluded.full_name;
+insert into family_parents (family_id, user_id, role, relation) select v::uuid, '00000000-0000-0000-0000-0000000a3103', 'helper', 'Grandpa' from ctx where k = 'fam31';
+insert into family_sitters (family_id, sitter_id, status) select v::uuid, '00000000-0000-0000-0000-0000000a3102', 'active' from ctx where k in ('fam31', 'fam31b');
+insert into push_tokens (token, user_id) values ('ExponentPushToken[pat31]', '00000000-0000-0000-0000-0000000a3101'),
+  ('ExponentPushToken[sky31]', '00000000-0000-0000-0000-0000000a3102'), ('ExponentPushToken[hal31]', '00000000-0000-0000-0000-0000000a3103');
+insert into ctx select 'ola31cred', id::text from sitter_credentials where sitter_id = '00000000-0000-0000-0000-0000000a1902' limit 1;
+set role authenticated;
+-- Sky's cards: a current CPR and First Aid, an expired one, an Infant CPR, and a background check report she uploads
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3102');
+insert into sitter_credentials (sitter_id, kind, title, issued_on, expires_on, file_path) values
+  (auth.uid(), 'first_aid', 'CPR and First Aid', current_date - 100, current_date + 600, auth.uid() || '/cards/fa.jpg'),
+  (auth.uid(), 'first_aid', 'CPR and First Aid', current_date - 900, current_date - 10, auth.uid() || '/cards/old.jpg'),
+  (auth.uid(), 'cpr_infant', 'Infant CPR', current_date - 100, current_date + 600, auth.uid() || '/cards/inf.jpg'),
+  (auth.uid(), 'background_check', 'Background check', current_date - 60, null, auth.uid() || '/cards/report.pdf');
+insert into ctx select 'fa31', id::text from sitter_credentials where file_path like '%/fa.jpg';
+insert into ctx select 'old31', id::text from sitter_credentials where file_path like '%/old.jpg';
+insert into ctx select 'inf31', id::text from sitter_credentials where file_path like '%/inf.jpg';
+insert into ctx select 'bg31', id::text from sitter_credentials where file_path like '%/report.pdf';
+do $$ begin
+  if (select verified_at from sitter_credentials where id = (select v::uuid from ctx where k = 'bg31')) is not null then raise exception 'FAIL uploaded report starts verified'; end if;
+  -- she can't ask, and can't write requests directly
+  perform pg_temp.must_fail($q$select public.ask_requirements((select v::uuid from ctx where k = 'fam31'), auth.uid(), array['cpr_first_aid'])$q$, 'not a parent%');
+  perform pg_temp.must_fail($q$insert into requirement_requests (family_id, sitter_id, req_key, status) select v::uuid, auth.uid(), 'cpr_first_aid', 'met' from ctx where k = 'fam31'$q$, 'permission denied%');
+end $$;
+-- Hal (helper) and Oz (other family) can't ask
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3103');
+do $$ begin
+  perform pg_temp.must_fail($q$select public.ask_requirements((select v::uuid from ctx where k = 'fam31'), '00000000-0000-0000-0000-0000000a3102', array['cpr_first_aid'])$q$, 'not a parent%');
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3104');
+do $$ begin
+  perform pg_temp.must_fail($q$select public.ask_requirements((select v::uuid from ctx where k = 'fam31'), '00000000-0000-0000-0000-0000000a3102', array['cpr_first_aid'])$q$, 'not a parent%');
+end $$;
+-- Pat asks for both CPR cards with a note; Sky gets one push
+reset role;
+delete from net.sent;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3101');
+do $$ begin
+  perform pg_temp.must_fail($q$select public.ask_requirements((select v::uuid from ctx where k = 'fam31'), '00000000-0000-0000-0000-0000000a1902', array['cpr_first_aid'])$q$, 'not your sitter');
+  perform pg_temp.must_fail($q$select public.ask_requirements((select v::uuid from ctx where k = 'fam31'), '00000000-0000-0000-0000-0000000a3102', array['water_safety'])$q$, 'unknown requirement%');
+  perform pg_temp.must_fail($q$select public.ask_requirements((select v::uuid from ctx where k = 'fam31'), '00000000-0000-0000-0000-0000000a3102', array[]::text[])$q$, 'Pick what to ask for.');
+  if public.ask_requirements((select v::uuid from ctx where k = 'fam31'), '00000000-0000-0000-0000-0000000a3102', array['cpr_first_aid', 'cpr_infant'], ' For Mia ') <> 2 then raise exception 'FAIL ask count'; end if;
+  if (select string_agg(req_key || ':' || status || ':' || note, ',' order by req_key) from requirement_requests) <> 'cpr_first_aid:asked:For Mia,cpr_infant:asked:For Mia' then
+    raise exception 'FAIL asked rows'; end if;
+  -- nothing shared yet: Pat can't see her cards or files
+  if (select count(*) from sitter_credentials where sitter_id = '00000000-0000-0000-0000-0000000a3102') <> 0 then raise exception 'FAIL parent reads unshared cards'; end if;
+  if public.can_read_sitter_file('00000000-0000-0000-0000-0000000a3102/cards/fa.jpg') then raise exception 'FAIL parent reads an unshared card photo'; end if;
+end $$;
+reset role;
+do $$ begin
+  if (select count(*) from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[sky31]'
+      and x->>'title' = 'The Oak family asked for CPR and First Aid, Infant CPR' and x->>'body' = 'For Mia' and x->'data'->>'url' = '/sitter/requests') <> 1 then
+    raise exception 'FAIL ask push'; end if;
+  if exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'to' in ('ExponentPushToken[pat31]', 'ExponentPushToken[hal31]')) then raise exception 'FAIL ask pushed the family'; end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+-- Sky sees the request; share must be her own, matching, unexpired card
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3102');
+do $$ declare m jsonb := public.my_requirement_requests(); begin
+  if jsonb_array_length(m) <> 1 or m->0->>'family_name' <> 'The Oak family' or jsonb_array_length(m->0->'requests') <> 2
+     or m->0->'requests'->0->>'title' <> 'CPR and First Aid' or m->0->'requests'->0->'kinds' <> '["first_aid", "cpr_child"]'::jsonb
+     or m->0->'requests'->0->>'asked_by' <> 'Pat' then raise exception 'FAIL my requests %', m; end if;
+  insert into ctx select 'rq31fa', id::text from requirement_requests where req_key = 'cpr_first_aid';
+  insert into ctx select 'rq31inf', id::text from requirement_requests where req_key = 'cpr_infant';
+  perform pg_temp.must_fail($q$select public.share_requirement((select v::uuid from ctx where k = 'rq31fa'), (select v::uuid from ctx where k = 'inf31'))$q$, 'That one isn''t a CPR and First Aid card.');
+  perform pg_temp.must_fail($q$select public.share_requirement((select v::uuid from ctx where k = 'rq31fa'), (select v::uuid from ctx where k = 'ola31cred'))$q$, 'not your credential');
+  perform pg_temp.must_fail($q$select public.share_requirement((select v::uuid from ctx where k = 'rq31fa'), (select v::uuid from ctx where k = 'old31'))$q$, 'That one has expired%');
+  perform pg_temp.must_fail($q$select public.share_requirement((select v::uuid from ctx where k = 'rq31fa'))$q$, 'Pick one of your certificates to share.');
+  perform public.share_requirement((select v::uuid from ctx where k = 'rq31fa'), (select v::uuid from ctx where k = 'fa31'), 'Renewed in June');
+  if (select status || ':' || sitter_note from requirement_requests where id = (select v::uuid from ctx where k = 'rq31fa')) <> 'shared:Renewed in June' then raise exception 'FAIL shared row'; end if;
+  -- she can't mark it met
+  perform pg_temp.must_fail($q$select public.review_requirement((select v::uuid from ctx where k = 'rq31fa'), true)$q$, 'not a parent%');
+  perform pg_temp.must_fail($q$update requirement_requests set status = 'met'$q$, 'permission denied%');
+end $$;
+reset role;
+do $$ begin
+  if (select count(*) from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[pat31]' and x->>'title' = 'Sky shared CPR and First Aid'
+      and x->'data'->>'url' = '/parent/shared/' || (select v from ctx where k = 'rq31fa')) <> 1 then raise exception 'FAIL share push'; end if;
+  if exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[hal31]') then raise exception 'FAIL share pushed a helper'; end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+-- Hal (helper) sees what she shared, but can't review or remove it
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3103');
+do $$ declare rows jsonb := public.family_requirement_requests((select v::uuid from ctx where k = 'fam31'), '00000000-0000-0000-0000-0000000a3102'); begin
+  if jsonb_array_length(rows) <> 5 or rows->1->'request'->>'status' <> 'shared' or rows->1->'request'->'credential'->>'file_path' <> '00000000-0000-0000-0000-0000000a3102/cards/fa.jpg'
+     or rows->0->'request' <> 'null'::jsonb or rows->2->'request'->'credential' <> 'null'::jsonb then raise exception 'FAIL helper rows %', rows; end if;
+  if (select count(*) from requirement_requests) <> 2 then raise exception 'FAIL helper reads requests'; end if;
+  if (select count(*) from sitter_credentials) <> 1 then raise exception 'FAIL helper reads the shared card row'; end if;
+  if not public.can_read_sitter_file('00000000-0000-0000-0000-0000000a3102/cards/fa.jpg') then raise exception 'FAIL helper can''t open the shared card'; end if;
+  if public.can_read_sitter_file('00000000-0000-0000-0000-0000000a3102/cards/inf.jpg') then raise exception 'FAIL helper opens an unshared card'; end if;
+  perform pg_temp.must_fail($q$select public.review_requirement((select v::uuid from ctx where k = 'rq31fa'), true)$q$, 'not a parent%');
+  perform pg_temp.must_fail($q$select public.cancel_requirement_request((select v::uuid from ctx where k = 'rq31fa'))$q$, 'not a parent%');
+end $$;
+-- Oz (the Elm family, Sky sits for them too) sees nothing of it
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3104');
+do $$ begin
+  if public.can_read_sitter_file('00000000-0000-0000-0000-0000000a3102/cards/fa.jpg') then raise exception 'FAIL another family opens Sky''s card'; end if;
+  if not public.can_read_sitter_file('00000000-0000-0000-0000-0000000a3102/photo/me.jpg') then raise exception 'FAIL her family can''t see her photo'; end if;
+  if (select count(*) from sitter_credentials where sitter_id = '00000000-0000-0000-0000-0000000a3102') <> 0 then raise exception 'FAIL another family reads Sky''s cards'; end if;
+  if (select count(*) from requirement_requests) <> 0 then raise exception 'FAIL another family reads the requests'; end if;
+  perform pg_temp.must_fail($q$select public.family_requirement_requests((select v::uuid from ctx where k = 'fam31'), '00000000-0000-0000-0000-0000000a3102')$q$, 'not in this family');
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a20c1');
+do $$ begin
+  if public.can_read_sitter_file('00000000-0000-0000-0000-0000000a3102/photo/me.jpg') then raise exception 'FAIL stranger sees her photo'; end if;
+  if public.can_read_sitter_file('00000000-0000-0000-0000-0000000a3102/cards/fa.jpg') then raise exception 'FAIL stranger opens her card'; end if;
+end $$;
+-- Shared isn't met; Pat taps Looks good, then it counts
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3101');
+do $$ begin
+  if (select st.reason from public.sitter_requirement_status((select v::uuid from ctx where k = 'fam31'), '00000000-0000-0000-0000-0000000a3102') st
+      join family_requirements fr on fr.id = st.requirement_id where fr.key = 'cpr_first_aid') <> 'shared' then raise exception 'FAIL shared counted as met'; end if;
+  perform public.review_requirement((select v::uuid from ctx where k = 'rq31fa'), true);
+  if (select st.met::text || st.reason from public.sitter_requirement_status((select v::uuid from ctx where k = 'fam31'), '00000000-0000-0000-0000-0000000a3102') st
+      join family_requirements fr on fr.id = st.requirement_id where fr.key = 'cpr_first_aid') <> 'truevalid' then raise exception 'FAIL Looks good not met'; end if;
+  perform pg_temp.must_fail($q$select public.review_requirement((select v::uuid from ctx where k = 'rq31fa'), true)$q$, 'Nothing to look at yet.');
+end $$;
+reset role;
+do $$ begin
+  if (select count(*) from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[sky31]' and x->>'title' = 'Looks good: CPR and First Aid'
+      and x->>'body' = 'The Oak family saw what you shared.') <> 1 then raise exception 'FAIL looks good push'; end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+-- Sky uploads a new photo of the card: back to "shared" for Pat to look again
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3102');
+update sitter_credentials set file_path = auth.uid() || '/cards/fa2.jpg' where id = (select v::uuid from ctx where k = 'fa31');
+do $$ begin
+  if (select status from requirement_requests where id = (select v::uuid from ctx where k = 'rq31fa')) <> 'shared' then raise exception 'FAIL new card stayed met'; end if;
+end $$;
+reset role;
+do $$ begin
+  if (select count(*) from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[pat31]' and x->>'title' = 'Sky updated CPR and First Aid') <> 1 then
+    raise exception 'FAIL updated card push'; end if;
+end $$;
+delete from net.sent;
+set role authenticated;
+-- Pat asks again with a note; the photo is no longer open to the family. Sky says she has no Infant CPR.
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3101');
+do $$ begin
+  perform public.review_requirement((select v::uuid from ctx where k = 'rq31fa'), false, 'The photo is blurry');
+  if (select status || ':' || note || ':' || (credential_id is null)::text from requirement_requests where id = (select v::uuid from ctx where k = 'rq31fa')) <> 'asked:The photo is blurry:true' then
+    raise exception 'FAIL ask again'; end if;
+  if public.can_read_sitter_file('00000000-0000-0000-0000-0000000a3102/cards/fa2.jpg') then raise exception 'FAIL card open after ask again'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3102');
+select public.decline_requirement((select v::uuid from ctx where k = 'rq31inf'), 'Booked a class for Nov 2');
+reset role;
+do $$ begin
+  if (select count(*) from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[sky31]' and x->>'title' = 'The Oak family asked again for CPR and First Aid'
+      and x->>'body' = 'The photo is blurry') <> 1 then raise exception 'FAIL ask again push'; end if;
+  if (select count(*) from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[pat31]' and x->>'title' = 'Sky doesn''t have Infant CPR'
+      and x->>'body' = 'Booked a class for Nov 2') <> 1 then raise exception 'FAIL decline push'; end if;
+end $$;
+set role authenticated;
+-- Self-declared: a confirmation with a note, no file; age 18 follows her birthday when she gave one
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3101');
+select public.ask_requirements((select v::uuid from ctx where k = 'fam31'), '00000000-0000-0000-0000-0000000a3102', array['non_smoker', 'age_18', 'background_check']);
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3102');
+insert into sitter_profiles (sitter_id, birthdate) values (auth.uid(), current_date - interval '16 years');
+do $$ begin
+  perform pg_temp.must_fail(format('select public.share_requirement(%L, %L)', (select id from requirement_requests where req_key = 'non_smoker'), (select v from ctx where k = 'fa31')), 'Nothing to attach%');
+  perform pg_temp.must_fail(format('select public.share_requirement(%L)', (select id from requirement_requests where req_key = 'age_18')), 'under_18');
+  perform public.share_requirement((select id from requirement_requests where req_key = 'non_smoker'), null, 'Never smoked');
+  perform public.share_requirement((select id from requirement_requests where req_key = 'background_check'), (select v::uuid from ctx where k = 'bg31'));
+end $$;
+-- Pat: the report she uploaded is open to the family; Looks good counts; an expired card stops counting
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3101');
+do $$ begin
+  if not public.can_read_sitter_file('00000000-0000-0000-0000-0000000a3102/cards/report.pdf') then raise exception 'FAIL parent can''t open the shared report'; end if;
+  perform public.review_requirement((select id from requirement_requests where req_key = 'background_check'), true);
+  perform public.review_requirement((select id from requirement_requests where req_key = 'non_smoker'), true);
+end $$;
+reset role;
+update sitter_credentials set expires_on = current_date - 1 where id = (select v::uuid from ctx where k = 'bg31');
+update requirement_requests set status = 'met' where req_key = 'background_check';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3101');
+do $$ declare s text; begin
+  select string_agg(st.reason, ',' order by fr.position) into s
+    from public.sitter_requirement_status((select v::uuid from ctx where k = 'fam31'), '00000000-0000-0000-0000-0000000a3102') st
+    join family_requirements fr on fr.id = st.requirement_id;
+  if s <> 'expired,asked,declined,asked,valid' then raise exception 'FAIL statuses %', s; end if;
+  -- removing a request; a removed requirement takes its requests along
+  perform public.cancel_requirement_request((select id from requirement_requests where req_key = 'age_18'));
+  delete from family_requirements where key = 'non_smoker' and family_id = (select v::uuid from ctx where k = 'fam31');
+  if (select string_agg(req_key, ',' order by req_key) from requirement_requests) <> 'background_check,cpr_first_aid,cpr_infant' then raise exception 'FAIL cancel / removed requirement'; end if;
+end $$;
+-- Sky deletes the report she shared: the request goes back to asked
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3102');
+delete from sitter_credentials where id = (select v::uuid from ctx where k = 'bg31');
+do $$ begin
+  if (select status || ':' || (credential_id is null)::text from requirement_requests where req_key = 'background_check') <> 'asked:true' then raise exception 'FAIL deleted card kept the request'; end if;
 end $$;
 reset role;
 

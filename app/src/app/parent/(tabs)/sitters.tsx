@@ -5,6 +5,7 @@ import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { shortName } from '@/components/addChild';
 import { MARKETPLACE } from '@/lib/features';
 import { findComingSoon, openPool, openPoolWeek, PickTimeSheet } from '@/components/pool';
+import { HelperNote } from '@/components/familyMembers';
 import { Button, ErrorText, Icon, Screen } from '@/components/ui';
 import { useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
@@ -25,6 +26,9 @@ import { Text } from '@/components/Text';
 // where they're resent or removed.
 // Left out until built: Find a new sitter (P48: the card says "Coming soon", canvas P54e), meet requests (P53),
 // saved sitters (P51).
+// A family helper (P54h) sees the pool only: no Invite, no "When do you need someone?" card or "See availability"
+// (they open the parents' pool screens), no IN PROGRESS invites; a sitter who hasn't signed yet doesn't open P25.
+// The note "Jen manages sitters." closes the list; with no sitters: "No sitters yet" and the same note.
 export default function Sitters() {
   const { family, familyRole } = useSession();
   // A family helper (P4m, migration 30) sees the sitters but doesn't invite them.
@@ -87,7 +91,7 @@ export default function Sitters() {
       }>
       <ErrorText>{error}</ErrorText>
 
-      {data && !sitters.length && !invites.length ? (
+      {data && !sitters.length && (!invites.length || !parent) ? (
         <>
           {/* P54b: no sitters yet. */}
           <View style={st.empty}>
@@ -95,7 +99,7 @@ export default function Sitters() {
               <Icon name="users" size={34} />
             </View>
             <Text style={st.emptyTitle}>No sitters yet</Text>
-            <Text style={st.emptyBody}>Invite someone you already know and trust. They join your pool once they accept and sign the notice.</Text>
+            <Text style={st.emptyBody}>{parent ? 'Invite someone you already know and trust. They join your pool once they accept and sign the notice.' : 'Sitters show up here once they join and sign the notice.'}</Text>
             {parent ? <Button label="Invite a sitter" onPress={() => router.push('/parent/invite')} style={st.emptyBtn} /> : null}
           </View>
           {MARKETPLACE ? findCard : null}
@@ -104,34 +108,38 @@ export default function Sitters() {
 
       {sitters.length ? (
         <>
-          <View style={st.when}>
-            <Text style={st.whenTitle}>When do you need someone?</Text>
-            <View style={st.chips}>
-              <Pressable accessibilityRole="button" onPress={() => openPool(tonight)} style={st.chip}>
-                <Text style={st.chipText}>Today</Text>
-              </Pressable>
-              <Pressable accessibilityRole="button" onPress={() => openPoolWeek(new Date())} style={st.chip}>
-                <Text style={st.chipText}>This week</Text>
-              </Pressable>
-              <Pressable accessibilityRole="button" onPress={() => setPicking(true)} style={st.chip}>
-                <Icon name="calendar" size={16} tint={color.ink} />
-                <Text style={st.chipText}>{' '}Pick a time</Text>
-              </Pressable>
+          {parent ? (
+            <View style={st.when}>
+              <Text style={st.whenTitle}>When do you need someone?</Text>
+              <View style={st.chips}>
+                <Pressable accessibilityRole="button" onPress={() => openPool(tonight)} style={st.chip}>
+                  <Text style={st.chipText}>Today</Text>
+                </Pressable>
+                <Pressable accessibilityRole="button" onPress={() => openPoolWeek(new Date())} style={st.chip}>
+                  <Text style={st.chipText}>This week</Text>
+                </Pressable>
+                <Pressable accessibilityRole="button" onPress={() => setPicking(true)} style={st.chip}>
+                  <Icon name="calendar" size={16} tint={color.ink} />
+                  <Text style={st.chipText}>{' '}Pick a time</Text>
+                </Pressable>
+              </View>
+              <Text style={st.whenSub}>{MARKETPLACE ? 'We check your pool first, then show new sitters nearby.' : 'We check who in your pool is free.'}</Text>
             </View>
-            <Text style={st.whenSub}>{MARKETPLACE ? 'We check your pool first, then show new sitters nearby.' : 'We check who in your pool is free.'}</Text>
-          </View>
+          ) : null}
 
           <View style={st.labelRow}>
             <Text style={st.label}>YOUR POOL · {sitters.length}</Text>
-            <Text accessibilityRole="link" onPress={() => openPool(tonight)} style={st.link}>
-              See availability
-            </Text>
+            {parent ? (
+              <Text accessibilityRole="link" onPress={() => openPool(tonight)} style={st.link}>
+                See availability
+              </Text>
+            ) : null}
           </View>
           <View style={st.pool}>
             {sitters.map((s, i) => {
               const { label, dot } = tabLabel(data ? statusFor(data, s.sitter_id, tonight, { onShiftNow: true }) : { state: 'no_hours' }, tonight, now);
               return (
-                <Pressable key={s.sitter_id} accessibilityRole="button" onPress={() => (s.status === 'active' ? router.push({ pathname: '/parent/sitter/[id]', params: { id: s.sitter_id } }) : openSitter(s.sitter_id))} style={st.poolItem}>
+                <Pressable key={s.sitter_id} accessibilityRole="button" disabled={!parent && s.status !== 'active'} onPress={() => (s.status === 'active' ? router.push({ pathname: '/parent/sitter/[id]', params: { id: s.sitter_id } }) : openSitter(s.sitter_id))} style={st.poolItem}>
                   <View>
                     <View style={[st.poolAvatar, { backgroundColor: AVATAR[i % AVATAR.length] }]}>
                       <Text style={st.poolLetter}>{(s.profile?.full_name || '?')[0].toUpperCase()}</Text>
@@ -150,11 +158,11 @@ export default function Sitters() {
           </View>
           {MARKETPLACE ? findCard : null}
         </>
-      ) : !sitters.length && invites.length ? (
+      ) : parent && !sitters.length && invites.length ? (
         findCard
       ) : null}
 
-      {invites.length ? (
+      {parent && invites.length ? (
         <>
           <Text style={st.label}>IN PROGRESS</Text>
           <View style={st.listCard}>
@@ -192,6 +200,7 @@ export default function Sitters() {
           </View>
         </>
       ) : null}
+      {data ? <HelperNote what="sitters" /> : null}
 
       <PickTimeSheet
         visible={picking}

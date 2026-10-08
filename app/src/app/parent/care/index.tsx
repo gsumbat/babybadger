@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
+import { HelperNote } from '@/components/familyMembers';
 import { ErrorText, Icon, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { isFood, itemLine, itemTitle, scheduleLabel, shortTime, sortItems } from '@/lib/care-plan';
 import { useSession } from '@/lib/session';
+import { useCanManage } from '@/lib/use-family-role';
 import type { CareItem, Kid } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
@@ -22,8 +24,11 @@ const TABS: { value: Tab; label: string }[] = [
 // bottles (family and kids); Routines = one row per kid -> P20. The Requirements pill opens P7a. Left out until built: the
 // "Weekday after school" template row with its Templates link, and the "Trip" tags. Row titles carry the type's
 // extras ("Bottle · 4 oz formula", "Tylenol · 5 ml").
+// A family helper (P7h) reads it: no Requirements pill, no "+ Add task" (the note "Jen manages the care plan." instead),
+// rows don't open the editor (P20a); Routines rows open the kid's day read-only (P20h).
 export default function CarePlan() {
   const { family } = useSession();
+  const manage = useCanManage();
   const fid = family!.id;
   const { data, error } = useQuery(async () => {
     const [items, kids] = await Promise.all([api.careItems(fid), api.kids(fid)]);
@@ -47,10 +52,12 @@ export default function CarePlan() {
               <Icon name="chevron-left" size={22} tint={color.ink} strokeWidth={2} />
             </Pressable>
             <Text style={st.title}>Care plan</Text>
-            <Pressable accessibilityRole="button" onPress={() => router.push('/parent/requirements')} style={st.reqPill}>
-              <SvgXml xml={SHIELD} width={16} height={16} style={{ flexShrink: 0 }} />
-              <Text style={st.reqPillText}>Requirements</Text>
-            </Pressable>
+            {manage ? (
+              <Pressable accessibilityRole="button" onPress={() => router.push('/parent/requirements')} style={st.reqPill}>
+                <SvgXml xml={SHIELD} width={16} height={16} style={{ flexShrink: 0 }} />
+                <Text style={st.reqPillText}>Requirements</Text>
+              </Pressable>
+            ) : null}
           </View>
           <View style={st.seg}>
             {TABS.map((t) => {
@@ -73,29 +80,36 @@ export default function CarePlan() {
       ))}
 
       {tab === 'routines' ? (
-        kids.length ? <Routines kids={kids} items={items} /> : null
+        kids.length ? <Routines kids={kids} items={items} manage={manage} /> : null
       ) : (
         <>
           {shown.length ? (
             <View style={st.card}>
               {shown.map((i, n) => (
-                <ItemRow key={i.id} item={i} kid={kidName(i.kid_id)} last={n === shown.length - 1} />
+                <ItemRow key={i.id} item={i} kid={kidName(i.kid_id)} last={n === shown.length - 1} open={manage} />
               ))}
             </View>
           ) : null}
-          <Pressable accessibilityRole="button" onPress={() => router.push(tab === 'meals' ? '/parent/care/item?type=meal' : '/parent/care/item')} style={st.add}>
-            <Text style={st.addText}>+ Add task</Text>
-          </Pressable>
+          {manage ? (
+            <Pressable accessibilityRole="button" onPress={() => router.push(tab === 'meals' ? '/parent/care/item?type=meal' : '/parent/care/item')} style={st.add}>
+              <Text style={st.addText}>+ Add task</Text>
+            </Pressable>
+          ) : (
+            <>
+              {shown.length ? null : <Text style={st.none}>{tab === 'meals' ? 'No meals in the plan yet.' : 'No tasks in the plan yet.'}</Text>}
+              <HelperNote what="the care plan" />
+            </>
+          )}
         </>
       )}
     </Screen>
   );
 }
 
-function ItemRow({ item, kid, last }: { item: CareItem; kid?: string; last: boolean }) {
+function ItemRow({ item, kid, last, open }: { item: CareItem; kid?: string; last: boolean; open: boolean }) {
   const sub = [scheduleLabel(item), kid, item.how.split('\n')[0]].filter(Boolean).join(' · ');
   return (
-    <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/care/item?id=${item.id}`)} style={[st.row, !last && st.rowLine]}>
+    <Pressable accessibilityRole="button" disabled={!open} onPress={() => router.push(`/parent/care/item?id=${item.id}`)} style={[st.row, !last && st.rowLine]}>
       <View style={{ width: 44, flexShrink: 1 }}>
         <Text style={st.time}>{shortTime(item.starts)}</Text>
       </View>
@@ -115,13 +129,13 @@ function ItemRow({ item, kid, last }: { item: CareItem; kid?: string; last: bool
 }
 
 /** One row per kid: "Mia’s day", then how many items and the first few. */
-function Routines({ kids, items }: { kids: Kid[]; items: CareItem[] }) {
+function Routines({ kids, items, manage }: { kids: Kid[]; items: CareItem[]; manage: boolean }) {
   return (
     <View style={st.card}>
       {kids.map((k, n) => {
         const mine = items.filter((i) => i.kid_id === k.id);
         const first = mine.slice(0, 3).map(itemTitle).join(', ');
-        const sub = mine.length ? `${mine.length} ${mine.length === 1 ? 'item' : 'items'} · ${first}` : 'Add naps, meals and bedtime';
+        const sub = mine.length ? `${mine.length} ${mine.length === 1 ? 'item' : 'items'} · ${first}` : manage ? 'Add naps, meals and bedtime' : 'Nothing set yet';
         return (
           <Pressable key={k.id} accessibilityRole="button" onPress={() => router.push(`/parent/kid/routine?kidId=${k.id}`)} style={[st.row, n < kids.length - 1 && st.rowLine]}>
             <View style={{ flexDirection: 'column', flexGrow: 1, flexShrink: 1 }}>
@@ -165,4 +179,5 @@ const st = StyleSheet.create({
   tagText: { fontFamily: font.bodyBold, fontSize: 12, color: color.ink },
   add: { height: 50, alignItems: 'center', justifyContent: 'center', borderRadius: 999, borderWidth: 2, borderColor: '#C9D3DD', borderStyle: 'dashed' },
   addText: { fontFamily: font.displayBold, fontSize: 16, color: color.primary },
+  none: { fontFamily: font.body, fontSize: 14, color: color.ink2, textAlign: 'center', paddingVertical: 6 },
 });

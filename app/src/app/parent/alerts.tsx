@@ -8,10 +8,12 @@ import { Text } from '@/components/Text';
 import { ErrorText, Icon, Loading, Screen } from '@/components/ui';
 import { alertShift, type AlertRow, buildAlerts } from '@/lib/alerts-logic';
 import { api, useQuery, useShiftLive } from '@/lib/data';
+import { willAnswerLine } from '@/lib/family-members';
 import { firstName } from '@/lib/format';
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
 import { offPlanCards, type TripAlert, tripAlertRows, tripsApi, useShiftAlerts } from '@/lib/trips';
+import { useCanManage, useParentNames } from '@/lib/use-family-role';
 import { cardShadow, color, font } from '@/theme';
 
 // Wireframe P9 "Alerts", translated from its HTML (app/src/wireframes/P9.tsx). Opened by tapping an incident push.
@@ -20,6 +22,9 @@ import { cardShadow, color, font } from '@/theme';
 // soccer"; a tap opens the trip, P8). Off-plan "See on map" opens the live shift (P8 needs a trip).
 // Left out until built: "Call Maya" (no phone number stored). Not drawn: the rows for a "Somewhere else" trip
 // request and a request to clock in away from home (a tap asks Not now / Yes).
+// A family helper (push "Tap to answer" lands here too) can't dismiss an off-plan card or answer a clock-in-away
+// request: the card has no "This is expected, dismiss", and a tap on the request says where it stands ("Waiting for
+// an answer · Jen will answer.", "A parent said yes"). The database refuses both for helpers.
 const clockSvg = (stroke: string) =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>`;
 const FORK = '<svg viewBox="0 0 24 24" fill="none" stroke="#1B2328" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v7a2 2 0 0 0 4 0V3M8 10v11M17 21V3c-2.5 1-3.5 3.5-3.5 7.5h3.5"/></svg>';
@@ -69,6 +74,8 @@ export default function Alerts() {
   const { bundle } = useShiftLive(shift?.id);
   const { alerts, reload: reloadAlerts } = useShiftAlerts(shift?.id);
   const back = () => (router.canGoBack() ? router.back() : router.replace('/parent'));
+  const manage = useCanManage();
+  const parents = useParentNames();
 
   if (!shifts) return error ? <Screen title="Alerts" back onBack={back}><ErrorText>{error}</ErrorText></Screen> : <Loading />;
   const live = bundle && bundle.shift.id === shift?.id ? bundle : null;
@@ -89,7 +96,12 @@ export default function Alerts() {
 
   // A "start somewhere else" request (S22): Not now / Yes, while it's still open.
   async function answerAway(a: TripAlert) {
-    const req = a.data?.request_id ? await tripsApi.awayRequestById(a.data.request_id) : null;
+    const req = a.data?.request_id ? await tripsApi.awayRequestById(a.data.request_id).catch(() => null) : null;
+    if (!manage)
+      return Alert.alert(
+        !req ? 'Request not found' : req.status === 'approved' ? 'A parent said yes' : req.status === 'pending' ? 'Waiting for an answer' : 'A parent said no',
+        req?.status === 'pending' ? willAnswerLine(parents) : undefined,
+      );
     if (!req || req.status !== 'pending') return Alert.alert(req?.status === 'approved' ? 'You said yes' : req ? 'You said no' : 'Request not found');
     const go = (ok: boolean) => tripsApi.answerAway(req.id, ok).catch((e) => Alert.alert('Couldn’t answer', errorText(e)));
     Alert.alert(`Let ${sitter} clock in where she is?`, a.data?.note || 'Starting somewhere else, like school pickup.', [
@@ -105,7 +117,7 @@ export default function Alerts() {
         <IncidentCard key={c.id} card={c} action="See report" onAction={() => router.push(`/parent/shift/${c.shiftId}`)} />
       ))}
       {offPlan.map((c) => (
-        <IncidentCard key={c.id} card={c} action="See on map" right onAction={() => router.push(`/parent/shift/${c.shiftId}`)} onDismiss={() => dismiss(c.id)} />
+        <IncidentCard key={c.id} card={c} action="See on map" right onAction={() => router.push(`/parent/shift/${c.shiftId}`)} onDismiss={manage ? () => dismiss(c.id) : undefined} />
       ))}
       <Text style={[st.section, incidents.length + offPlan.length > 0 && { marginTop: 6 }]}>EARLIER TODAY</Text>
       {rows.length ? (

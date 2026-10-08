@@ -2,11 +2,13 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { RuleCard, RuleRow, RuleSection } from '@/components/houseRules';
+import { HelperNote } from '@/components/familyMembers';
 import { Button, ErrorText, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { familyRulesState, groupRules, joinNames, ruleIcon } from '@/lib/house-rules';
 import { useSession } from '@/lib/session';
+import { useCanManage } from '@/lib/use-family-role';
 import { color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
@@ -15,8 +17,11 @@ import { Text } from '@/components/Text';
 // closes the list. The note under it names the active sitters who still have to agree to the current Must rules.
 // Left out until built: "Preview" (no wireframe for the parent's preview). Food rules use P75's "FOOD AND ROUTINE"
 // heading, since P74 draws no food rule.
+// A family helper (P74h) reads the rules: rows don't open P76, no "+ Add rules", no Save footer (the back button
+// closes it), and the note "Jen manages house rules." With no rules yet: "No house rules yet."
 export default function HouseRules() {
   const { family } = useSession();
+  const manage = useCanManage();
   const fid = family!.id;
   const { data, error } = useQuery(async () => {
     const sitters = (await api.familySitters(fid)).filter((s) => s.status === 'active');
@@ -34,10 +39,12 @@ export default function HouseRules() {
       back
       gap={8}
       footer={
-        <View style={{ gap: 4 }}>
-          <Button label="Save" onPress={() => router.back()} />
-          {data.pending.length ? <Text style={st.note}>{joinNames(data.pending)} will be asked to agree before {data.pending.length === 1 ? 'her' : 'their'} next shift.</Text> : null}
-        </View>
+        manage ? (
+          <View style={{ gap: 4 }}>
+            <Button label="Save" onPress={() => router.back()} />
+            {data.pending.length ? <Text style={st.note}>{joinNames(data.pending)} will be asked to agree before {data.pending.length === 1 ? 'her' : 'their'} next shift.</Text> : null}
+          </View>
+        ) : undefined
       }>
       <ErrorText>{error}</ErrorText>
       {sections.map((s, i) => (
@@ -45,14 +52,21 @@ export default function HouseRules() {
           <RuleSection label={s.label} right={i === 0 && s.label === 'UPDATES AND LOGS' ? 'Sitters get reminders' : undefined} />
           <RuleCard>
             {s.rules.map((r, n) => (
-              <RuleRow key={r.id} icon={ruleIcon(r)} title={r.title} sub={r.sub} strength={r.strength} last={n === s.rules.length - 1} onPress={() => router.push(`/parent/rules/rule?id=${r.id}`)} />
+              <RuleRow key={r.id} icon={ruleIcon(r)} title={r.title} sub={r.sub} strength={r.strength} last={n === s.rules.length - 1} onPress={manage ? () => router.push(`/parent/rules/rule?id=${r.id}`) : undefined} />
             ))}
           </RuleCard>
         </View>
       ))}
-      <Pressable accessibilityRole="button" onPress={() => router.push('/parent/rules/add')} style={st.add}>
-        <Text style={st.addText}>+ Add rules</Text>
-      </Pressable>
+      {manage ? (
+        <Pressable accessibilityRole="button" onPress={() => router.push('/parent/rules/add')} style={st.add}>
+          <Text style={st.addText}>+ Add rules</Text>
+        </Pressable>
+      ) : (
+        <>
+          {sections.length ? null : <Text style={st.none}>No house rules yet.</Text>}
+          <HelperNote what="house rules" />
+        </>
+      )}
     </Screen>
   );
 }
@@ -60,5 +74,6 @@ export default function HouseRules() {
 const st = StyleSheet.create({
   add: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: 46, borderRadius: 999, borderWidth: 2, borderColor: '#C9D3DD', borderStyle: 'dashed' },
   addText: { fontFamily: font.displayBold, fontSize: 16, color: color.primary },
+  none: { fontFamily: font.body, fontSize: 14, color: color.ink2, textAlign: 'center', paddingVertical: 6 },
   note: { fontFamily: font.body, fontSize: 12, color: color.ink2, textAlign: 'center' },
 });

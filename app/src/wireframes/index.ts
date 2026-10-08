@@ -26,6 +26,7 @@ import WF_P20d from './P20d';
 import WF_P20e from './P20e';
 import WF_P20f from './P20f';
 import WF_P20g from './P20g';
+import WF_P20h from './P20h';
 import WF_P21 from './P21';
 import WF_P21b from './P21b';
 import WF_P22 from './P22';
@@ -89,9 +90,12 @@ import WF_P54d from './P54d';
 import WF_P54e from './P54e';
 import WF_P54f from './P54f';
 import WF_P54g from './P54g';
+import WF_P54h from './P54h';
 import WF_P55 from './P55';
+import WF_P55h from './P55h';
 import WF_P56 from './P56';
 import WF_P56b from './P56b';
+import WF_P56h from './P56h';
 import WF_P57 from './P57';
 import WF_P57b from './P57b';
 import WF_P57c from './P57c';
@@ -101,10 +105,12 @@ import WF_P58b from './P58b';
 import WF_P5b from './P5b';
 import WF_P6a from './P6a';
 import WF_P6b from './P6b';
+import WF_P6bh from './P6bh';
 import WF_P6c from './P6c';
 import WF_P7 from './P7';
 import WF_P74 from './P74';
 import WF_P74b from './P74b';
+import WF_P74h from './P74h';
 import WF_P75 from './P75';
 import WF_P76 from './P76';
 import WF_P76b from './P76b';
@@ -119,10 +125,17 @@ import WF_P78d from './P78d';
 import WF_P78e from './P78e';
 import WF_P78f from './P78f';
 import WF_P78s from './P78s';
+import WF_P79 from './P79';
+import WF_P79b from './P79b';
+import WF_P79c from './P79c';
+import WF_P79d from './P79d';
+import WF_P79e from './P79e';
 import WF_P7a from './P7a';
 import WF_P7b from './P7b';
+import WF_P7h from './P7h';
 import WF_P8 from './P8';
 import WF_P8b from './P8b';
+import WF_P8h from './P8h';
 import WF_P9 from './P9';
 import WF_P9t from './P9t';
 import WF_S0a from './S0a';
@@ -152,6 +165,7 @@ import WF_S16 from './S16';
 import WF_S17 from './S17';
 import WF_S17b from './S17b';
 import WF_S17c from './S17c';
+import WF_S17d from './S17d';
 import WF_S18 from './S18';
 import WF_S19 from './S19';
 import WF_S2 from './S2';
@@ -198,6 +212,10 @@ import WF_S50 from './S50';
 import WF_S51 from './S51';
 import WF_S52 from './S52';
 import WF_S52b from './S52b';
+import WF_S53 from './S53';
+import WF_S53b from './S53b';
+import WF_S53c from './S53c';
+import WF_S53d from './S53d';
 import WF_S6 from './S6';
 import WF_S6a from './S6a';
 import WF_S6c from './S6c';
@@ -234,6 +252,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P20e: WF_P20e,
   P20f: WF_P20f,
   P20g: WF_P20g,
+  P20h: WF_P20h,
   P21: WF_P21,
   P21b: WF_P21b,
   P22: WF_P22,
@@ -297,9 +316,12 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P54e: WF_P54e,
   P54f: WF_P54f,
   P54g: WF_P54g,
+  P54h: WF_P54h,
   P55: WF_P55,
+  P55h: WF_P55h,
   P56: WF_P56,
   P56b: WF_P56b,
+  P56h: WF_P56h,
   P57: WF_P57,
   P57b: WF_P57b,
   P57c: WF_P57c,
@@ -309,10 +331,12 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P5b: WF_P5b,
   P6a: WF_P6a,
   P6b: WF_P6b,
+  P6bh: WF_P6bh,
   P6c: WF_P6c,
   P7: WF_P7,
   P74: WF_P74,
   P74b: WF_P74b,
+  P74h: WF_P74h,
   P75: WF_P75,
   P76: WF_P76,
   P76b: WF_P76b,
@@ -327,10 +351,17 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P78e: WF_P78e,
   P78f: WF_P78f,
   P78s: WF_P78s,
+  P79: WF_P79,
+  P79b: WF_P79b,
+  P79c: WF_P79c,
+  P79d: WF_P79d,
+  P79e: WF_P79e,
   P7a: WF_P7a,
   P7b: WF_P7b,
+  P7h: WF_P7h,
   P8: WF_P8,
   P8b: WF_P8b,
+  P8h: WF_P8h,
   P9: WF_P9,
   P9t: WF_P9t,
   S0a: WF_S0a,
@@ -360,6 +391,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   S17: WF_S17,
   S17b: WF_S17b,
   S17c: WF_S17c,
+  S17d: WF_S17d,
   S18: WF_S18,
   S19: WF_S19,
   S2: WF_S2,
@@ -406,6 +438,10 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   S51: WF_S51,
   S52: WF_S52,
   S52b: WF_S52b,
+  S53: WF_S53,
+  S53b: WF_S53b,
+  S53c: WF_S53c,
+  S53d: WF_S53d,
   S6: WF_S6,
   S6a: WF_S6a,
   S6c: WF_S6c,

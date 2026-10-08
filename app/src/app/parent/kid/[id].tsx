@@ -3,10 +3,12 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
 import { KidDot } from '@/components/bits';
+import { HelperNote } from '@/components/familyMembers';
 import { ErrorText, Icon, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { routineSummary } from '@/lib/care-plan';
 import { ageLabel, kidWeek, pronouns } from '@/lib/kid-profile';
+import { useCanManage } from '@/lib/use-family-role';
 import { cardShadow, color, font } from '@/theme';
 import { Text } from '@/components/Text';
 
@@ -18,8 +20,11 @@ const HEART_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="#4B5960" stroke
 // Wireframe P55 Child profile, from app/src/wireframes/P55.tsx. Left out until built: grade and school, the
 // kid's location line, the See on map / Message tiles (the plan tile keeps its third of the row), and the phone and
 // Who looks after rows. The plan tile reads "Her plan" / "His plan" from the optional gender, "Plan" without one.
+// A family helper (P55h) reads it: no Edit, no Care and safety row (it opens the editor, P19), Routine opens the day
+// read-only (P20h), and the note "Jen manages Ava’s profile." at the end.
 export default function KidProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const manage = useCanManage();
   const { data, error } = useQuery(async () => {
     // The care plan table arrives with migration 06; until it's run the Routine row just shows its empty copy.
     const [kid, shifts, care] = await Promise.all([api.kid(id), api.kidShifts(id), api.kidCareItems(id).catch(() => [])]);
@@ -41,10 +46,12 @@ export default function KidProfile() {
           <Text style={st.headTitle} numberOfLines={1}>
             {kid.name}
           </Text>
-          <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/kid/new?id=${kid.id}&step=1`)} style={st.edit}>
-            <SvgXml xml={PENCIL} width={16} height={16} style={{ flexShrink: 0 }} />
-            <Text style={st.editText}>Edit</Text>
-          </Pressable>
+          {manage ? (
+            <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/kid/new?id=${kid.id}&step=1`)} style={st.edit}>
+              <SvgXml xml={PENCIL} width={16} height={16} style={{ flexShrink: 0 }} />
+              <Text style={st.editText}>Edit</Text>
+            </Pressable>
+          ) : null}
         </View>
       }>
       <ErrorText>{error}</ErrorText>
@@ -77,23 +84,25 @@ export default function KidProfile() {
       ) : null}
 
       <View style={st.listCard}>
-        <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/kid/new?id=${kid.id}&step=2`)} style={[st.listRow, st.listLine]}>
-          <View style={st.listIcon}>
-            <Icon name="shield" size={20} tint={color.primary} />
-          </View>
-          <View style={{ flexDirection: 'column', minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
-            <Text style={st.rowTitle}>Care and safety</Text>
-            <Text style={st.rowSub}>Pediatrician, medicines, what calms {pronouns(kid.gender).obj}</Text>
-          </View>
-          <Icon name="chevron-right" size={18} tint={color.ink2} />
-        </Pressable>
+        {manage ? (
+          <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/kid/new?id=${kid.id}&step=2`)} style={[st.listRow, st.listLine]}>
+            <View style={st.listIcon}>
+              <Icon name="shield" size={20} tint={color.primary} />
+            </View>
+            <View style={{ flexDirection: 'column', minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
+              <Text style={st.rowTitle}>Care and safety</Text>
+              <Text style={st.rowSub}>Pediatrician, medicines, what calms {pronouns(kid.gender).obj}</Text>
+            </View>
+            <Icon name="chevron-right" size={18} tint={color.ink2} />
+          </Pressable>
+        ) : null}
         <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/kid/routine?kidId=${kid.id}`)} style={st.listRow}>
           <View style={st.listIcon}>
             <Icon name="clock" size={20} tint={color.primary} />
           </View>
           <View style={{ flexDirection: 'column', minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
             <Text style={st.rowTitle}>Routine</Text>
-            <Text style={st.rowSub}>{routine || 'Add naps, meals and bedtime'}</Text>
+            <Text style={st.rowSub}>{routine || (manage ? 'Add naps, meals and bedtime' : 'Nothing set yet')}</Text>
           </View>
           <Icon name="chevron-right" size={18} tint={color.ink2} />
         </Pressable>
@@ -114,6 +123,7 @@ export default function KidProfile() {
           </View>
         ) : null}
       </View>
+      <HelperNote what={`${kid.name}’s profile`} />
     </Screen>
   );
 }

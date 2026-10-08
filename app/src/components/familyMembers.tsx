@@ -6,6 +6,7 @@ import { SvgXml } from 'react-native-svg';
 import { Text } from '@/components/Text';
 import { Icon } from '@/components/ui';
 import { initials, ROLE_OPTIONS, roleLabel, type MemberRole } from '@/lib/family-members';
+import { useManagedBy } from '@/lib/use-family-role';
 import { cardShadow, color, font } from '@/theme';
 
 // Shared pieces of the Family members screens (wireframes P78, P78f, P78b, P78s, P78c, P78e). Values from the boards
@@ -86,6 +87,15 @@ export function MembersNote({ children }: { children: string }) {
       <Text style={st.infoText}>{children}</Text>
     </View>
   );
+}
+
+/**
+ * A family helper's read-only line where a parent has Add / Edit (boards P7h, P55h, P56h, P74h, P20h): "Jen manages
+ * the care plan." Renders nothing for a parent.
+ */
+export function HelperNote({ what }: { what: string }) {
+  const line = useManagedBy(what);
+  return line ? <MembersNote>{line}</MembersNote> : null;
 }
 
 /** P78 header: back button + Baloo title (P27's). */

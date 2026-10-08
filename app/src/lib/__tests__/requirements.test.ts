@@ -175,25 +175,35 @@ describe('S27 rows', () => {
     status('background_check', true, 'valid'),
     status('cpr_first_aid', true, 'valid'),
     status('cpr_infant', true, 'expiring', '2026-10-22'),
-    status('drivers_license', false, 'unconfirmed'),
-    status('non_smoker', false, 'unconfirmed'),
-    status('dogs', false, 'unconfirmed'),
+    status('drivers_license', false, 'not_asked'),
+    status('non_smoker', false, 'asked'),
+    status('dogs', false, 'not_asked'),
   ];
   const creds = [
     { kind: 'background_check', verified_at: '2026-08-12T10:00:00Z', expires_on: null },
-    { kind: 'cpr_infant', verified_at: '2026-01-02T10:00:00Z', expires_on: '2026-10-22' },
+    { kind: 'cpr_infant', verified_at: null, expires_on: '2026-10-22' },
+    { kind: 'drivers_license', verified_at: null, expires_on: '2099-01-01' },
   ];
   it('matches the wireframe', () => {
     const out = sitterRows(reqs, rows, creds, {});
     expect(out.map((r) => [r.title, r.sub, r.state, !!r.confirmId])).toEqual([
-      ['Background check', 'Verified Aug 2026', 'have', false],
-      ['CPR, First Aid, Infant CPR', 'Verified · Infant expires Oct 22', 'have', false],
+      ['Background check', 'Looks good to the family', 'have', false],
+      ['CPR, First Aid, Infant CPR', 'Looks good to the family · Infant expires Oct 22', 'have', false],
       ['Driving', 'License ✓ record ✓ car seats', 'confirm', true],
       ['Non-smoker', 'Confirm for this family', 'confirm', true],
       ['Comfortable with dogs', '“Biscuit, a big friendly lab”', 'nice', false],
     ]);
     const s = summarize(reqs, rows);
     expect(sitterBanner(s, out)).toEqual({ bold: '3 of 5 must-haves done.', rest: 'Confirm the last 2 below so the family can book you.', done: false });
+  });
+  it('phase 1: a card she has counts only once the family says it looks good', () => {
+    const creds2 = [{ kind: 'water_safety', verified_at: null, expires_on: null }];
+    expect(sitterRows([req('water_safety')], [status('water_safety', false, 'not_asked')], creds2, {})[0]).toMatchObject({ state: 'missing', sub: 'You have it · share it when they ask' });
+    expect(sitterRows([req('water_safety')], [status('water_safety', false, 'asked')], creds2, {})[0].sub).toBe('Asked · share it from Requests');
+    expect(sitterRows([req('water_safety')], [status('water_safety', false, 'shared')], creds2, {})[0].sub).toBe('Shared · waiting for the family');
+    expect(sitterRows([req('water_safety')], [status('water_safety', false, 'declined')], creds2, {})[0].sub).toBe('You said you don’t have it');
+    expect(sitterRows([req('non_smoker')], [status('non_smoker', false, 'shared')], [], {})[0]).toMatchObject({ state: 'confirm', sub: 'Shared · waiting for the family' });
+    expect(sitterRows([req('non_smoker')], [status('non_smoker', true, 'valid')], [], {})[0]).toMatchObject({ state: 'confirmed', sub: 'Looks good to the family' });
   });
   it('a missing credential links out instead of asking', () => {
     const out = sitterRows([req('water_safety')], [status('water_safety', false, 'missing')], [], {});

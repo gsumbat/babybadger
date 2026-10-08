@@ -8,22 +8,24 @@ import { DateField } from '@/components/DateField';
 import { Text, TextInput } from '@/components/Text';
 import { Button, ErrorText, Screen } from '@/components/ui';
 import { CERT_CHOICES, choiceOf, credentialApi, sitterFileUrl, uploadCard, type CertChoice } from '@/lib/credentials';
+import { requestErrorText, requirementRequestsApi } from '@/lib/requirement-requests-api';
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
 import { color, font } from '@/theme';
 
 // Wireframe S15 Add a certification, from app/src/wireframes/S15.tsx. Opened from S14 "Add a certification", and with
 // ?id= from S41 "Upload renewed card" / S18 "Upload new card" (same form, filled in; saving a new card or new dates
-// sends it back to review). The card photo comes from the phone's library and goes to a private folder only the sitter
-// can read (families never see it). Dates open the phone's date wheel (DateField).
+// ?share=<request> from S53b "Add a new card" (migration 31: the tile of that kind is picked; Save shares it with the
+// family that asked, then goes back to S53). The card photo comes from the phone's library and goes to a private
+// folder: only she can read it, and a family only once she shares it with them (S53b). Dates open the date wheel.
 // Not drawn: the "Name" field when "Other" is picked, the empty upload box before a photo is added, and PDF upload
 // (no document picker in the app yet: photos only). "Issued by" is typed (the wireframe's chevron implies a list of
 // issuers that isn't designed yet). The wireframe's "photo is clear" check isn't built.
 export default function AddCert() {
   const { session } = useSession();
   const uid = session!.user.id;
-  const { id } = useLocalSearchParams<{ id?: string }>();
-  const [choice, setChoice] = useState<CertChoice | null>(null);
+  const { id, share, kind } = useLocalSearchParams<{ id?: string; share?: string; kind?: string }>();
+  const [choice, setChoice] = useState<CertChoice | null>(() => (!id && kind ? (CERT_CHOICES.find((c) => c.kind === (kind === 'cpr_child' ? 'first_aid' : kind)) ?? null) : null));
   const [other, setOther] = useState('');
   const [issuer, setIssuer] = useState('');
   const [issued, setIssued] = useState('');
@@ -68,11 +70,14 @@ export default function AddCert() {
     try {
       const file_path = photo ? await uploadCard(uid, photo.uri) : savedPath;
       const fields = { kind: choice.kind, title, issuer: issuer.trim() || null, issued_on: issued || null, expires_on: expires || null, file_path };
-      if (id) await credentialApi.update(id, fields);
-      else await credentialApi.add(uid, fields);
+      const saved = id ? await credentialApi.update(id, fields) : await credentialApi.add(uid, fields);
+      if (share) {
+        await requirementRequestsApi.share(share, saved.id, '');
+        return router.dismissTo('/sitter/requests');
+      }
       router.dismissTo('/sitter/credentials');
     } catch (e) {
-      setErr(errorText(e));
+      setErr(share ? requestErrorText(e) : errorText(e));
     } finally {
       setBusy(false);
     }
@@ -82,7 +87,7 @@ export default function AddCert() {
   const thumb = photo?.uri ?? savedUrl;
 
   return (
-    <Screen back title="Add a certification" gap={12} footer={<Button label="Submit for review" busy={busy} onPress={submit} />}>
+    <Screen back title="Add a certification" gap={12} footer={<Button label={share ? 'Save and share' : 'Save'} busy={busy} onPress={submit} />}>
       <Text style={st.label}>WHAT IS IT?</Text>
       <View style={{ gap: 8 }}>
         {[CERT_CHOICES.slice(0, 3), CERT_CHOICES.slice(3, 6), CERT_CHOICES.slice(6)].map((row, r) => (
@@ -131,7 +136,7 @@ export default function AddCert() {
         <Text style={st.replace}>{thumb ? 'Replace' : 'Add'}</Text>
       </Pressable>
 
-      <Text style={st.note}>We check it with the issuer, usually within 1–2 days. Families see the badge and expiry date, never the card or its number.</Text>
+      <Text style={st.note}>Only you see this card. A family sees it only if you share it with them when they ask.</Text>
       <ErrorText>{err}</ErrorText>
     </Screen>
   );

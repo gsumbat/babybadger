@@ -10,7 +10,9 @@ import { type MapZone, ZoneMap } from '@/components/ZoneMap';
 import { usePlan } from '@/lib/billing';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
+import { willAnswerLine } from '@/lib/family-members';
 import { errorText } from '@/lib/supabase';
+import { useCanManage, useParentNames } from '@/lib/use-family-role';
 import { placesOrEmpty, tripDest, tripEta, tripHeading, tripsApi, tripSteps, tripSub, useTripLive } from '@/lib/trips';
 import { color, font } from '@/theme';
 
@@ -19,6 +21,8 @@ import { color, font } from '@/theme';
 // destination zones and the route since the trip started (a sketch on the web preview). Left out: Call (no phone
 // number stored; its slot stays empty). Not drawn: the pill and heading for the other states (waiting / arrived /
 // ended) and the Not now / Let her go buttons on a "Somewhere else" trip that waits for a parent.
+// A family helper (P8h) can't answer a trip that waits: the pill reads "Waiting for a parent", the line "Jen will
+// answer." sits above the buttons, and Message Maya replaces Not now / Let her go (the database refuses the answer too).
 export default function TripView() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { trip, points, error } = useTripLive(id);
@@ -33,6 +37,8 @@ export default function TripView() {
   const [busy, setBusy] = useState<'yes' | 'no'>();
   const back = () => (router.canGoBack() ? router.back() : router.replace('/parent'));
   const plan = usePlan();
+  const manage = useCanManage();
+  const parents = useParentNames();
 
   // No plan (billing on): trips are paused (P40), the map shows the P4l lock.
   if (!plan.hasPlan)
@@ -54,7 +60,8 @@ export default function TripView() {
   if (start?.lat != null && start.lng != null) zones.push({ id: start.id, lat: start.lat, lng: start.lng, radius_ft: start.radius_ft, label: start.kind === 'home' ? 'Home' : start.name, tone: 'home' });
   if (destPlace?.lat != null && destPlace.lng != null) zones.push({ id: destPlace.id, lat: destPlace.lat, lng: destPlace.lng, radius_ft: destPlace.radius_ft, label: destPlace.name, tone: 'dest' });
   const steps = tripSteps(trip, start, dest);
-  const pill = trip.status === 'pending' ? 'Waiting for you' : trip.status === 'active' ? 'On a trip' : trip.status === 'arrived' ? 'Arrived' : 'Trip ended';
+  const waits = trip.status === 'pending' && manage;
+  const pill = trip.status === 'pending' ? (manage ? 'Waiting for you' : 'Waiting for a parent') : trip.status === 'active' ? 'On a trip' : trip.status === 'arrived' ? 'Arrived' : 'Trip ended';
 
   async function answer(ok: boolean) {
     setBusy(ok ? 'yes' : 'no');
@@ -107,8 +114,9 @@ export default function TripView() {
             </View>
           ))}
         </View>
+        {trip.status === 'pending' && !manage ? <Text style={st.stepSub}>{willAnswerLine(parents)}</Text> : null}
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          {trip.status === 'pending' ? (
+          {waits ? (
             <>
               <Pressable accessibilityRole="button" onPress={busy ? undefined : () => answer(false)} style={st.btn}>
                 {busy === 'no' ? <ActivityIndicator color={color.primary} /> : <Text style={st.btnText}>Not now</Text>}

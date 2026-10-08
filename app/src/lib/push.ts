@@ -45,12 +45,16 @@ export async function unregisterPush(): Promise<void> {
   currentToken = null;
 }
 
-/** Opens the screen an alert points to (data.url), including the alert that launched the app. */
-export function listenForAlertTaps(): () => void {
+/**
+ * Opens the screen an alert points to (data.url), including the alert that launched the app. `route` can send it
+ * elsewhere: a family helper's tap on a parent-only screen lands on its read-only view (lib/family-members
+ * routeForRole).
+ */
+export function listenForAlertTaps(route: (url: string) => string = (u) => u): () => void {
   if (!supported) return () => {};
   const open = (r: Notifications.NotificationResponse | null) => {
     const url = r?.notification.request.content.data?.url;
-    if (typeof url === 'string' && url.startsWith('/')) router.push(url as never);
+    if (typeof url === 'string' && url.startsWith('/')) router.push(route(url) as never);
   };
   const last = Notifications.getLastNotificationResponse();
   if (last) {

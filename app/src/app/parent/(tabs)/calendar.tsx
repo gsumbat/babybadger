@@ -9,6 +9,7 @@ import { type CalendarView, addDays, addMonths, dayKey, dayTitle, formatHours, h
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { useSession } from '@/lib/session';
+import { useCanManage } from '@/lib/use-family-role';
 import { color } from '@/theme';
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -16,8 +17,11 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? o
 // Wireframes P6a (Day), P6b (Week, the default) and P6c (Month). The switch keeps the selected date; tapping a day in
 // Month opens it in Day. Left out until built: requests ("Waiting" pills and legend), the Trip / Food tags on task
 // lines, the "· soccer 4:30" next-task part of the week sub-line, and opening P6 with the tapped date filled in.
+// A family helper (P6bh) sees the same calendar without Book: no header button, no "+ Book a sitter" slot in Day, and
+// an empty Week day doesn't open the booking form ("No sitter" stays as a label).
 export default function Calendar() {
   const { family } = useSession();
+  const manage = useCanManage();
   const fid = family!.id;
   const [view, setView] = useState<CalendarView>('week');
   const [day, setDay] = useState(() => new Date());
@@ -60,7 +64,7 @@ export default function Calendar() {
   return (
     <Screen
       gap={view === 'week' ? 8 : 10}
-      header={<CalendarHeader right={<HeaderButton label="Book" onPress={book} />} view={view} onView={setView} title={nav.title} sub={nav.sub} unit={view} onPrev={() => move(-1)} onNext={() => move(1)} />}>
+      header={<CalendarHeader right={manage ? <HeaderButton label="Book" onPress={book} /> : <View style={{ height: 40 }} />} view={view} onView={setView} title={nav.title} sub={nav.sub} unit={view} onPrev={() => move(-1)} onNext={() => move(1)} />}>
       <ErrorText>{error}</ErrorText>
 
       {view === 'day' && (
@@ -76,7 +80,7 @@ export default function Calendar() {
             pill={statusPill}
             tasks={details?.tasks}
             onOpen={(s) => router.push(`/parent/shift/${s.id}`)}
-            book={(slot) => ({ label: sameDay(day, now) && slot.from >= 17 ? '+ Book a sitter for tonight' : '+ Book a sitter', onPress: book })}
+            book={manage ? (slot) => ({ label: sameDay(day, now) && slot.from >= 17 ? '+ Book a sitter for tonight' : '+ Book a sitter', onPress: book }) : undefined}
           />
         </View>
       )}
@@ -90,7 +94,7 @@ export default function Calendar() {
           sub={(s) => (s.status === 'completed' ? 'Report ready' : s.status === 'active' ? kidNames : '')}
           onOpen={(s) => router.push(`/parent/shift/${s.id}`)}
           emptyText="No sitter"
-          onEmpty={book}
+          onEmpty={manage ? book : undefined}
         />
       )}
 

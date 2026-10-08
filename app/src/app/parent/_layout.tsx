@@ -6,7 +6,8 @@ import { color } from '@/theme';
 export default function ParentLayout() {
   // Family helpers (migration 30, P4m) see the kids, schedule, live shift and updates and message the sitter. Screens
   // that manage the family (sitters, pay, requirements, bookings, kids, the care plan, places, billing) are parents
-  // only; the database refuses those writes for helpers too.
+  // only; the database refuses those writes for helpers too. Keep this list in step with PARENT_ONLY in
+  // lib/family-members (it sends a helper's push taps for these screens to a read-only one).
   const { familyRole } = useSession();
   const parent = familyRole === 'parent';
   return (
@@ -16,6 +17,10 @@ export default function ParentLayout() {
       <Stack.Screen name="trip/[id]" />
       <Stack.Screen name="kid/[id]" />
       <Stack.Screen name="care/index" />
+      {/* Read-only for a helper (P20h, P56h, P74h): the editors they open are below. */}
+      <Stack.Screen name="kid/routine" />
+      <Stack.Screen name="places/index" />
+      <Stack.Screen name="rules/index" />
       <Stack.Screen name="members/index" />
       <Stack.Screen name="members/[id]" />
       <Stack.Protected guard={parent}>
@@ -26,7 +31,6 @@ export default function ParentLayout() {
         <Stack.Screen name="sitter-list" />
         <Stack.Screen name="setup" />
         <Stack.Screen name="kid/new" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="kid/routine" />
         <Stack.Screen name="care/item" options={{ presentation: 'modal' }} />
         <Stack.Screen name="places/new" />
         <Stack.Screen name="places/[id]" />

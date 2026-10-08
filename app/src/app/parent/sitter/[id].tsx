@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Alert, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { CIcon, SitterAvatar } from '@/components/credentials';
+import { AskSheet, ReqStatusCard } from '@/components/requirementRequests';
 import { CredGrid, SpeaksBlock } from '@/components/sitterProfile';
 import { Text } from '@/components/Text';
 import { Button, ErrorText, Loading, Pill, Screen } from '@/components/ui';
@@ -10,7 +11,9 @@ import { formatHours, hoursOf } from '@/lib/calendar-logic';
 import { familyCredentials, monthDay, monthYear, shortName, sitterAge, sitterBundle, toDay } from '@/lib/credentials';
 import { api, useQuery } from '@/lib/data';
 import { dayOf } from '@/lib/format';
+import { requirementRequestsApi } from '@/lib/requirement-requests-api';
 import { requirementStatus } from '@/lib/requirements';
+import { useCanManage } from '@/lib/use-family-role';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { cardShadow, color, font } from '@/theme';
@@ -18,26 +21,31 @@ import { cardShadow, color, font } from '@/theme';
 // Wireframe P11 Sitter profile, from app/src/wireframes/P11.tsx. Opened from an active sitter on the Sitters tab (P54).
 // What a parent sees of a sitter: badges and dates only, never documents (nP7a). Credentials show only while they
 // count (verified and not expired; "Expires Oct 22" in amber within 30 days); the background check reads "Checked
-// <month>". The requirements banner (lib/requirements, migration 20) opens P7a; hidden when the family has none.
+// <month>". Requirements (migration 31, the request form): one row per family requirement with Not asked / Asked /
+// Shared, see it / Looks good ✓ / Doesn't have it / Expired; shared ones open P79b (helpers too, read-only, P79c);
+// "Ask Maya" opens P79 (parents only). Before migration 31 the old banner shows (it opens P7a for a parent only).
 // Left out until built: "Monitoring notice · View copy", "Can pick up from", the "Maya has been reminded." line (no
 // reminders are sent yet), a sitter-specific booking (Book a shift opens the usual booking screen).
 // Not drawn: the banner when she meets them all with nothing expiring (green) or is missing some, "Not signed" for
 // location consent, no credentials yet, the remove confirm.
 export default function SitterProfile() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { family, familyRole } = useSession();
-  // A family helper (migration 30) messages the sitter; booking and removing her are the parents'.
-  const parent = familyRole === 'parent';
+  const { family } = useSession();
+  // A family helper (migration 30) messages the sitter and looks at what she shared; booking, asking and removing
+  // her are the parents'.
+  const parent = useCanManage();
   const fid = family!.id;
-  const { data, error } = useQuery(async () => {
-    const [sitters, shifts, bundle, req, consent] = await Promise.all([
+  const [asking, setAsking] = useState(false);
+  const { data, error, reload } = useQuery(async () => {
+    const [sitters, shifts, bundle, req, consent, asks] = await Promise.all([
       api.familySitters(fid),
       api.familyShifts(fid),
       sitterBundle(id),
       requirementStatus(fid, id),
       supabase.from('consents').select('signed_at').eq('family_id', fid).eq('sitter_id', id).order('signed_at', { ascending: false }).limit(1),
+      requirementRequestsApi.forSitterOrMissing(fid, id).catch(() => ({ rows: [], missing: true })),
     ]);
-    return { link: sitters.find((s) => s.sitter_id === id), shifts: shifts.filter((s) => s.sitter_id === id), bundle, req, signedAt: (consent.data?.[0]?.signed_at as string | undefined) ?? null };
+    return { link: sitters.find((s) => s.sitter_id === id), shifts: shifts.filter((s) => s.sitter_id === id), bundle, req, asks, signedAt: (consent.data?.[0]?.signed_at as string | undefined) ?? null };
   }, [fid, id]);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -105,8 +113,10 @@ export default function SitterProfile() {
         </View>
       </View>
 
-      {req.total ? (
-        <Pressable accessibilityRole="button" onPress={() => router.push('/parent/requirements')} style={[st.banner, req.allMet && !soon && { backgroundColor: color.okTint }]}>
+      {!data.asks.missing ? (
+        <ReqStatusCard rows={data.asks.rows} name={first} canAsk={parent} onAsk={() => setAsking(true)} onOpen={(rid) => router.push({ pathname: '/parent/shared/[id]', params: { id: rid } })} />
+      ) : req.total ? (
+        <Pressable accessibilityRole={parent ? 'button' : undefined} disabled={!parent} onPress={() => router.push('/parent/requirements')} style={[st.banner, req.allMet && !soon && { backgroundColor: color.okTint }]}>
           <CIcon name="warn" tint={req.allMet && !soon ? color.okInk : color.warnInk} />
           <View style={{ flexGrow: 1, flexShrink: 1 }}>
             <Text style={[st.bannerTitle, req.allMet && !soon && { color: color.okInk }]}>
@@ -132,6 +142,8 @@ export default function SitterProfile() {
         <CredGrid creds={ordered} />
         <SpeaksBlock langs={data.bundle.langs} />
       </View>
+
+      <AskSheet open={asking} onClose={() => setAsking(false)} familyId={fid} sitterId={id} name={first} rows={data.asks.rows} onSent={reload} />
 
       <View style={st.list}>
         <View style={[st.row, last && st.line]}>

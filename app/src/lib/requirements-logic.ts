@@ -37,8 +37,10 @@ export type Requirement = {
   updated_at: string;
 };
 
-/** Reason codes from sitter_requirement_status (migration 20). */
-export type ReqReason = 'valid' | 'expiring' | 'speaks' | 'confirmed' | 'reviewed' | 'missing' | 'expired' | 'too_old' | 'unconfirmed' | 'declined' | 'unreviewed';
+/** Reason codes from sitter_requirement_status (migration 31; only a parent's "Looks good" makes one met).
+ *   met: valid | expiring (the shared card runs out within 30 days) | speaks (a language on her profile)
+ *   not met: not_asked | asked | shared (waiting for a parent) | declined | expired | too_old | missing (language) */
+export type ReqReason = 'valid' | 'expiring' | 'speaks' | 'not_asked' | 'asked' | 'shared' | 'declined' | 'expired' | 'too_old' | 'missing';
 export type ReqStatusRow = { requirement_id: string; met: boolean; reason: ReqReason; expires_on: string | null };
 
 /** What the draft screens edit. `ref` = the saved id, or a local id for a new row. */
@@ -102,7 +104,7 @@ export const isLanguage = (key: string) => key.startsWith('language:');
 export const languageOf = (r: Pick<Requirement, 'key' | 'details'>) => r.details.language || r.key.slice('language:'.length);
 export const languageKey = (language: string) => `language:${language.trim()}`;
 
-/** How the sitter shows it: credential (BabyBadger checks a certificate), language, self (she says Yes), document
+/** How the sitter shows it: credential (she shares a certificate, the family looks at it), language, self (she says Yes), document
  * (a parent reviews it), mixed (Driving: license + record from her credentials, insurance / car seats she confirms). */
 export function proofOf(r: Pick<Requirement, 'key' | 'details'>): 'credential' | 'language' | 'self' | 'document' | 'mixed' {
   if (['background_check', 'cpr_first_aid', 'cpr_infant', 'cpr_child', 'first_aid', 'newborn_care', 'water_safety', 'vaccination'].includes(r.key)) return 'credential';
@@ -408,14 +410,24 @@ const CRED_KINDS: Record<string, string[]> = {
   vaccination: ['vaccination'],
 };
 
+const SEEN = 'Looks good to the family';
+
+/** She has a current card of one of these kinds. */
+function hasCard(kinds: string[], creds: CredLite[]) {
+  const today = new Date().toISOString().slice(0, 10);
+  return creds.some((c) => kinds.includes(c.kind) && (!c.expires_on || c.expires_on >= today));
+}
+
+// Phase 1 (migration 31): a card counts once she shares it and a parent taps "Looks good".
 function credLine(kinds: string[], creds: CredLite[], s: ReqStatusRow | undefined) {
   if (!s) return '';
   if (s.reason === 'expired' && s.expires_on) return `Expired ${monthDay(s.expires_on)}`;
   if (s.reason === 'too_old') return 'Older than 12 months';
-  if (!s.met) return 'Add it to your profile';
-  const c = creds.find((x) => kinds.includes(x.kind) && (!s.expires_on || x.expires_on === s.expires_on));
-  const verified = c?.verified_at ? `Verified ${MONTHS[new Date(c.verified_at).getMonth()]} ${new Date(c.verified_at).getFullYear()}` : 'In review';
-  return s.reason === 'expiring' && s.expires_on ? `${c?.verified_at ? 'Verified' : 'In review'} · expires ${monthDay(s.expires_on)}` : verified;
+  if (s.met) return s.reason === 'expiring' && s.expires_on ? `${SEEN} · expires ${monthDay(s.expires_on)}` : SEEN;
+  if (s.reason === 'shared') return 'Shared · waiting for the family';
+  if (s.reason === 'declined') return 'You said you don’t have it';
+  if (hasCard(kinds, creds)) return s.reason === 'asked' ? 'Asked · share it from Requests' : 'You have it · share it when they ask';
+  return 'Add it to your profile';
 }
 
 /** S27 rows: what the family asks for and where she stands on each. `answers` = her Yes / No per requirement id. */
@@ -435,7 +447,7 @@ export function sitterRows(reqs: Requirement[], rows: ReqStatusRow[], creds: Cre
       const met = !!s?.met && !!si?.met;
       const soon = [s, si].find((x) => x?.met && x.reason === 'expiring' && x.expires_on);
       const sub = met
-        ? `${creds.some((c) => ['first_aid', 'cpr_child', 'cpr_infant'].includes(c.kind) && c.verified_at) ? 'Verified' : 'In review'}${soon ? ` · ${soon === si ? 'Infant ' : ''}expires ${monthDay(soon.expires_on!)}` : ''}`
+        ? `${SEEN}${soon ? ` · ${soon === si ? 'Infant ' : ''}expires ${monthDay(soon.expires_on!)}` : ''}`
         : !s?.met && !si?.met
           ? 'Add both to your profile'
           : !s?.met
@@ -453,7 +465,7 @@ export function sitterRows(reqs: Requirement[], rows: ReqStatusRow[], creds: Cre
       out.push({ ...base, sub: r.details.why ? `“${r.details.why}”` : 'The family reviews a document', state: s?.met ? 'have' : nice ? 'nice' : 'review' });
     } else if (proof === 'mixed') {
       const items = r.details.items ?? [];
-      const licenseOk = s?.met || s?.reason === 'unconfirmed' || s?.reason === 'declined';
+      const licenseOk = !!s?.met || hasCard(['drivers_license'], creds);
       const askMe = items.includes('insurance') || items.includes('car_seats');
       const sub = [
         items.includes('license') || !items.length ? `License${licenseOk ? ' ✓' : ''}` : '',
@@ -465,7 +477,7 @@ export function sitterRows(reqs: Requirement[], rows: ReqStatusRow[], creds: Cre
       out.push({ ...base, sub, state, confirmId: askMe && licenseOk && !nice ? r.id : undefined, answer: answers[r.id] ?? null });
     } else {
       const state: SitterReqState = s?.met ? 'confirmed' : nice ? 'nice' : 'confirm';
-      const sub = r.details.why ? `“${r.details.why}”` : 'Confirm for this family';
+      const sub = s?.met ? SEEN : s?.reason === 'shared' ? 'Shared · waiting for the family' : r.details.why ? `“${r.details.why}”` : 'Confirm for this family';
       out.push({ ...base, sub, state, confirmId: nice ? undefined : r.id, answer: answers[r.id] ?? null });
     }
   }

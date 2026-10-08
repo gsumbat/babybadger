@@ -1,7 +1,7 @@
 // Sitter profile and credentials data (migration 19). Types and pure logic are in ./credentials-logic.ts and
 // re-exported here. The sitter writes her own rows; parents of a family she's linked to read them (P11).
 // Files go to the private sitter-files bucket: <sitter_id>/photo/... (families may read) and <sitter_id>/cards/...
-// (only she can; families never see a card, S15).
+// (only she can, and a family she shared that card or report with through a request, migration 31).
 import type { Credential, CredentialInput, LanguageLevel, SitterLanguage, SitterProfile } from './credentials-logic';
 import { supabase } from './supabase';
 
@@ -101,9 +101,15 @@ async function upload(path: string, uri: string, contentType: string) {
   return path;
 }
 
-/** S15 card photo. Only the sitter can read it back. */
+/** S15 card photo. Only the sitter can read it, and a family she shares it with (migration 31). */
 export function uploadCard(sitterId: string, uri: string) {
   return upload(`${sitterId}/cards/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`, uri, 'image/jpeg');
+}
+
+/** S17d background check report (PDF or photo). Private like a card photo: a family reads it only once she shares it
+ * with them (migration 31). */
+export function uploadReport(sitterId: string, uri: string, pdf: boolean) {
+  return upload(`${sitterId}/cards/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${pdf ? 'pdf' : 'jpg'}`, uri, pdf ? 'application/pdf' : 'image/jpeg');
 }
 
 /** S40 profile photo. Families she's linked to can read it. */

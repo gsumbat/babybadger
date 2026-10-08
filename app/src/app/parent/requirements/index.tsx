@@ -3,10 +3,12 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
+import { AskSheet, ReqStatusCard } from '@/components/requirementRequests';
 import { ModeSeg, ReqSection, ReqTile, reqSvg, Toggle } from '@/components/requirements';
 import { Button, ErrorText, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
+import { progressLine, requirementRequestsApi, type FamilyReqRow } from '@/lib/requirement-requests-api';
 import {
   catalogueDraft,
   catalogueItem,
@@ -41,10 +43,13 @@ import { Text, TextInput } from '@/components/Text';
 // requirement on (as Must) or off; language chips add a "Speaks …" nice-to-have; Save writes everything.
 // Not drawn: rows for Non-smoker and the parent's own requirements (shown under the five switches when the P29 flow
 // added them), the "+ Add" language field, the line for a sitter who is missing one, the line with no sitters yet.
+// Scrolled down (P79d, migration 31): BY SITTER, each active sitter's status per requirement (the P11 card), her name
+// opens P11, a shared row opens P79b, "Ask Maya" opens P79. Hidden before migration 31 or with no sitters.
 export default function SitterRequirements() {
   const { family } = useSession();
   const fid = family!.id;
-  const { data, error } = useQuery(async () => {
+  const [askFor, setAskFor] = useState<{ id: string; name: string; rows: FamilyReqRow[] } | null>(null);
+  const { data, error, reload } = useQuery(async () => {
     const [{ saved, missing }, kids, mode, sitters] = await Promise.all([
       requirementsOrMissing(fid),
       api.kids(fid),
@@ -53,7 +58,14 @@ export default function SitterRequirements() {
     ]);
     const active = sitters.filter((s) => s.status === 'active');
     const lines = await Promise.all(active.map(async (s) => meetsLine(firstName(s.profile?.full_name), await requirementStatus(fid, s.sitter_id))));
-    return { saved, missing, kids, mode, lines: lines.filter(Boolean) };
+    const bySitter = await Promise.all(
+      active.map(async (s) => ({
+        id: s.sitter_id,
+        full: s.profile?.full_name || 'Sitter',
+        rows: await requirementRequestsApi.forSitter(fid, s.sitter_id).catch((): FamilyReqRow[] => []),
+      })),
+    );
+    return { saved, missing, kids, mode, lines: lines.filter(Boolean), bySitter: bySitter.filter((b) => b.rows.length) };
   }, [fid]);
   const [drafts, setDrafts] = useState<ReqDraft[] | null>(null);
   const [mode, setMode] = useState<RequirementMode>('warn');
@@ -178,6 +190,40 @@ export default function SitterRequirements() {
           {l}
         </Text>
       ))}
+      {data.bySitter.length ? (
+        <>
+          <ReqSection label="BY SITTER" style={{ marginTop: 4 }} />
+          <Text style={st.lead2}>Ask a sitter to share what she has. It counts once you say it looks good.</Text>
+          {data.bySitter.map((b) => {
+            const name = firstName(b.full);
+            return (
+              <ReqStatusCard
+                key={b.id}
+                rows={b.rows}
+                name={name}
+                canAsk
+                onAsk={() => setAskFor({ id: b.id, name, rows: b.rows })}
+                onOpen={(rid) => router.push({ pathname: '/parent/shared/[id]', params: { id: rid } })}
+                head={
+                  <Pressable accessibilityRole="button" onPress={() => router.push({ pathname: '/parent/sitter/[id]', params: { id: b.id } })} style={st.sitterHead}>
+                    <View style={st.sitterDot}>
+                      <Text style={st.sitterInitial}>{(name[0] || '?').toUpperCase()}</Text>
+                    </View>
+                    <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
+                      <Text style={st.sitterName}>{name}</Text>
+                      <Text style={st.sitterMeta}>{progressLine(b.rows)}</Text>
+                    </View>
+                    <SvgXml xml={reqSvg('chevron', color.ink2)} width={18} height={18} style={{ flexShrink: 0 }} />
+                  </Pressable>
+                }
+              />
+            );
+          })}
+          {askFor ? (
+            <AskSheet open onClose={() => setAskFor(null)} familyId={fid} sitterId={askFor.id} name={askFor.name} rows={askFor.rows} onSent={reload} />
+          ) : null}
+        </>
+      ) : null}
       <Pressable accessibilityRole="button" onPress={() => router.push('/parent/rules')} style={st.rules}>
         <SvgXml xml={reqSvg('rules', color.primaryStrong)} width={20} height={20} style={{ flexShrink: 0 }} />
         <Text style={st.rulesText}>
@@ -206,6 +252,13 @@ const st = StyleSheet.create({
   chipText: { fontFamily: font.bodySemi, fontSize: 14, color: color.ink },
   chipInput: { minWidth: 120, fontFamily: font.bodySemi, fontSize: 14, color: color.ink, borderColor: color.primary },
   note: { fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.ink2 },
+  // P79d
+  lead2: { fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink2 },
+  sitterHead: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingBottom: 4 },
+  sitterDot: { width: 32, height: 32, borderRadius: 16, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  sitterInitial: { fontFamily: font.display, fontSize: 16, color: '#FFFFFF' },
+  sitterName: { fontFamily: font.bodyBold, fontSize: 16, color: color.ink },
+  sitterMeta: { fontFamily: font.body, fontSize: 12, color: color.ink2 },
   rules: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: color.primaryTint, borderRadius: 14 },
   rulesText: { flexGrow: 1, flexShrink: 1, fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.ink },
   rulesBold: { fontFamily: font.bodyBold, color: color.primaryStrong },
