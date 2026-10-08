@@ -24,8 +24,8 @@
   --body: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 84px; -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; overflow-x: hidden; }
+html { overflow-x: hidden; overflow-x: clip; scroll-behavior: smooth; scroll-padding-top: 84px; -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.5; overflow-x: hidden; overflow-x: clip; }
 img, svg { display: block; }
 a { color: var(--primary); }
 h1, h2, h3 { font-family: var(--display); margin: 0; }
