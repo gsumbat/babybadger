@@ -145,13 +145,13 @@
     <span class="kicker">HOW IT WORKS</span>
     <h2 id="how-title">Bring your sitter along, in four steps</h2>
   </div>
-  <ol class="grid g4 how-steps" style="list-style:none;margin:0;padding:0">
+  <ol class="grid g4 m-carousel" style="list-style:none;margin:0;padding:0">
     <li class="card" style="--bc:#A3D2F0"><span class="step-n" style="background:#A3D2F0;color:#1B2328" aria-hidden="true">1</span><h3><span class="sr-only">Step 1: </span>Set up your family</h3><p>Add your kids, your home and the care plan: pickups, meals, naps, bedtime.</p></li>
     <li class="card" style="--bc:#2F6FD6"><span class="step-n" style="background:#2F6FD6" aria-hidden="true">2</span><h3><span class="sr-only">Step 2: </span>Invite the sitter you already use</h3><p>Send her an invite by text. She sees what you’ll see, signs the notice and adds her credentials.</p></li>
     <li class="card" style="--bc:#8676B3"><span class="step-n" style="background:#8676B3" aria-hidden="true">3</span><h3><span class="sr-only">Step 3: </span>Shifts, calmly</h3><p>When she clocks in at your door, the live map turns on. Trips send arrival alerts and the care plan is in her hand.</p></li>
     <li class="card" style="--bc:#D9822B"><span class="step-n" style="background:#D9822B" aria-hidden="true">4</span><h3><span class="sr-only">Step 4: </span>Read the report</h3><p>At clock-out sharing stops and the report is ready: meals, naps, trips, photos and her note.</p></li>
   </ol>
-  <div class="how-dots m-only" aria-hidden="true"><span class="on"></span><span></span><span></span><span></span></div>
+  <div class="m-dots m-only" aria-hidden="true"><span class="on"></span><span></span><span></span><span></span></div>
 </section>
 
 <!-- ================= PARENTS ================= -->
@@ -184,11 +184,12 @@
     <h2 id="bring-title">Already have a sitter you love? Bring her along.</h2>
     <p class="sec-lead">BabyBadger works with the sitter you already know. Nothing to switch, nobody new to meet.</p>
   </div>
-  <div class="grid g3">
+  <div class="grid g3 m-carousel">
     <div class="card" style="--bc:#2F6FD6"><span class="card-ic" style="background:#E6EEFB;color:#1F4E9A"><svg class="ic"><use href="#i-chat"/></svg></span><h3>Invite her by text in a minute</h3><p>BabyBadger writes the message. You send it from your phone, with a link and a 6-digit code.</p></div>
     <div class="card" style="--bc:#8676B3"><span class="card-ic" style="background:#EFEAFB;color:#5B3FA8"><svg class="ic"><use href="#i-list"/></svg></span><h3>She knows your home before day one</h3><p>House rules, the care plan and each kid’s needs are waiting for her before her first shift.</p></div>
     <div class="card" style="--bc:#D9822B"><span class="card-ic" style="background:#FBEEDF;color:#9A4E12"><svg class="ic"><use href="#i-cal"/></svg></span><h3>One place instead of texts</h3><p>Shifts, plans, logs and photos live in one app you both keep, not scattered across group chats.</p></div>
   </div>
+  <div class="m-dots m-only" aria-hidden="true"><span class="on"></span><span></span><span></span></div>
   <div class="bring-cta">
     <a class="btn btn-primary" href="{{TRIAL_URL}}">Start free trial</a>
     <span>She joins free. You start a {{TRIAL_DAYS}}-day free trial.</span>
@@ -362,15 +363,17 @@
 })();
 </script>
 <script>
-// "How it works" carousel (phones): the dot under the card in view lights up.
+// Phone carousels ("How it works", "Bring your own sitter"): the dot under the card in view lights up.
 (function () {
-  var list = document.querySelector('.how-steps'), dots = document.querySelectorAll('.how-dots span');
-  if (!list || !dots.length) return;
-  list.addEventListener('scroll', function () {
-    var cards = list.children, mid = list.scrollLeft + list.clientWidth / 2, best = 0;
-    for (var i = 0; i < cards.length; i++) if (Math.abs(cards[i].offsetLeft + cards[i].offsetWidth / 2 - mid) < Math.abs(cards[best].offsetLeft + cards[best].offsetWidth / 2 - mid)) best = i;
-    for (var j = 0; j < dots.length; j++) dots[j].className = j === best ? 'on' : '';
-  }, { passive: true });
+  document.querySelectorAll('.m-carousel').forEach(function (list) {
+    var dots = list.nextElementSibling && list.nextElementSibling.classList.contains('m-dots') ? list.nextElementSibling.children : [];
+    if (!dots.length) return;
+    list.addEventListener('scroll', function () {
+      var cards = list.children, mid = list.scrollLeft + list.clientWidth / 2, best = 0;
+      for (var i = 0; i < cards.length; i++) if (Math.abs(cards[i].offsetLeft + cards[i].offsetWidth / 2 - mid) < Math.abs(cards[best].offsetLeft + cards[best].offsetWidth / 2 - mid)) best = i;
+      for (var j = 0; j < dots.length; j++) dots[j].className = j === best ? 'on' : '';
+    }, { passive: true });
+  });
 })();
 </script>
 </body>
