@@ -317,6 +317,12 @@ p { margin: 0; }
   .g4, .g3, .g2, .trust ul, .faq { grid-template-columns: minmax(0, 1fr); }
   .trust { padding-top: calc(var(--wave) + 24px); }
   #how .plane { display: none; }
+  .how-steps { display: flex !important; overflow-x: auto; scroll-snap-type: x mandatory; gap: 14px; margin: 0 calc(-1 * var(--g)) !important; padding: 4px var(--g) 8px !important; scroll-padding: 0 var(--g); scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .how-steps::-webkit-scrollbar { display: none; }
+  .how-steps > li { flex: 0 0 82%; scroll-snap-align: start; }
+  .how-dots { display: flex !important; justify-content: center; gap: 8px; margin-top: 16px; }
+  .how-dots span { width: 8px; height: 8px; border-radius: 4px; background: #C3CCD5; transition: width .2s, background .2s; }
+  .how-dots span.on { width: 22px; background: #47698A; }
   .sitter-cta { flex-direction: column; }
   .phase { padding: 22px 20px; gap: 18px; }
   .phase-list { grid-template-columns: minmax(0, 1fr); gap: 16px; }

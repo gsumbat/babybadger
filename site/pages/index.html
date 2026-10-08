@@ -145,12 +145,13 @@
     <span class="kicker">HOW IT WORKS</span>
     <h2 id="how-title">Bring your sitter along, in four steps</h2>
   </div>
-  <ol class="grid g4" style="list-style:none;margin:0;padding:0">
+  <ol class="grid g4 how-steps" style="list-style:none;margin:0;padding:0">
     <li class="card" style="--bc:#A3D2F0"><span class="step-n" style="background:#A3D2F0;color:#1B2328" aria-hidden="true">1</span><h3><span class="sr-only">Step 1: </span>Set up your family</h3><p>Add your kids, your home and the care plan: pickups, meals, naps, bedtime.</p></li>
     <li class="card" style="--bc:#2F6FD6"><span class="step-n" style="background:#2F6FD6" aria-hidden="true">2</span><h3><span class="sr-only">Step 2: </span>Invite the sitter you already use</h3><p>Send her an invite by text. She sees what you’ll see, signs the notice and adds her credentials.</p></li>
     <li class="card" style="--bc:#8676B3"><span class="step-n" style="background:#8676B3" aria-hidden="true">3</span><h3><span class="sr-only">Step 3: </span>Shifts, calmly</h3><p>When she clocks in at your door, the live map turns on. Trips send arrival alerts and the care plan is in her hand.</p></li>
     <li class="card" style="--bc:#D9822B"><span class="step-n" style="background:#D9822B" aria-hidden="true">4</span><h3><span class="sr-only">Step 4: </span>Read the report</h3><p>At clock-out sharing stops and the report is ready: meals, naps, trips, photos and her note.</p></li>
   </ol>
+  <div class="how-dots m-only" aria-hidden="true"><span class="on"></span><span></span><span></span><span></span></div>
 </section>
 
 <!-- ================= PARENTS ================= -->
@@ -358,6 +359,18 @@
     if (location.hash) history.replaceState(null, '', location.pathname + location.search);
     window.scrollTo(0, 0);
   }
+})();
+</script>
+<script>
+// "How it works" carousel (phones): the dot under the card in view lights up.
+(function () {
+  var list = document.querySelector('.how-steps'), dots = document.querySelectorAll('.how-dots span');
+  if (!list || !dots.length) return;
+  list.addEventListener('scroll', function () {
+    var cards = list.children, mid = list.scrollLeft + list.clientWidth / 2, best = 0;
+    for (var i = 0; i < cards.length; i++) if (Math.abs(cards[i].offsetLeft + cards[i].offsetWidth / 2 - mid) < Math.abs(cards[best].offsetLeft + cards[best].offsetWidth / 2 - mid)) best = i;
+    for (var j = 0; j < dots.length; j++) dots[j].className = j === best ? 'on' : '';
+  }, { passive: true });
 })();
 </script>
 </body>
