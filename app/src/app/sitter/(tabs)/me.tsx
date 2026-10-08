@@ -26,7 +26,7 @@ const SETTINGS =
   '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg>';
 
 export default function Me() {
-  const { profile, session, sitterLinks } = useSession();
+  const { profile, session, sitterLinks, signOut } = useSession();
   const uid = session!.user.id;
   // sitter_availability arrives with migration 12; until it's run the row just has no summary.
   const { data: hours } = useQuery(() => availabilityApi.mine(uid).catch(() => []), [uid]);
@@ -130,12 +130,18 @@ export default function Me() {
           <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>
             <Text style={st.rowTitle}>Settings, privacy and help</Text>
             <Text style={st.sub12} numberOfLines={1}>
-              Location sharing, notifications, sign out
+              Location sharing, notifications, help
             </Text>
           </View>
           <Icon name="chevron-right" size={18} tint={color.ink2} />
         </Pressable>
       </View>
+
+      {/* Sign out at the bottom of Me, like parents' P12b (S39). */}
+      <Pressable accessibilityRole="button" onPress={signOut} style={({ pressed }) => [st.signOut, pressed && { opacity: 0.8 }]}>
+        <Text style={st.signOutText}>Sign out</Text>
+      </Pressable>
+      <Text style={st.note}>Alerts to this phone stop until you sign in again.</Text>
     </Screen>
   );
 }
@@ -177,4 +183,8 @@ const st = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 46, paddingVertical: 3 },
   rowIcon: { width: 32, height: 32, borderRadius: 10, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
   rowTitle: { fontFamily: font.bodySemi, fontSize: 15, lineHeight: 19, color: color.ink },
+  // P12b sign out: white pill, 1.5 px line-strong border, red label.
+  signOut: { height: 54, marginTop: 8, borderRadius: 999, borderWidth: 1.5, borderColor: color.lineStrong, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
+  signOutText: { fontFamily: font.displayBold, fontSize: 17, color: color.badInk, includeFontPadding: false },
+  note: { fontFamily: font.body, fontSize: 13, color: color.ink2, textAlign: 'center' },
 });

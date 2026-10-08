@@ -173,11 +173,13 @@ export default function WF_S39() {
             </View>
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328", lineHeight: 19 }}>Settings, privacy and help</Text>
-              <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960" }}>Location sharing, notifications, sign out</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960" }}>Location sharing, notifications, help</Text>
             </View>
             <SvgXml xml={SVG[16]} width={18} height={18} />
           </View>
         </View>
+        <View style={{ height: 54, flexShrink: 0, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.5, borderColor: "#C3CCD5", justifyContent: "center" }}><Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#A1321F" }}>Sign out</Text></View>
+        <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", textAlign: "center" }}>Alerts to this phone stop until you sign in again.</Text>
       </View>
       {/* tab bar: drawn by the app's tab navigator */}
     </View>
