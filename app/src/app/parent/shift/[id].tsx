@@ -4,6 +4,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { KidDot, SafetyBox, TaskRows, kidChipTone } from '@/components/bits';
 import { LiveMap } from '@/components/LiveMap';
+import { LogEntries, LogTypeChips, useLogLove } from '@/components/logFeed';
 import { LogTimeline, PhotoThumb } from '@/components/LogTimeline';
 import { EditableTasksCard } from '@/components/shiftTasks';
 import { Avatar, Button, Card, Chip, ErrorText, Icon, Loading, Pill, Screen, T } from '@/components/ui';
@@ -11,8 +12,9 @@ import { planKidId } from '@/lib/care-plan';
 import { useShiftLive } from '@/lib/data';
 import { dayOf, firstName, timeOf } from '@/lib/format';
 import { ageLabel } from '@/lib/kid-profile';
-import { kidLogs, kidTasks, reportTitle } from '@/lib/shift-log-logic';
-import { canEditShiftTasks, describeLog, workedMinutes } from '@/lib/shift-logic';
+import { kidLogs, kidTasks, reportTitle, shiftLogRows } from '@/lib/shift-log-logic';
+import { type LogFilter, useShiftReactions } from '@/lib/shift-log';
+import { canEditShiftTasks, workedMinutes } from '@/lib/shift-logic';
 import { useSession } from '@/lib/session';
 import { useCanManage } from '@/lib/use-family-role';
 import { errorText, supabase } from '@/lib/supabase';
@@ -25,8 +27,8 @@ import { Text } from '@/components/Text';
 // Kid filter (like the care plan): opened for one kid (P55's "Last report", ?kidId=) it is only her report (P5k:
 // "Ava’s report", no chips). Opened for the family (Home, calendar, pushes) the report shows All · Ava · Leo chips under
 // the header (2+ kids on the shift). A kid: her logs and the whole family's (lib/shift-log-logic kidLogs), tasks that
-// don't name only other kids (tasks store no kid, so they match by name: kidTasks), photos likewise; "See all N" counts
-// hers and opens P77 with the same kid. Time, pay, the map and the notes are the shift's. The live "Today’s log" card
+// don't name only other kids (tasks store no kid, so they match by name: kidTasks), photos likewise. The Logs card
+// shows the whole log in place (type chips + timeline, components/logFeed), hers when a kid is picked. Time, pay, the map and the notes are the shift's. The live "Today’s log" card
 // follows ?kidId= too (no chips drawn there).
 export default function ParentShift() {
   const params = useLocalSearchParams<{ id: string; kidId?: string }>();
@@ -34,9 +36,12 @@ export default function ParentShift() {
   // Opened from a kid's profile: that kid's report only, no switching to All or another kid.
   const [scoped] = useState(() => !!params.kidId);
   const { bundle, error, reload } = useShiftLive(id);
+  const { reactions, setReactions } = useShiftReactions(id);
+  const [logFilter, setLogFilter] = useState<LogFilter>('all');
   const [, tick] = useState(0);
   // A family helper (migration 30) can't cancel a booking.
-  const { familyRole } = useSession();
+  const { familyRole, session } = useSession();
+  const loved = useLogLove(id, session!.user.id, reactions, setReactions);
   const manage = useCanManage();
   useEffect(() => {
     const t = setInterval(() => tick((n) => n + 1), 30_000);
@@ -82,8 +87,6 @@ export default function ParentShift() {
   // Approve hours, Replay route, house-rules check.
   if (shift.status === 'completed') {
     const photos = logs.filter((l) => l.photo_path);
-    const hm = (iso: string) => timeOf(iso).replace(/\s?[AP]M$/i, '');
-    const who = (ids: string[]) => (ids.length === 0 || (kids.length > 1 && ids.length === kids.length) ? (kids.length > 1 ? 'both' : '') : ids.map((i) => kids.find((k) => k.id === i)?.name).filter(Boolean).join(', '));
     return (
       <Screen
         header={
@@ -139,23 +142,17 @@ export default function ParentShift() {
           </View>
           <Text style={st.summary}>{tasks.length ? tasks.map((t) => (t.done_at ? t.title : `${t.title} (not done)`)).join(' · ') : 'No tasks were set for this shift.'}</Text>
         </View>
-        {/* P5's Logs card opens the full log (P77, ended: P77d). */}
-        <Pressable accessibilityRole="link" onPress={() => router.push({ pathname: '/parent/log/[shiftId]', params: logParams })} style={[st.card, { gap: 8 }]}>
+        {/* P5 Logs: the whole log right here (P77's type chips and timeline, "Love it" on photos), no "See all" page. */}
+        <View style={st.card}>
           <View style={st.cardHead}>
             <Text style={st.cardTitle}>Logs</Text>
-            {logs.length ? <Text style={st.seeAll}>See all {logs.length} ›</Text> : null}
+            {logs.length ? <Text style={st.count}>{logs.length}</Text> : null}
           </View>
-          {logs.length === 0 ? <Text style={st.summary}>Nothing logged.</Text> : null}
-          {[...logs].reverse().map((l) => {
-            const d = describeLog(l);
-            return (
-              <View key={l.id} style={{ flexDirection: 'row', gap: 10 }}>
-                <Text style={st.logTime}>{hm(l.happened_at)}</Text>
-                <Text style={[st.logText, l.urgent && { color: color.badInk }]}>{[d.title, who(l.kid_ids), d.detail].filter(Boolean).join(' · ')}</Text>
-              </View>
-            );
-          })}
-        </Pressable>
+          {logs.length ? <LogTypeChips filter={logFilter} onChange={setLogFilter} inset={16} /> : null}
+          <View style={{ marginTop: 2 }}>
+            <LogEntries rows={shiftLogRows(bundle.logs, bundle.tasks, kids, logFilter, kidId)} filter={logFilter} loved={loved.mine} onLove={loved.toggle} live={false} />
+          </View>
+        </View>
         <View style={st.card}>
           <Text style={st.cardTitle}>Notes</Text>
           <Text style={st.summary}>{shift.note || `${name} didn’t leave a note.`}</Text>
@@ -249,10 +246,8 @@ const st = StyleSheet.create({
   smallPill: { flexDirection: 'row', alignSelf: 'flex-start', alignItems: 'center', height: 24, paddingHorizontal: 8, borderRadius: 999, backgroundColor: color.okTint },
   smallPillText: { fontFamily: font.bodyBold, fontSize: 12, color: color.okInk },
   summary: { fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink2 },
-  logTime: { width: 40, fontFamily: font.body, fontSize: 14, color: color.quiet },
-  logText: { flexShrink: 1, fontFamily: font.body, fontSize: 14, color: color.ink },
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink },
-  seeAll: { fontFamily: font.bodyBold, fontSize: 13, color: color.primary },
+  count: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2 },
   kidRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60 },
 });
