@@ -17,6 +17,8 @@ export default function ParentLayout() {
       <Stack.Screen name="trip/[id]" />
       <Stack.Screen name="kid/[id]" />
       <Stack.Screen name="kid/care" />
+      {/* P5h Ava’s report: her logs over a range, patterns and the doctor-visit summary. Read only, so for everyone. */}
+      <Stack.Screen name="kid/report" />
       <Stack.Screen name="care/index" />
       <Stack.Screen name="care/view" />
       {/* Read only for a read-only member (P20h, P56h, P74h, P19v, P20v): the editors they open are below. */}

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { hasDetails, normalizeCareItem } from './care-plan';
 import type { FamilyContact } from './family-page-logic';
+import { kidLogs } from './shift-log-logic';
 import { supabase } from './supabase';
 import type { CareItemInput, Invite, Kid, LocationPoint, LogEntry, Profile, Shift, SitterLink, Task } from './types';
 
@@ -72,6 +73,15 @@ export const api = {
       .map((r) => r.shift)
       .filter((s): s is Shift => !!s)
       .sort((a, b) => b.starts_at.localeCompare(a.starts_at));
+  },
+  /** Her logs since a date across all her shifts (shift_kids), newest first: logs for her and the whole family's
+   * (kid_ids empty), as kidLogs reads them. Shifts that ended before the date are skipped. "Ava’s report" (P5h). */
+  async kidLogsSince(kidId: string, sinceIso: string) {
+    const rows = must(await supabase.from('shift_kids').select('shift_id, shift:shifts(ends_at)').eq('kid_id', kidId)) as unknown as { shift_id: string; shift: { ends_at: string } | null }[];
+    const ids = rows.filter((r) => r.shift && r.shift.ends_at >= sinceIso).map((r) => r.shift_id);
+    if (!ids.length) return [] as LogEntry[];
+    const logs = must(await supabase.from('logs').select('*').in('shift_id', ids).gte('happened_at', sinceIso).order('happened_at', { ascending: false })) as LogEntry[];
+    return kidLogs(logs, kidId);
   },
   async familySitters(familyId: string) {
     const links = must(await supabase.from('family_sitters').select('*').eq('family_id', familyId).neq('status', 'removed')) as SitterLink[];

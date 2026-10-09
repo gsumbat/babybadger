@@ -31,13 +31,14 @@ export function LogTypeChips({ filter, onChange, inset = 20 }: { filter: LogFilt
   );
 }
 
-/** The timeline rows (no card around them), or the empty line for the filter. */
-export function LogEntries({ rows, filter, loved, onLove, live = true }: { rows: LogRow[]; filter: LogFilter; loved: Set<string>; onLove: (logId: string) => void; live?: boolean }) {
+/** The timeline rows (no card around them), or the empty line for the filter. Without `onLove` (Ava’s report, P5h)
+ * photos show no "Love it". */
+export function LogEntries({ rows, filter, loved, onLove, live = true }: { rows: LogRow[]; filter: LogFilter; loved?: Set<string>; onLove?: (logId: string) => void; live?: boolean }) {
   if (!rows.length) return <Text style={st.empty}>{filter === 'all' ? (live ? 'Nothing logged yet.' : 'Nothing logged.') : `No ${LOG_FILTERS.find((f) => f.value === filter)!.label.toLowerCase()} logged.`}</Text>;
   return (
     <View>
       {rows.map((r, i) => (
-        <Entry key={r.key} row={r} last={i === rows.length - 1} loved={!!r.logId && loved.has(r.logId)} onLove={r.kind === 'photo' && r.logId ? () => onLove(r.logId!) : undefined} />
+        <Entry key={r.key} row={r} last={i === rows.length - 1} loved={!!r.logId && !!loved?.has(r.logId)} onLove={onLove && r.kind === 'photo' && r.logId ? () => onLove(r.logId!) : undefined} />
       ))}
     </View>
   );

@@ -24,6 +24,7 @@ const HEART_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="#4B5960" stroke
 // and opens her day (P20k): her routine and the family's to-dos in one timeline. No separate Routine row (it
 // opened the same day).
 // THIS WEEK counts her shifts (shift_kids) and "Last report" opens the latest completed one as her report (P5k, ?kidId=).
+// The whole card, with "Her report ›" in its header, opens Ava’s report over the week (P5h, /parent/kid/report).
 // A read-only member (P55h) reads it: no Edit, Care and safety opens the read-only view (P19v) instead of the editor
 // (P19e), the plan tile opens the day read-only (P20h), and the note "Jen manages Ava’s profile." at the end.
 export default function KidProfile() {
@@ -110,8 +111,11 @@ export default function KidProfile() {
         </Pressable>
       </View>
 
-      <View style={st.weekCard}>
-        <Text style={st.label}>THIS WEEK</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel={`${reportLink(kid.gender).replace(' ›', '')}, this week`} onPress={() => router.push(`/parent/kid/report?kidId=${kid.id}&range=week`)} style={({ pressed }) => [st.weekCard, pressed && { opacity: 0.85 }]}>
+        <View style={st.weekRow}>
+          <Text style={st.label}>THIS WEEK</Text>
+          <Text style={st.reportLink}>{reportLink(kid.gender)}</Text>
+        </View>
         <View style={st.weekRow}>
           <Text style={st.weekText}>Shifts with a sitter</Text>
           <Text style={[st.weekText, { fontFamily: font.bodyBold }]}>{week.count}</Text>
@@ -124,10 +128,15 @@ export default function KidProfile() {
             </Pressable>
           </View>
         ) : null}
-      </View>
+      </Pressable>
       <HelperNote what={`${kid.name}’s profile`} />
     </Screen>
   );
+}
+
+/** THIS WEEK header link: "Her report ›" / "His report ›", "Report ›" without a gender. */
+function reportLink(gender: Parameters<typeof pronouns>[0]) {
+  return gender ? `${pronouns(gender).poss[0].toUpperCase()}${pronouns(gender).poss.slice(1)} report ›` : 'Report ›';
 }
 
 // P55 values
@@ -156,6 +165,7 @@ const st = StyleSheet.create({
   weekCard: { gap: 8, padding: 14, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6 },
   weekRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  reportLink: { fontFamily: font.bodySemi, fontSize: 14, color: color.primary },
   weekText: { fontFamily: font.body, fontSize: 14, color: color.ink, flexShrink: 1 },
   link: { fontFamily: font.bodySemi, fontSize: 14, color: color.primary, textDecorationLine: 'underline' },
 });
