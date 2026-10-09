@@ -378,50 +378,18 @@ export function suggestedLabel(ageMonths: number | null): string {
 // P7 kid filter (All · Ava · Leo, ?kidId=). null = All: the whole family's plan as before. A kid: family items marked
 // "Everyone" plus that kid's own; Routines shows only her row; food to avoid only on Meals.
 
-export type PlanTab = 'tasks' | 'meals' | 'routines';
-
-/** The kid the plan is filtered to, or null for All (no param, or a kid that isn't in the family). */
+/** The kid a screen is filtered to (?kidId=, e.g. a kid's shift report), or null for all (no param, or a kid that
+ * isn't in the family). */
 export function planKidId(kids: Pick<Kid, 'id'>[], param: string | null | undefined): string | null {
   return param && kids.some((k) => k.id === param) ? param : null;
 }
 
-/** P7 rows for a tab. Tasks: only the whole-family to-dos that aren't food (a kid's naps, bedtime and medicine are
- * her routine, on Routines, never here too). Meals: every meal and bottle (All), or the family's and the kid's.
- * Routines has no item rows. */
-export function planItems<T extends Pick<CareItem, 'kid_id' | 'type'>>(items: T[], tab: PlanTab, kidId: string | null): T[] {
-  if (tab === 'routines') return [];
-  if (tab === 'tasks') return items.filter((i) => !isFood(i.type) && i.kid_id === null);
-  return items.filter((i) => isFood(i.type) && (!kidId || i.kid_id === null || i.kid_id === kidId));
+/** Care plan (P7) "Family to-dos": the whole-family items (no kid), in time order. Each kid's own items are her day. */
+export function familyItems<T extends Pick<CareItem, 'kid_id' | 'starts' | 'created_at'>>(items: T[]): T[] {
+  return sortItems(items.filter((i) => i.kid_id === null));
 }
 
 /** A kid's day (P20, "Her plan"): her own items and the whole-family ones, one list in time order. */
 export function kidDayItems<T extends Pick<CareItem, 'kid_id' | 'starts' | 'created_at'>>(items: T[], kidId: string): T[] {
   return sortItems(items.filter((i) => i.kid_id === null || i.kid_id === kidId));
-}
-
-/** The kids listed: one row per kid on Routines, or only the selected kid. */
-export function planKids<K extends Pick<Kid, 'id'>>(kids: K[], kidId: string | null): K[] {
-  return kidId ? kids.filter((k) => k.id === kidId) : kids;
-}
-
-/** "Food to avoid" cards: only on Meals, for the selected kid (every kid with foods to avoid under All). */
-export function avoidKids<K extends Pick<Kid, 'id' | 'avoid_foods'>>(kids: K[], tab: PlanTab, kidId: string | null): K[] {
-  return tab === 'meals' ? planKids(kids, kidId).filter((k) => k.avoid_foods.trim()) : [];
-}
-
-/** A whole-family row gets the small "Everyone" label when one kid is selected. */
-export function isEveryone(item: Pick<CareItem, 'kid_id'>, kidId: string | null): boolean {
-  return kidId !== null && item.kid_id === null;
-}
-
-/** Header title: "Ava’s plan" for one kid, "Care plan" for All. */
-export function planTitle(kidName: string | null | undefined): string {
-  return kidName ? `${kidName}’s plan` : 'Care plan';
-}
-
-/** The dashed add button: "+ Add meal" on Meals, "+ Add task" on Tasks, none on Routines (it goes through P20). */
-export function planAdd(tab: PlanTab, kidId: string | null): { label: string; href: '/parent/care/item' | `/parent/care/item?${string}` } | null {
-  if (tab === 'routines') return null;
-  const q = [tab === 'meals' && 'type=meal', kidId && `kidId=${encodeURIComponent(kidId)}`].filter(Boolean).join('&');
-  return { label: tab === 'meals' ? '+ Add meal' : '+ Add task', href: q ? `/parent/care/item?${q}` : '/parent/care/item' };
 }

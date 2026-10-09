@@ -89,7 +89,7 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
     ? [
         { done: kidsDone, title: 'Add your kids', next: 'add your kids', sub: kidsDone ? data.kids.map((k) => k.name).join(' and ') : 'Names, birthdays, foods to avoid', go: '/parent/kid/new' },
         { done: data.rulesCount > 0, optional: true, title: 'House rules', next: 'house rules', sub: 'Optional · Must rules need her OK before booking', go: '/parent/rules' },
-        { done: data.careCount > 0, optional: true, title: 'Write the care plan', next: 'write the care plan', sub: 'Optional · tasks, meals, routines', go: '/parent/care' },
+        { done: data.careCount > 0, optional: true, title: 'Write the care plan', next: 'write the care plan', sub: 'Optional · each kid’s day and family to-dos', go: '/parent/care' },
         { done: sitterDone, title: 'Invite your sitter', next: 'invite your sitter', sub: 'Someone you trust', go: '/parent/invite?from=setup' },
         { done: data.shifts.length > 0, locked: !!bookLock, title: 'Book the first shift', next: 'book the first shift', sub: bookLock || 'Pick a day and time', go: '/parent/shift/new' },
       ]

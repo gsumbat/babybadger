@@ -1,30 +1,25 @@
 import { describe, expect, it } from '@jest/globals';
 
 import {
-  avoidKids,
-  kidDayItems,
   cleanDetails,
-  isEveryone,
-  planAdd,
-  planItems,
-  planKidId,
-  planKids,
-  planTitle,
   daysLabel,
   detailLabel,
-  hasDetails,
-  itemLine,
-  normalizeCareItem,
-  parseAmount,
-  repeatChoices,
+  familyItems,
   formatTime,
   hasDay,
-  itemTitle,
+  hasDetails,
+  itemLine,
   itemsForShift,
+  itemTitle,
+  kidDayItems,
+  planKidId,
+  normalizeCareItem,
+  parseAmount,
   parseTime,
+  repeatChoices,
   repeatLabel,
-  scheduleLabel,
   routineSummary,
+  scheduleLabel,
   shiftTaskLines,
   shortTime,
   sortItems,
@@ -292,35 +287,18 @@ describe('per-type extras', () => {
   });
 });
 
-describe('kid filter (P7 All · Ava · Leo)', () => {
-  const kids = [
-    { id: 'ava', avoid_foods: 'peanuts' },
-    { id: 'leo', avoid_foods: ' ' },
-    { id: 'mia', avoid_foods: 'eggs' },
-  ];
-  const famTask = item({ type: 'activity', title: 'Pick up' });
-  const famMeal = item({ type: 'meal', title: 'Dinner' });
-  const avaNap = item({ type: 'nap', kid_id: 'ava' });
-  const avaBottle = item({ type: 'bottle', kid_id: 'ava' });
-  const leoMeal = item({ type: 'meal', kid_id: 'leo' });
-  const leoNap = item({ type: 'nap', kid_id: 'leo' });
-  const all = [famTask, famMeal, avaNap, avaBottle, leoMeal, leoNap];
-
-  it('reads the kid param, falling back to All', () => {
+describe('care plan split (P7 family to-dos, P20 a kid\'s day)', () => {
+  it('reads the kid param, falling back to all', () => {
+    const kids = [{ id: 'ava' }, { id: 'leo' }];
     expect(planKidId(kids, 'ava')).toBe('ava');
     expect(planKidId(kids, 'nobody')).toBeNull();
-    expect(planKidId(kids, '')).toBeNull();
     expect(planKidId(kids, undefined)).toBeNull();
   });
-  it('All keeps the whole-family plan', () => {
-    expect(planItems(all, 'tasks', null)).toEqual([famTask]);
-    expect(planItems(all, 'meals', null)).toEqual([famMeal, avaBottle, leoMeal]);
-    expect(planItems(all, 'routines', null)).toEqual([]);
-  });
-  it('a kid sees the family items plus her own meals; her routine stays off Tasks', () => {
-    expect(planItems(all, 'tasks', 'ava')).toEqual([famTask]);
-    expect(planItems(all, 'meals', 'ava')).toEqual([famMeal, avaBottle]);
-    expect(planItems(all, 'meals', 'leo')).toEqual([famMeal, leoMeal]);
+  it('lists only the whole-family items as family to-dos, in time order', () => {
+    const fam1 = item({ type: 'activity', starts: '17:30', created_at: '2026-01-01' });
+    const fam2 = item({ type: 'meal', starts: '12:00', created_at: '2026-01-02' });
+    const ava = item({ type: 'nap', starts: '13:00', created_at: '2026-01-03', kid_id: 'ava' });
+    expect(familyItems([fam1, fam2, ava])).toEqual([fam2, fam1]);
   });
   it("puts a kid's day and the family items in one timeline", () => {
     const t = (starts: string | null, created_at: string, kid_id: string | null = null) => item({ type: 'nap', starts, created_at, kid_id });
@@ -330,32 +308,5 @@ describe('kid filter (P7 All · Ava · Leo)', () => {
     const leo = t('12:00', '2026-01-04', 'leo');
     const anyTime = t(null, '2026-01-05', 'ava');
     expect(kidDayItems([fam, avaLate, avaEarly, leo, anyTime], 'ava')).toEqual([avaEarly, fam, avaLate, anyTime]);
-  });
-  it('lists one kid on Routines', () => {
-    expect(planKids(kids, 'leo').map((k) => k.id)).toEqual(['leo']);
-    expect(planKids(kids, null)).toHaveLength(3);
-  });
-  it('shows food to avoid only on Meals, for the selected kid', () => {
-    expect(avoidKids(kids, 'tasks', null)).toEqual([]);
-    expect(avoidKids(kids, 'routines', 'ava')).toEqual([]);
-    expect(avoidKids(kids, 'meals', null).map((k) => k.id)).toEqual(['ava', 'mia']);
-    expect(avoidKids(kids, 'meals', 'ava').map((k) => k.id)).toEqual(['ava']);
-    expect(avoidKids(kids, 'meals', 'leo')).toEqual([]);
-  });
-  it('marks family rows "Everyone" only when a kid is selected', () => {
-    expect(isEveryone(famTask, 'ava')).toBe(true);
-    expect(isEveryone(avaNap, 'ava')).toBe(false);
-    expect(isEveryone(famTask, null)).toBe(false);
-  });
-  it('titles the plan', () => {
-    expect(planTitle('Ava')).toBe('Ava’s plan');
-    expect(planTitle(null)).toBe('Care plan');
-  });
-  it('labels the add button and pre-assigns the kid', () => {
-    expect(planAdd('tasks', null)).toEqual({ label: '+ Add task', href: '/parent/care/item' });
-    expect(planAdd('meals', null)).toEqual({ label: '+ Add meal', href: '/parent/care/item?type=meal' });
-    expect(planAdd('meals', 'ava')).toEqual({ label: '+ Add meal', href: '/parent/care/item?type=meal&kidId=ava' });
-    expect(planAdd('tasks', 'ava')).toEqual({ label: '+ Add task', href: '/parent/care/item?kidId=ava' });
-    expect(planAdd('routines', 'ava')).toBeNull();
   });
 });
