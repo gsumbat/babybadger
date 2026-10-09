@@ -19,7 +19,7 @@ const PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width
 
 type Row = { key: string; type: CareType; title: string; detail: string; starts: string | null; ends: string | null; days: number; every: number | null; everyone?: boolean; open?: () => void };
 
-// Wireframe P20 Routine, from app/src/wireframes/P20.tsx, opened from the kid profile's "Her plan" (P55) with a plain back header
+// Wireframe P20 Routine, from app/src/wireframes/P20.tsx, opened from the kid profile's "Her plan" (P55) with the title in the back header ("‹ Ava’s day")
 // instead of the Add-a-child step header. Left out: the Places row and the "Set a time ... to continue" footer
 // (it belongs to Add a child), and the Suggested / Start blank switch (dropped: it only listed what is saved, plus
 // age suggestions that "+ Add to Ava's day" covers). A repeating item shows its start chip
@@ -46,9 +46,8 @@ export default function KidRoutine() {
   const rows: Row[] = items.map((i) => ({ key: i.id, type: i.type, title: itemTitle(i), detail: detailLabel(i), starts: i.starts, ends: i.ends, days: i.days, every: i.every_minutes ?? null, everyone: i.kid_id === null, open: manage ? () => router.push(`/parent/care/item?id=${i.id}`) : undefined }));
 
   return (
-    <Screen back gap={8}>
+    <Screen back title={`${kid.name}’s day`} gap={8}>
       <ErrorText>{error}</ErrorText>
-      <Text style={st.title}>{kid.name}’s day</Text>
       {kid.avoid_foods.trim() ? (
         <View style={st.avoid}>
           <Text style={st.avoidTitle}>Food to avoid</Text>
@@ -130,7 +129,6 @@ export default function KidRoutine() {
 
 // P20 values
 const st = StyleSheet.create({
-  title: { fontFamily: font.display, fontSize: 26, color: color.ink, marginVertical: -4.83 },
   hint: { fontFamily: font.body, fontSize: 13, color: color.ink2, lineHeight: 18 },
   card: { paddingHorizontal: 14, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   row: { flexDirection: 'row', gap: 12, paddingVertical: 9 },

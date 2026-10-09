@@ -27,12 +27,12 @@ export default function WF_P20k() {
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F5F8", flexDirection: "column", overflow: "hidden" }}>
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 16, paddingRight: 20, paddingBottom: 8, paddingLeft: 20 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, backgroundColor: "#FFFFFF", borderRadius: 22, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>{/* -> P55-ChildProfile.dc.html */}
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, flexShrink: 0, backgroundColor: "#FFFFFF", borderRadius: 22, borderWidth: 1.0, borderColor: "#E6EAEF" }}>{/* -> P55-ChildProfile.dc.html */}
           <SvgXml xml={SVG[0]} width={22} height={22} />
         </View>
+        <Text style={{ fontFamily: font.display, fontSize: 22, color: "#1B2328", marginVertical: -4.62, flexGrow: 1, flexShrink: 1 }}>Ava’s day</Text>
       </View>
       <View style={{ flexDirection: "column", gap: 8, flexGrow: 1, paddingTop: 0, paddingRight: 20, paddingBottom: 8, paddingLeft: 20 }}>
-        <Text style={{ fontFamily: font.display, fontSize: 26, color: "#1B2328", marginVertical: -4.83 }}>Ava’s day</Text>
         <View style={{ flexDirection: "column", gap: 2, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#FBE3DE", borderRadius: 12 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#9A2E1C" }}>Food to avoid</Text>
           <Text style={{ fontFamily: font.body, fontSize: 14, color: "#6E2215" }}>Peanuts and tree nuts</Text>
