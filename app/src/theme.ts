@@ -45,6 +45,8 @@ export const space = { xs: 4, s: 8, m: 12, l: 16, xl: 20, xxl: 28 } as const;
  * so sections read as separate blocks. Same on every screen (Home set it). Not for labels inside a card or the first
  * thing on a screen. */
 export const SECTION_GAP = 14;
+/** Height of every filter / choice chip (kid chips, log type chips, sitter and place chips…). */
+export const CHIP_HEIGHT = 40;
 
 export const cardShadow = {
   shadowColor: color.edge,

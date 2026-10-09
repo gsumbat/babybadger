@@ -24,7 +24,7 @@ import {
 } from '@/lib/places';
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, CHIP_HEIGHT } from '@/theme';
 import { Text, TextInput } from '@/components/Text';
 
 // Wireframe P57 Edit a home, from app/src/wireframes/P57.tsx. `/parent/places/<id>` edits a saved home or place;
@@ -310,7 +310,7 @@ const st = StyleSheet.create({
   input: { flex: 1, minWidth: 0, padding: 0, fontFamily: font.body, fontSize: 15, color: color.ink },
   card: { backgroundColor: '#FFFFFF', borderRadius: 24, paddingHorizontal: 14, ...cardShadow },
   section: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 12, borderRadius: 999 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: CHIP_HEIGHT, paddingHorizontal: 12, borderRadius: 999 },
   chipOn: { backgroundColor: color.primaryTint, borderWidth: 1.5, borderColor: color.primary },
   chipOff: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line },
   chipText: { fontFamily: font.bodySemi, fontSize: 13 },

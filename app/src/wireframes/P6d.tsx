@@ -155,13 +155,13 @@ export default function WF_P6d() {
         </View>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>KIDS</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 6, backgroundColor: "#FBEAEE", borderRadius: 999, borderWidth: 1.5, borderColor: "#D9919F", flexShrink: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 6, backgroundColor: "#FBEAEE", borderRadius: 999, borderWidth: 1.5, borderColor: "#D9919F", flexShrink: 1 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, backgroundColor: "#E8B9BE", borderRadius: 10, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.displayBold, fontSize: 9, color: "#8A3F5A" }}>A</Text>
             </View>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#8A3F5A" }}>Ava</Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 6, backgroundColor: "#E3ECFA", borderRadius: 999, borderWidth: 1.5, borderColor: "#2F6FD6", flexShrink: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 6, backgroundColor: "#E3ECFA", borderRadius: 999, borderWidth: 1.5, borderColor: "#2F6FD6", flexShrink: 1 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, backgroundColor: "#2F6FD6", borderRadius: 10, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.displayBold, fontSize: 9, color: "#FFFFFF" }}>L</Text>
             </View>

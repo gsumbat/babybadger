@@ -51,8 +51,8 @@ export default function WF_P10() {
       </View>
       <View style={{ flexDirection: "column", gap: 10, paddingTop: 10, paddingRight: 16, paddingBottom: 28, paddingLeft: 16, backgroundColor: "#FFFFFF", borderTopWidth: 1.0, borderTopColor: "#E6EAEF" }}>
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <View style={{ height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1, justifyContent: "center" }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Ask for a photo</Text></View>
-          <View style={{ height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1, justifyContent: "center" }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Running late</Text></View>
+          <View style={{ height: 40, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1, justifyContent: "center" }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Ask for a photo</Text></View>
+          <View style={{ height: 40, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1, justifyContent: "center" }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Running late</Text></View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <View style={{ width: 1, height: 1, position: "absolute", overflow: "hidden", flexShrink: 1, minHeight: 0, justifyContent: "center" }}><Text style={{ fontFamily: font.body, fontSize: 16, color: "#1B2328" }}>Message Maya</Text></View>

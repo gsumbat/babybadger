@@ -78,11 +78,11 @@ export default function WF_P57d() {
         <View style={{ flexDirection: "column", gap: 10, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>WHO STAYS HERE, AND WHEN</Text>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A" }}>
               <SvgXml xml={SVG[3]} width={16} height={16} />
               <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#34526E" }}>Ava</Text>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A" }}>
               <SvgXml xml={SVG[4]} width={16} height={16} />
               <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#34526E" }}>Leo</Text>
             </View>

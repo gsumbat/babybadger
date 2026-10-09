@@ -5,7 +5,7 @@ import { LOG_ICON, PhotoThumb } from '@/components/LogTimeline';
 import { Text } from '@/components/Text';
 import { Icon } from '@/components/ui';
 import { isRideTask, LOG_FILTERS, type LogFilter, type LogRow, type LogReaction, shiftLogApi, shortClock } from '@/lib/shift-log';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, CHIP_HEIGHT } from '@/theme';
 
 // The P77 log, shared by the log page (P77) and the shift report's Logs card (P5): the type chips
 // (All / Food / Sleep / Activities / Photos), the timeline card and "Love it" on photos.
@@ -103,7 +103,7 @@ function Entry({ row, last, loved, onLove }: { row: LogRow; last: boolean; loved
 // Values from wireframe P77.
 const st = StyleSheet.create({
   chips: { flexDirection: 'row', gap: 6 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 36, paddingHorizontal: 12, borderRadius: 999, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: CHIP_HEIGHT, paddingHorizontal: 12, borderRadius: 999, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line },
   chipOn: { backgroundColor: color.primaryTint, borderWidth: 1.5, borderColor: color.primary },
   chipText: { fontFamily: font.bodySemi, fontSize: 13, color: color.ink },
   card: { paddingTop: 14, paddingHorizontal: 14, paddingBottom: 2, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },

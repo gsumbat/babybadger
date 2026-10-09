@@ -16,7 +16,7 @@ import { poolData, poolRow, slotOf, statusFor, timeText, tonightWindow, windowLa
 import { askLabel } from '@/lib/pool-requests';
 import { requirementStatus } from '@/lib/requirements';
 import { useSession } from '@/lib/session';
-import { cardShadow, color, font, SECTION_GAP } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP, CHIP_HEIGHT } from '@/theme';
 
 // Wireframe P42 Sitter pool, from app/src/wireframes/P42.tsx. Opened from the Sitters tab (P54) for a time window
 // (?start=ISO&end=ISO; tonight when missing). The family's active sitters, grouped by lib/pool-logic: FREE THE WHOLE
@@ -239,7 +239,7 @@ const st = StyleSheet.create({
   timeTitle: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink },
   link: { fontFamily: font.bodyBold, fontSize: 14, color: color.primary, textDecorationLine: 'underline' },
   chips: { flexDirection: 'row', gap: 6, overflow: 'hidden' },
-  chip: { height: 36, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 },
+  chip: { height: CHIP_HEIGHT, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 },
   chipOn: { backgroundColor: color.primaryTint, borderWidth: 1.5, borderColor: color.primary },
   chipText: { fontFamily: font.bodySemi, fontSize: 13, color: color.ink },
   label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6 },

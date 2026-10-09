@@ -36,17 +36,17 @@ export default function WF_P5i() {
       </View>
       <View style={{ flexDirection: "column", gap: 12, flexGrow: 1, paddingTop: 0, paddingRight: 20, paddingBottom: 20, paddingLeft: 20 }}>
         <View style={{ flexDirection: "row", gap: 8, flexShrink: 0, paddingTop: 0, paddingRight: 20, paddingBottom: 0, paddingLeft: 20, marginRight: -20, marginLeft: -20 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A" }}>
             <SvgXml xml={SVG[1]} width={14} height={14} />
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#34526E" }}>All</Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>{/* -> P5k-AvaReport.dc.html */}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>{/* -> P5k-AvaReport.dc.html */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 10 }}>
               <Text style={{ fontFamily: font.displayBold, fontSize: 9, color: "#8A3F5A" }}>A</Text>
             </View>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Ava</Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, flexShrink: 0, backgroundColor: "#2F6FD6", borderRadius: 10 }}>
               <Text style={{ fontFamily: font.displayBold, fontSize: 9, color: "#FFFFFF" }}>L</Text>
             </View>
@@ -97,20 +97,20 @@ export default function WF_P5i() {
             <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", flexShrink: 1 }}>9</Text>
           </View>
           <View style={{ flexDirection: "row", gap: 6, paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, marginRight: -16, marginLeft: -16, overflow: "hidden", flexShrink: 1, minHeight: 0 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A" }}>
               <SvgXml xml={SVG[3]} width={16} height={16} />
               <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#34526E" }}>All</Text>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>Food</Text>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>Sleep</Text>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>Activities</Text>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>Photos</Text>
             </View>
           </View>

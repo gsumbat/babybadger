@@ -6,7 +6,7 @@ import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboa
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 
-import { cardShadow, color, font, radius, SECTION_GAP, space } from '@/theme';
+import { cardShadow, color, font, radius, SECTION_GAP, space, CHIP_HEIGHT } from '@/theme';
 
 import { wfSvg } from './wfIcons';
 import { Text, TextInput } from '@/components/Text';
@@ -472,7 +472,7 @@ const s = StyleSheet.create({
   pillText: { fontFamily: font.bodyBold, fontSize: 12 },
   fieldLabel: { fontFamily: font.bodySemi, fontSize: 14, color: color.ink },
   input: { minHeight: 50, borderWidth: 1, borderColor: color.lineStrong, borderRadius: 8, backgroundColor: '#FFFFFF', paddingHorizontal: 14, fontFamily: font.body, fontSize: 16, color: color.ink },
-  chip: { minHeight: 36, paddingHorizontal: 12, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', gap: 6 },
+  chip: { minHeight: CHIP_HEIGHT, paddingHorizontal: 12, borderRadius: radius.pill, flexDirection: 'row', alignItems: 'center', gap: 6 },
   chipOn: { backgroundColor: color.primaryTint, borderWidth: 1.5, borderColor: color.primary },
   chipOff: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line },
   chipText: { fontFamily: font.bodySemi, fontSize: 14 },

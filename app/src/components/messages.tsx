@@ -10,7 +10,7 @@ import { tabBarHeight } from '@/components/tabs';
 import { ErrorText } from '@/components/ui';
 import { timeOf } from '@/lib/format';
 import { messagesApi, type ThreadItem } from '@/lib/messages';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, CHIP_HEIGHT } from '@/theme';
 import { Text, TextInput } from '@/components/Text';
 
 // Messages thread, translated from wireframes P10 (parent) and S37 (sitter): app/src/wireframes/P10.tsx, S37.tsx.
@@ -208,12 +208,12 @@ export const st = StyleSheet.create({
   photo: { borderRadius: 18, overflow: 'hidden', backgroundColor: color.accentTint },
   photoCaption: { fontFamily: font.body, fontSize: 12 },
   footer: { gap: 10, paddingTop: 10, paddingHorizontal: 16, paddingBottom: 12, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: color.line },
-  quick: { height: 36, paddingHorizontal: 12, justifyContent: 'center', backgroundColor: '#FFFFFF', borderRadius: 999, borderWidth: 1, borderColor: color.line },
+  quick: { height: CHIP_HEIGHT, paddingHorizontal: 12, justifyContent: 'center', backgroundColor: '#FFFFFF', borderRadius: 999, borderWidth: 1, borderColor: color.line },
   quickText: { fontFamily: font.bodySemi, color: color.ink },
   composer: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   input: { flex: 1, minWidth: 0, height: 48, paddingHorizontal: 16, borderRadius: 24, borderWidth: 1, borderColor: color.lineStrong, fontFamily: font.body, fontSize: 16, color: color.ink },
   send: { width: 48, height: 48, borderRadius: 24, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center' },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 12, borderRadius: 999 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, height: CHIP_HEIGHT, paddingHorizontal: 12, borderRadius: 999 },
   chipOn: { backgroundColor: color.primaryTint },
   chipOff: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line },
   dot: { width: 8, height: 8, borderRadius: 4 },

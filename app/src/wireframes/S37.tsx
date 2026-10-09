@@ -19,12 +19,12 @@ export default function WF_S37() {
       <View style={{ flexDirection: "column", gap: 12, paddingTop: 16, paddingRight: 20, paddingBottom: 10, paddingLeft: 20, backgroundColor: "#FFFFFF", borderBottomWidth: 1.0, borderBottomColor: "#E6EAEF" }}>
         <Text style={{ fontFamily: font.display, fontSize: 24, color: "#1B2328" }}>Messages</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 34, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 34, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1 }}>
             <View style={{ width: 8, height: 8, backgroundColor: "#2F6FD6", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
             </View>
             <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#34526E" }}>Lee family</Text>
           </View>
-          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 34, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 34, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
             <View style={{ width: 8, height: 8, backgroundColor: "#D9822B", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>
             </View>
             <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#1B2328" }}>Ortiz family · 1</Text>
@@ -62,13 +62,13 @@ export default function WF_S37() {
       </View>
       <View style={{ flexDirection: "column", gap: 10, paddingTop: 10, paddingRight: 16, paddingBottom: 12, paddingLeft: 16, backgroundColor: "#FFFFFF", borderTopWidth: 1.0, borderTopColor: "#E6EAEF" }}>
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>Running late</Text>
           </View>
-          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>Send a photo</Text>
           </View>
-          <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>All good here</Text>
           </View>
         </View>
