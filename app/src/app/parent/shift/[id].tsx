@@ -4,8 +4,8 @@ import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { KidDot, SafetyBox, TaskRows, kidChipTone } from '@/components/bits';
 import { LiveMap } from '@/components/LiveMap';
-import { LogEntries, LogTypeChips, useLogLove } from '@/components/logFeed';
-import { LogTimeline, PhotoThumb } from '@/components/LogTimeline';
+import { LogEntries, LogTypeChips, PhotoCard, useLogLove } from '@/components/logFeed';
+import { LogTimeline } from '@/components/LogTimeline';
 import { EditableTasksCard } from '@/components/shiftTasks';
 import { Avatar, Button, Card, Chip, ErrorText, Icon, Loading, Pill, Screen, T } from '@/components/ui';
 import { planKidId } from '@/lib/care-plan';
@@ -86,12 +86,11 @@ export default function ParentShift() {
   // Wireframe P5, translated from its HTML (app/src/wireframes/P5.tsx). Left out until built: total pay,
   // Approve hours, Replay route, house-rules check.
   if (shift.status === 'completed') {
-    const photos = logs.filter((l) => l.photo_path);
     // The log rows (incidents have their own cards): all of them for the count, the chosen type for the timeline.
-    const notIncident = (r: { kind: string }) => r.kind !== 'incident';
+    const notIncident = (r: { kind: string }) => r.kind !== 'incident' && r.kind !== 'photo';
     const allRows = shiftLogRows(bundle.logs, bundle.tasks, kids, 'all', kidId).filter(notIncident);
     const shownRows = logFilter === 'all' ? allRows : shiftLogRows(bundle.logs, bundle.tasks, kids, logFilter, kidId).filter(notIncident);
-    const anyLog = bundle.logs.some((l) => l.kind !== 'incident');
+    const anyLog = bundle.logs.some((l) => l.kind !== 'incident' && l.kind !== 'photo');
     return (
       <Screen
         header={
@@ -164,7 +163,7 @@ export default function ParentShift() {
               </View>
             );
           })}
-        {/* P5 Logs: the whole log right here (P77's type chips and timeline, "Love it" on photos), no "See all" page. */}
+        {/* P5 Logs: the whole log right here (P77's type chips and timeline), no "See all" page; photos are their own card. */}
         <View style={st.card}>
           <View style={st.cardHead}>
             <Text style={st.cardTitle}>Logs</Text>
@@ -176,25 +175,12 @@ export default function ParentShift() {
             <LogEntries rows={shownRows} filter={logFilter} loved={loved.mine} onLove={loved.toggle} live={false} />
           </View>
         </View>
+        {/* Photos: their own card under the log (not in the timeline), then Notes. */}
+        <PhotoCard photos={logs.filter((l) => l.kind === 'photo' || l.photo_path)} loved={loved.mine} onLove={loved.toggle} />
         <View style={st.card}>
           <Text style={st.cardTitle}>Notes</Text>
           <Text style={st.summary}>{shift.note || `${name} didn’t leave a note.`}</Text>
         </View>
-        {photos.length > 0 && (
-          <View style={st.card}>
-            <Text style={st.cardTitle}>Photos</Text>
-            <View style={{ gap: 8 }}>
-              {Array.from({ length: Math.ceil(photos.length / 3) }, (_, r) => (
-                <View key={r} style={{ flexDirection: 'row', gap: 8 }}>
-                  {[0, 1, 2].map((c) => {
-                    const l = photos[r * 3 + c];
-                    return l ? <PhotoThumb key={l.id} path={l.photo_path!} style={st.thumb} /> : <View key={c} style={st.thumb} />;
-                  })}
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
       </Screen>
     );
   }
@@ -260,7 +246,6 @@ const st = StyleSheet.create({
   backBtn: { width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: color.line, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   headTitle: { fontFamily: font.display, fontSize: 20, color: color.ink },
   headSub: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
-  thumb: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, height: 64, borderRadius: 10 },
   blue: { backgroundColor: color.primary, borderRadius: 20, padding: 16, gap: 12 },
   blueSmall: { fontFamily: font.body, fontSize: 13, color: '#FFFFFF', opacity: 0.8 },
   blueBig: { fontFamily: font.display, fontSize: 32, color: '#FFFFFF', marginVertical: -6.63 },

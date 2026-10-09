@@ -4,7 +4,7 @@ import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-
 import { SvgXml } from 'react-native-svg';
 
 import { KidDot, kidChipTone } from '@/components/bits';
-import { LogEntries, LogTypeChips, useLogLove } from '@/components/logFeed';
+import { LogEntries, LogTypeChips, PhotoCard, useLogLove } from '@/components/logFeed';
 import { Text } from '@/components/Text';
 import { Button, Chip, ErrorText, Loading, Screen } from '@/components/ui';
 import { planKidId } from '@/lib/care-plan';
@@ -13,6 +13,7 @@ import { firstName, timeOf } from '@/lib/format';
 import { rulesApi, shiftRuleRows } from '@/lib/house-rules';
 import { useSession } from '@/lib/session';
 import { type LogFilter, logTitle, nextPhotoDue, photoAskWaiting, rulesStrip, shiftLogApi, shiftLogRows, shortClock, useShiftReactions } from '@/lib/shift-log';
+import { kidLogs } from '@/lib/shift-log-logic';
 import { cardShadow, color, font } from '@/theme';
 
 // P77 icons from the wireframe: the strip tick and the bell (P77b, S4's strip). Chips, rows and hearts: components/logFeed.
@@ -60,7 +61,8 @@ export default function ShiftLog() {
   const at = live ? new Date(now) : new Date(shift.clock_out_at ?? shift.ends_at);
   const kidId = planKidId(kids, params.kidId);
   const pick = (k: string | null) => router.setParams({ kidId: k ?? undefined });
-  const rows = shiftLogRows(logs, tasks, kids, filter, kidId);
+  // Photos are their own card under the timeline (PhotoCard), not rows here.
+  const rows = shiftLogRows(logs, tasks, kids, filter, kidId).filter((r) => r.kind !== 'photo');
   const strip = rulesStrip(shiftRuleRows(rules ?? [], logs, kids, shift.clock_in_at, at), live ? nextPhotoDue(rules ?? [], logs, shift.clock_in_at) : null);
   const waiting = photoAskWaiting(requests, logs, new Date(now));
   const subtitle = live
@@ -122,6 +124,7 @@ export default function ShiftLog() {
       <View style={st.card}>
         <LogEntries rows={rows} filter={filter} loved={mine} onLove={toggleLove} live={live} />
       </View>
+      <PhotoCard photos={kidLogs(logs, kidId)} loved={mine} onLove={toggleLove} />
     </Screen>
   );
 }

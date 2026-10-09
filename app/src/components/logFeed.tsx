@@ -18,7 +18,7 @@ const LOVE_INK = '#8A5A7A';
 export function LogTypeChips({ filter, onChange, inset = 20 }: { filter: LogFilter; onChange: (f: LogFilter) => void; inset?: number }) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -inset, flexGrow: 0 }} contentContainerStyle={[st.chips, { paddingHorizontal: inset }]}>
-      {LOG_FILTERS.map((f) => {
+      {LOG_FILTERS.filter((f) => f.value !== 'photos').map((f) => {
         const on = filter === f.value;
         return (
           <Pressable key={f.value} accessibilityRole="button" accessibilityState={{ selected: on }} onPress={() => onChange(f.value)} style={[st.chip, on && st.chipOn]}>
@@ -28,6 +28,37 @@ export function LogTypeChips({ filter, onChange, inset = 20 }: { filter: LogFilt
         );
       })}
     </ScrollView>
+  );
+}
+
+/** The Photos card under the log (P5 / P77): photos aren't in the timeline or the chips any more; a 3-column grid,
+ * newest first, each with its "Love it" heart (migration 26) when onLove is given. Nothing when there are no photos. */
+export function PhotoCard({ photos, loved, onLove }: { photos: { id: string; photo_path: string | null; happened_at: string }[]; loved?: Set<string>; onLove?: (logId: string) => void }) {
+  const list = photos.filter((p) => p.photo_path).sort((a, b) => b.happened_at.localeCompare(a.happened_at));
+  if (!list.length) return null;
+  return (
+    <View style={st.photoCard}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text style={st.photoTitle}>Photos</Text>
+        <Text style={st.photoCount}>{list.length}</Text>
+      </View>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {list.map((p) => {
+          const on = !!loved?.has(p.id);
+          return (
+            <View key={p.id} style={st.photoCell}>
+              <PhotoThumb path={p.photo_path!} height={104} />
+              <Text style={st.photoTime}>{shortClock(p.happened_at)}</Text>
+              {onLove ? (
+                <Pressable accessibilityRole="button" accessibilityLabel={on ? 'Loved' : 'Love it'} accessibilityState={{ selected: on }} onPress={() => onLove(p.id)} hitSlop={6} style={st.photoHeart}>
+                  <SvgXml xml={HEART(on)} width={16} height={16} />
+                </Pressable>
+              ) : null}
+            </View>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
@@ -118,5 +149,12 @@ const st = StyleSheet.create({
   detail: { fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.ink2 },
   love: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 30, alignSelf: 'flex-end', paddingHorizontal: 10, borderRadius: 999, backgroundColor: color.accentTint },
   loveText: { fontFamily: font.bodyBold, fontSize: 12, color: LOVE_INK },
+  photoCard: { gap: 10, paddingVertical: 14, paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
+  photoTitle: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink },
+  photoCount: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2 },
+  // Three across: (card width - 2 gaps) / 3.
+  photoCell: { width: '31.6%', gap: 4 },
+  photoTime: { fontFamily: font.body, fontSize: 12, color: color.ink2 },
+  photoHeart: { position: 'absolute', right: 6, top: 6, width: 30, height: 30, borderRadius: 15, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' },
   empty: { fontFamily: font.body, fontSize: 14, color: color.ink2, paddingBottom: 12 },
 });
