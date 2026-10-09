@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { kidShade } from '@/components/bits';
+import { kidBadge } from '@/components/bits';
 import { Text, TextInput } from '@/components/Text';
 import { Button, ErrorText, Field, Icon, Screen } from '@/components/ui';
 import { cardTitle, closedCopy, familyPlural, inviteAppUrl, landingTitle, storeButton, type LinkPreview, type LinkStatus } from '@/lib/invite-links';
@@ -43,8 +43,8 @@ export function InviteCard({ preview }: { preview: LinkPreview }) {
           <Text style={st.faceText}>{preview.invited_by_initials || (preview.family_name ?? 'B').replace(/^The /, '')[0]?.toUpperCase()}</Text>
         </View>
         {(preview.kids ?? []).map((k, i) => (
-          <View key={i} style={[st.face, { marginLeft: -10, backgroundColor: kidShade(k.color ?? undefined) }]}>
-            <Text style={st.faceText}>{k.name[0]?.toUpperCase()}</Text>
+          <View key={i} style={[st.face, { marginLeft: -10, backgroundColor: kidBadge(k).bg }]}>
+            <Text style={[st.faceText, { color: kidBadge(k).ink }]}>{k.name[0]?.toUpperCase()}</Text>
           </View>
         ))}
       </View>

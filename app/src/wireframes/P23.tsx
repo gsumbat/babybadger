@@ -27,13 +27,13 @@ export default function WF_P23() {
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>WHO SHE’LL LOOK AFTER</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, height: 44, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 2.0, borderColor: "#47698A", flexShrink: 1 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 34, height: 34, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 17 }}>
-              <Text style={{ fontFamily: font.displayBold, fontSize: 15, color: "#FFFFFF" }}>A</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 34, height: 34, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 17 }}>
+              <Text style={{ fontFamily: font.displayBold, fontSize: 15, color: "#8A3F5A" }}>A</Text>
             </View>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>✓ Ava</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, height: 44, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 2.0, borderColor: "#47698A", flexShrink: 1 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 34, height: 34, flexShrink: 0, backgroundColor: "#8676B3", borderRadius: 17 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 34, height: 34, flexShrink: 0, backgroundColor: "#2F6FD6", borderRadius: 17 }}>
               <Text style={{ fontFamily: font.displayBold, fontSize: 15, color: "#FFFFFF" }}>L</Text>
             </View>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>✓ Leo</Text>

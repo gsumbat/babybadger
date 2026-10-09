@@ -116,8 +116,8 @@ export default function WF_S4b() {
         <View style={{ paddingTop: 10, paddingRight: 14, paddingBottom: 10, paddingLeft: 14, backgroundColor: "#F6DCD6", borderRadius: 12 }}><Text style={{ fontFamily: font.body, fontSize: 14, color: "#6E2215" }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#A1321F" }}>Leo · food to avoid:</Text> [listed foods]</Text></View>
         <View style={{ flexDirection: "column", paddingTop: 4, paddingRight: 16, paddingBottom: 4, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 52, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 18 }}>
-              <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#FFFFFF" }}>A</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 18 }}>
+              <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#8A3F5A" }}>A</Text>
             </View>
             <View style={{ flexDirection: "column", flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Ava, 7</Text>
@@ -125,7 +125,7 @@ export default function WF_S4b() {
             </View>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 52 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#8676B3", borderRadius: 18 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#2F6FD6", borderRadius: 18 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#FFFFFF" }}>L</Text>
             </View>
             <View style={{ flexDirection: "column", flexShrink: 1 }}>

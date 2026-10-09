@@ -22,10 +22,10 @@ export default function WF_S1() {
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 52, height: 52, backgroundColor: "#1B2328", borderRadius: 26, borderWidth: 3.0, borderColor: "#FFFFFF", flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 16, color: "#FFFFFF" }}>JL</Text>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 52, height: 52, marginLeft: -14, backgroundColor: "#B86A82", borderRadius: 26, borderWidth: 3.0, borderColor: "#FFFFFF", flexShrink: 1 }}>
-              <Text style={{ fontFamily: font.bodyBold, fontSize: 16, color: "#FFFFFF" }}>A</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 52, height: 52, marginLeft: -14, backgroundColor: "#E8B9BE", borderRadius: 26, borderWidth: 3.0, borderColor: "#FFFFFF", flexShrink: 1 }}>
+              <Text style={{ fontFamily: font.bodyBold, fontSize: 16, color: "#8A3F5A" }}>A</Text>
             </View>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 52, height: 52, marginLeft: -14, backgroundColor: "#8676B3", borderRadius: 26, borderWidth: 3.0, borderColor: "#FFFFFF", flexShrink: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 52, height: 52, marginLeft: -14, backgroundColor: "#2F6FD6", borderRadius: 26, borderWidth: 3.0, borderColor: "#FFFFFF", flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 16, color: "#FFFFFF" }}>L</Text>
             </View>
           </View>
@@ -34,10 +34,10 @@ export default function WF_S1() {
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960" }}>Rate: [RATE] per hour</Text>
           </View>
           <View style={{ flexDirection: "row", gap: 8 }}>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 32, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#F3E1E3", borderRadius: 999, flexShrink: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 32, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#F3E1E3", borderRadius: 999, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Ava, 7</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 32, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#F3E1E3", borderRadius: 999, flexShrink: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 32, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#F3E1E3", borderRadius: 999, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Leo, 4</Text>
             </View>
           </View>

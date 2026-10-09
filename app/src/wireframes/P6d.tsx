@@ -170,8 +170,8 @@ export default function WF_P6d() {
         <View style={{ flexDirection: "column", gap: 10 }}>
           <View style={{ paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#F3F5F8", borderRadius: 16, flexDirection: "column" }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 12, paddingRight: 0, paddingBottom: 8, paddingLeft: 0 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 26, height: 26, backgroundColor: "#B86A82", borderRadius: 13, flexShrink: 1 }}>
-                <Text style={{ fontFamily: font.displayBold, fontSize: 12, color: "#FFFFFF" }}>A</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 26, height: 26, backgroundColor: "#E8B9BE", borderRadius: 13, flexShrink: 1 }}>
+                <Text style={{ fontFamily: font.displayBold, fontSize: 12, color: "#8A3F5A" }}>A</Text>
               </View>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Ava</Text>
             </View>

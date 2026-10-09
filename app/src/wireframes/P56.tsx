@@ -52,12 +52,12 @@ export default function WF_P56() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 }}>
                 <View style={{ flexDirection: "row", paddingLeft: 6, flexShrink: 1 }}>
                   <View style={{ flexDirection: "row", marginLeft: -6, borderRadius: 999, borderWidth: 2.0, borderColor: "#FFFFFF", flexShrink: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 11 }}>
-                      <Text style={{ fontFamily: font.displayBold, fontSize: 10, color: "#FFFFFF" }}>A</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 11 }}>
+                      <Text style={{ fontFamily: font.displayBold, fontSize: 10, color: "#8A3F5A" }}>A</Text>
                     </View>
                   </View>
                   <View style={{ flexDirection: "row", marginLeft: -6, borderRadius: 999, borderWidth: 2.0, borderColor: "#FFFFFF", flexShrink: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#8676B3", borderRadius: 11 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#2F6FD6", borderRadius: 11 }}>
                       <Text style={{ fontFamily: font.displayBold, fontSize: 10, color: "#FFFFFF" }}>L</Text>
                     </View>
                   </View>
@@ -79,12 +79,12 @@ export default function WF_P56() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 }}>
                 <View style={{ flexDirection: "row", paddingLeft: 6, flexShrink: 1 }}>
                   <View style={{ flexDirection: "row", marginLeft: -6, borderRadius: 999, borderWidth: 2.0, borderColor: "#FFFFFF", flexShrink: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 11 }}>
-                      <Text style={{ fontFamily: font.displayBold, fontSize: 10, color: "#FFFFFF" }}>A</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 11 }}>
+                      <Text style={{ fontFamily: font.displayBold, fontSize: 10, color: "#8A3F5A" }}>A</Text>
                     </View>
                   </View>
                   <View style={{ flexDirection: "row", marginLeft: -6, borderRadius: 999, borderWidth: 2.0, borderColor: "#FFFFFF", flexShrink: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#8676B3", borderRadius: 11 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#2F6FD6", borderRadius: 11 }}>
                       <Text style={{ fontFamily: font.displayBold, fontSize: 10, color: "#FFFFFF" }}>L</Text>
                     </View>
                   </View>
@@ -116,8 +116,8 @@ export default function WF_P56() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 }}>
                 <View style={{ flexDirection: "row", paddingLeft: 6, flexShrink: 1 }}>
                   <View style={{ flexDirection: "row", marginLeft: -6, borderRadius: 999, borderWidth: 2.0, borderColor: "#FFFFFF", flexShrink: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 11 }}>
-                      <Text style={{ fontFamily: font.displayBold, fontSize: 10, color: "#FFFFFF" }}>A</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 11 }}>
+                      <Text style={{ fontFamily: font.displayBold, fontSize: 10, color: "#8A3F5A" }}>A</Text>
                     </View>
                   </View>
                 </View>
@@ -138,8 +138,8 @@ export default function WF_P56() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 }}>
                 <View style={{ flexDirection: "row", paddingLeft: 6, flexShrink: 1 }}>
                   <View style={{ flexDirection: "row", marginLeft: -6, borderRadius: 999, borderWidth: 2.0, borderColor: "#FFFFFF", flexShrink: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 11 }}>
-                      <Text style={{ fontFamily: font.displayBold, fontSize: 10, color: "#FFFFFF" }}>A</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 11 }}>
+                      <Text style={{ fontFamily: font.displayBold, fontSize: 10, color: "#8A3F5A" }}>A</Text>
                     </View>
                   </View>
                 </View>
@@ -160,12 +160,12 @@ export default function WF_P56() {
               <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginTop: 2 }}>
                 <View style={{ flexDirection: "row", paddingLeft: 6, flexShrink: 1 }}>
                   <View style={{ flexDirection: "row", marginLeft: -6, borderRadius: 999, borderWidth: 2.0, borderColor: "#FFFFFF", flexShrink: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 11 }}>
-                      <Text style={{ fontFamily: font.displayBold, fontSize: 10, color: "#FFFFFF" }}>A</Text>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 11 }}>
+                      <Text style={{ fontFamily: font.displayBold, fontSize: 10, color: "#8A3F5A" }}>A</Text>
                     </View>
                   </View>
                   <View style={{ flexDirection: "row", marginLeft: -6, borderRadius: 999, borderWidth: 2.0, borderColor: "#FFFFFF", flexShrink: 1 }}>
-                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#8676B3", borderRadius: 11 }}>
+                    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 22, height: 22, flexShrink: 0, backgroundColor: "#2F6FD6", borderRadius: 11 }}>
                       <Text style={{ fontFamily: font.displayBold, fontSize: 10, color: "#FFFFFF" }}>L</Text>
                     </View>
                   </View>

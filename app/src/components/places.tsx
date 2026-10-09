@@ -2,7 +2,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
-import { kidShade } from '@/components/bits';
+import { kidBadge } from '@/components/bits';
 import type { Kid } from '@/lib/types';
 import { font } from '@/theme';
 import { Text } from '@/components/Text';
@@ -46,8 +46,8 @@ export function KidStack({ kids }: { kids: Pick<Kid, 'id' | 'name' | 'color'>[] 
     <View style={{ flexDirection: 'row', paddingLeft: 6 }}>
       {kids.map((k) => (
         <View key={k.id} style={st.ring}>
-          <View style={[st.dot, { backgroundColor: kidShade(k.color) }]}>
-            <Text style={st.dotText}>{k.name[0]?.toUpperCase()}</Text>
+          <View style={[st.dot, { backgroundColor: kidBadge(k).bg }]}>
+            <Text style={[st.dotText, { color: kidBadge(k).ink }]}>{k.name[0]?.toUpperCase()}</Text>
           </View>
         </View>
       ))}

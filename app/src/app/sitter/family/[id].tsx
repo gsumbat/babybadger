@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
-import { kidShade } from '@/components/bits';
+import { kidBadge } from '@/components/bits';
 import { ErrorText, Icon, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { contactName, dialable, mapsUrl, routineGroups } from '@/lib/family-page-logic';
@@ -59,8 +59,8 @@ export default function SitterFamily() {
           <View key={r[0].id} style={{ flexDirection: 'row', gap: 10 }}>
             {r.map((k) => (
               <View key={k.id} style={st.kidCard}>
-                <View style={[st.kidDot, { backgroundColor: kidShade(k.color) }]}>
-                  <Text style={st.kidLetter}>{k.name[0]?.toUpperCase()}</Text>
+                <View style={[st.kidDot, { backgroundColor: kidBadge(k).bg }]}>
+                  <Text style={[st.kidLetter, { color: kidBadge(k).ink }]}>{k.name[0]?.toUpperCase()}</Text>
                 </View>
                 <Text style={st.kidName}>
                   {k.name}
@@ -80,7 +80,7 @@ export default function SitterFamily() {
             {routines.map((g) => (
               <View key={g.key}>
                 <View style={st.groupHead}>
-                  {g.kid ? <View style={[st.groupDot, { backgroundColor: kidShade(g.kid.color) }]} /> : null}
+                  {g.kid ? <View style={[st.groupDot, { backgroundColor: kidBadge(g.kid).bg }]} /> : null}
                   <Text style={st.groupTitle}>{g.title}</Text>
                 </View>
                 {g.rows.map((r, i) => (

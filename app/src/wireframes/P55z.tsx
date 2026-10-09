@@ -38,8 +38,8 @@ export default function WF_P55z() {
       </View>
       <View style={{ flexDirection: "column", gap: 12, minHeight: 0, flexGrow: 1, paddingTop: 0, paddingRight: 20, paddingBottom: 12, paddingLeft: 20 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 14 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 64, height: 64, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 32 }}>
-            <Text style={{ fontFamily: font.displayBold, fontSize: 28, color: "#FFFFFF" }}>A</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 64, height: 64, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 32 }}>
+            <Text style={{ fontFamily: font.displayBold, fontSize: 28, color: "#8A3F5A" }}>A</Text>
           </View>
           <View style={{ flexDirection: "column", gap: 4, flexShrink: 1 }}>
             <Text style={{ fontFamily: font.display, fontSize: 22, color: "#1B2328", marginVertical: -5.62 }}>Ava</Text>

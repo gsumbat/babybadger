@@ -35,7 +35,7 @@ export default function WF_P2() {
         <Text style={{ fontFamily: font.display, fontSize: 26, color: "#1B2328", marginVertical: -4.83 }}>Who are we looking after?</Text>
         <View style={{ flexDirection: "column", backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 48, height: 48, flexShrink: 0, backgroundColor: "#8676B3", borderRadius: 24 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 48, height: 48, flexShrink: 0, backgroundColor: "#2F6FD6", borderRadius: 24 }}>
               <Text style={{ fontFamily: font.displayBold, fontSize: 18, color: "#FFFFFF" }}>L</Text>
             </View>
             <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
@@ -45,8 +45,8 @@ export default function WF_P2() {
             <SvgXml xml={SVG[1]} width={22} height={22} />
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16 }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 48, height: 48, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 24 }}>
-              <Text style={{ fontFamily: font.displayBold, fontSize: 18, color: "#FFFFFF" }}>A</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 48, height: 48, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 24 }}>
+              <Text style={{ fontFamily: font.displayBold, fontSize: 18, color: "#8A3F5A" }}>A</Text>
             </View>
             <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#1B2328" }}>Ava</Text>

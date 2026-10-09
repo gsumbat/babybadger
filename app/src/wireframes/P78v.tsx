@@ -60,8 +60,8 @@ export default function WF_P78v() {
           </View>
           <View style={{ flexDirection: "column" }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 68 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 22 }}>
-                <Text style={{ fontFamily: font.displayBold, fontSize: 19, color: "#FFFFFF" }}>SB</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 44, height: 44, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 22 }}>
+                <Text style={{ fontFamily: font.displayBold, fontSize: 19, color: "#8A3F5A" }}>SB</Text>
               </View>
               <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
                 <Text style={{ fontFamily: font.bodySemi, fontSize: 16, color: "#1B2328" }}>Sue Bell</Text>

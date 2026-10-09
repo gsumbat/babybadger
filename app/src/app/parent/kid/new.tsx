@@ -34,6 +34,8 @@ export default function NewKid() {
 
   const [name, setName] = useState('');
   const [tint, setTint] = useState<string>(KID_COLORS[0]);
+  // Until the parent taps a color, it follows the gender: pink for a girl, blue for a boy.
+  const [tintPicked, setTintPicked] = useState(false);
   const [birthday, setBirthday] = useState('');
   const [callsYou, setCallsYou] = useState('');
   const [gender, setGender] = useState<'girl' | 'boy' | null>(null);
@@ -62,6 +64,7 @@ export default function NewKid() {
         const suggested = suggestedFoods(k.birthdate ? ageInMonths(k.birthdate) : null);
         setName(k.name);
         setTint(k.color || KID_COLORS[0]);
+        setTintPicked(!!k.color);
         setBirthday(isoToUS(k.birthdate));
         setCallsYou(k.calls_you ?? '');
         setGender(k.gender ?? null);
@@ -208,7 +211,10 @@ export default function NewKid() {
           <View style={{ flexShrink: 1 }}>
             <View style={{ flexDirection: 'row', gap: 10 }}>
               {KID_COLORS.map((c) => (
-                <Pressable key={c} accessibilityRole="radio" accessibilityState={{ selected: c === tint }} accessibilityLabel={`Color ${c}`} onPress={() => setTint(c)} style={[st.swatchRing, c === tint && { borderColor: color.primaryStrong }]}>
+                <Pressable key={c} accessibilityRole="radio" accessibilityState={{ selected: c === tint }} accessibilityLabel={`Color ${c}`} onPress={() => {
+                  setTint(c);
+                  setTintPicked(true);
+                }} style={[st.swatchRing, c === tint && { borderColor: color.primaryStrong }]}>
                   <View style={[st.swatch, { backgroundColor: c }]} />
                 </Pressable>
               ))}
@@ -225,7 +231,11 @@ export default function NewKid() {
             {(['girl', 'boy'] as const).map((g) => {
               const on = gender === g;
               return (
-                <Pressable key={g} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => setGender(on ? null : g)} style={[st.genderItem, on && { backgroundColor: '#FFFFFF' }]}>
+                <Pressable key={g} accessibilityRole="radio" accessibilityState={{ checked: on }} onPress={() => {
+                    const next = on ? null : g;
+                    setGender(next);
+                    if (!tintPicked) setTint(next === 'boy' ? KID_COLORS[1] : KID_COLORS[0]);
+                  }} style={[st.genderItem, on && { backgroundColor: '#FFFFFF' }]}>
                   <Text style={[st.genderText, on && { fontFamily: font.bodyBold, color: color.ink }]}>{g === 'girl' ? 'Girl' : 'Boy'}</Text>
                 </Pressable>
               );

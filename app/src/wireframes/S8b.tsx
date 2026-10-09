@@ -61,13 +61,13 @@ export default function WF_S8b() {
           <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Who's coming</Text>
           <View style={{ flexDirection: "row", gap: 8 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#F3E1E3", borderRadius: 999, borderWidth: 2.0, borderColor: "#47698A", flexShrink: 1 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 30, height: 30, backgroundColor: "#B86A82", borderRadius: 15, flexShrink: 1 }}>
-                <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#FFFFFF" }}>A</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 30, height: 30, backgroundColor: "#E8B9BE", borderRadius: 15, flexShrink: 1 }}>
+                <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#8A3F5A" }}>A</Text>
               </View>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#1B2328" }}>Ava</Text>
             </View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#F3E1E3", borderRadius: 999, borderWidth: 2.0, borderColor: "#47698A", flexShrink: 1 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 30, height: 30, backgroundColor: "#8676B3", borderRadius: 15, flexShrink: 1 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 30, height: 30, backgroundColor: "#2F6FD6", borderRadius: 15, flexShrink: 1 }}>
                 <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#FFFFFF" }}>L</Text>
               </View>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#1B2328" }}>Leo</Text>

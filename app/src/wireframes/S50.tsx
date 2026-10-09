@@ -20,7 +20,7 @@ export default function WF_S50() {
     <View style={{ flex: 1, backgroundColor: "#F3F5F8", flexDirection: "column", overflow: "hidden" }}>
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingTop: 20, paddingRight: 20, paddingBottom: 8, paddingLeft: 20 }}>
         <Text style={{ fontFamily: font.display, fontSize: 26, color: "#1B2328", flexShrink: 1 }}>Families</Text>
-        <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", gap: 4, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1 }}>{/* -> S51-JoinCode.dc.html */}
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, flexShrink: 1 }}>{/* -> S51-JoinCode.dc.html */}
           <SvgXml xml={SVG[0]} width={16} height={16} />
           <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#47698A" }}>Join with a code</Text>
         </View>
@@ -36,10 +36,10 @@ export default function WF_S50() {
               <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Next shift Sat 10 AM</Text>
             </View>
             <View style={{ flexDirection: "row", flexShrink: 0 }}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 18, borderWidth: 2.0, borderColor: "#FFFFFF" }}>
-                <Text style={{ fontFamily: font.displayBold, fontSize: 15, color: "#FFFFFF" }}>A</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 18, borderWidth: 2.0, borderColor: "#FFFFFF" }}>
+                <Text style={{ fontFamily: font.displayBold, fontSize: 15, color: "#8A3F5A" }}>A</Text>
               </View>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, marginLeft: -10, backgroundColor: "#8676B3", borderRadius: 18, borderWidth: 2.0, borderColor: "#FFFFFF" }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, marginLeft: -10, backgroundColor: "#2F6FD6", borderRadius: 18, borderWidth: 2.0, borderColor: "#FFFFFF" }}>
                 <Text style={{ fontFamily: font.displayBold, fontSize: 15, color: "#FFFFFF" }}>L</Text>
               </View>
             </View>
@@ -68,7 +68,7 @@ export default function WF_S50() {
             </View>
             <View style={{ flexDirection: "row", flexShrink: 0 }}>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#F6E3C6", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#F6E3C6", borderRadius: 999 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#7A4E0E" }}>Sign notice</Text>
             </View>
             <SvgXml xml={SVG[3]} width={20} height={20} />

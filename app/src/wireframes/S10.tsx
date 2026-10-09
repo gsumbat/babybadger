@@ -39,14 +39,14 @@ export default function WF_S10() {
         <View style={{ flexDirection: "column", gap: 10 }}>
           <View style={{ flexDirection: "row", gap: 10 }}>
             <View style={{ flexDirection: "column", gap: 8, paddingTop: 14, paddingRight: 14, paddingBottom: 14, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0, ...cardShadow }}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, backgroundColor: "#B86A82", borderRadius: 20 }}>
-                <Text style={{ fontFamily: font.bodyBold, fontSize: 16, color: "#FFFFFF" }}>A</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, backgroundColor: "#E8B9BE", borderRadius: 20 }}>
+                <Text style={{ fontFamily: font.bodyBold, fontSize: 16, color: "#8A3F5A" }}>A</Text>
               </View>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 16, color: "#1B2328" }}>Ava, 7 yrs 2 mos</Text>
               <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Lincoln Elementary · soccer Thu · loves drawing</Text>
             </View>
             <View style={{ flexDirection: "column", gap: 8, paddingTop: 14, paddingRight: 14, paddingBottom: 14, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0, ...cardShadow }}>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, backgroundColor: "#8676B3", borderRadius: 20 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, backgroundColor: "#2F6FD6", borderRadius: 20 }}>
                 <Text style={{ fontFamily: font.bodyBold, fontSize: 16, color: "#FFFFFF" }}>L</Text>
               </View>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 16, color: "#1B2328" }}>Leo, 4 yrs 5 mos</Text>

@@ -1,7 +1,7 @@
 // Small pieces shared by parent and sitter screens (wireframe patterns).
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { ageLabel, safetyLine } from '@/lib/kid-profile';
+import { ageLabel, KID_COLORS, safetyLine } from '@/lib/kid-profile';
 import { timeOf } from '@/lib/format';
 import type { Kid, Task } from '@/lib/types';
 import { cardShadow, color, font, radius } from '@/theme';
@@ -42,15 +42,18 @@ export function kidShade(c?: string) {
   return (c && DEEP[c.toUpperCase()]) || c || '#B86A82';
 }
 
-/** A girl's badge is always pink; otherwise the kid's own color. */
-export function kidBadge(kid: Pick<Kid, 'color'> & { gender?: Kid['gender'] }) {
-  return kid.gender === 'girl' ? '#B86A82' : kidShade(kid.color);
+/** Kid badge colors (P18 picker): the light pink default stays light with a deep-pink letter, like the P18 avatar;
+ * any other picked color is solid with a white letter. No color saved: pink for a girl, blue for a boy. */
+export function kidBadge(kid: { color?: string | null; gender?: Kid['gender'] }): { bg: string; ink: string } {
+  const c = (kid.color || (kid.gender === 'boy' ? KID_COLORS[1] : KID_COLORS[0])).toUpperCase();
+  return c === KID_COLORS[0] ? { bg: KID_COLORS[0], ink: '#8A3F5A' } : { bg: kidShade(c), ink: '#FFFFFF' };
 }
 
 export function KidDot({ kid, size = 36 }: { kid: Pick<Kid, 'name' | 'color'> & { gender?: Kid['gender'] }; size?: number }) {
+  const b = kidBadge(kid);
   return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: kidBadge(kid), alignItems: 'center', justifyContent: 'center' }}>
-      <Text style={{ fontFamily: font.displayBold, fontSize: Math.round(size / 2.25), color: '#FFFFFF' }}>{kid.name[0]?.toUpperCase()}</Text>
+    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: b.bg, alignItems: 'center', justifyContent: 'center' }}>
+      <Text style={{ fontFamily: font.displayBold, fontSize: Math.round(size / 2.25), color: b.ink }}>{kid.name[0]?.toUpperCase()}</Text>
     </View>
   );
 }

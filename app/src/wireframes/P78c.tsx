@@ -23,8 +23,8 @@ export default function WF_P78c() {
       </View>
       <View style={{ flexDirection: "column", gap: 12, flexGrow: 1, paddingTop: 4, paddingRight: 20, paddingBottom: 12, paddingLeft: 20 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 16, paddingRight: 16, paddingBottom: 16, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
-          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 56, height: 56, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 28 }}>
-            <Text style={{ fontFamily: font.displayBold, fontSize: 22, color: "#FFFFFF" }}>SB</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 56, height: 56, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 28 }}>
+            <Text style={{ fontFamily: font.displayBold, fontSize: 22, color: "#8A3F5A" }}>SB</Text>
           </View>
           <View style={{ flexDirection: "column", gap: 2, minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
             <Text style={{ fontFamily: font.display, fontSize: 20, color: "#1B2328", marginVertical: -4.02 }}>Sue Bell</Text>

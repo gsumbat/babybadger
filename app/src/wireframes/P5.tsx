@@ -34,13 +34,13 @@ export default function WF_P5() {
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#34526E" }}>All</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>{/* -> P5k-AvaReport.dc.html */}
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 10 }}>
-              <Text style={{ fontFamily: font.displayBold, fontSize: 9, color: "#FFFFFF" }}>A</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, flexShrink: 0, backgroundColor: "#E8B9BE", borderRadius: 10 }}>
+              <Text style={{ fontFamily: font.displayBold, fontSize: 9, color: "#8A3F5A" }}>A</Text>
             </View>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Ava</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, flexShrink: 0, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, flexShrink: 0, backgroundColor: "#8676B3", borderRadius: 10 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, flexShrink: 0, backgroundColor: "#2F6FD6", borderRadius: 10 }}>
               <Text style={{ fontFamily: font.displayBold, fontSize: 9, color: "#FFFFFF" }}>L</Text>
             </View>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Leo</Text>

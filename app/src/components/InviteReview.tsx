@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { kidShade } from '@/components/bits';
+import { kidBadge } from '@/components/bits';
 import { Button, ErrorText, initialsOf, Screen } from '@/components/ui';
 import { money, type InvitePreview } from '@/lib/invites';
 import { cardShadow, color, font } from '@/theme';
@@ -32,8 +32,8 @@ export function InviteReview({ invite, onAccept, onDecline, busy, err }: { invit
             <Text style={st.faceText}>{initialsOf(invite.invited_by)}</Text>
           </View>
           {invite.kids.map((k, i) => (
-            <View key={i} style={[st.face, { marginLeft: -14, backgroundColor: kidShade(k.color ?? undefined) }]}>
-              <Text style={st.faceText}>{k.name[0]?.toUpperCase()}</Text>
+            <View key={i} style={[st.face, { marginLeft: -14, backgroundColor: kidBadge(k).bg }]}>
+              <Text style={[st.faceText, { color: kidBadge(k).ink }]}>{k.name[0]?.toUpperCase()}</Text>
             </View>
           ))}
         </View>

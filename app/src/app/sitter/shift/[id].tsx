@@ -4,7 +4,7 @@ import { ActionSheetIOS, ActivityIndicator, Alert, Linking, Platform, Pressable,
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 
-import { kidShade, SafetyBox, TaskRows } from '@/components/bits';
+import { kidBadge, SafetyBox, TaskRows } from '@/components/bits';
 import { ExtendRequestCard, RunningLateSheet } from '@/components/timing';
 import { LogTimeline } from '@/components/LogTimeline';
 import { Banner, Button, Card, ChoicePill, ErrorText, Field, Icon, type IconName, Loading, Screen } from '@/components/ui';
@@ -485,8 +485,8 @@ function BeforeShift({ bundle, family, parent, rules, reload }: { bundle: ShiftB
         <View style={st.kidsCard}>
           {kids.map((k, i) => (
             <View key={k.id} style={[st.kidRow, i < kids.length - 1 && st.kidLine]}>
-              <View style={[st.kidDot, { backgroundColor: kidShade(k.color) }]}>
-                <Text style={st.kidLetter}>{k.name[0]?.toUpperCase()}</Text>
+              <View style={[st.kidDot, { backgroundColor: kidBadge(k).bg }]}>
+                <Text style={[st.kidLetter, { color: kidBadge(k).ink }]}>{k.name[0]?.toUpperCase()}</Text>
               </View>
               <View style={{ flexShrink: 1 }}>
                 <Text style={st.kidName}>{kidAge(k)}</Text>

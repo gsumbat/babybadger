@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { kidShade } from '@/components/bits';
+import { kidBadge } from '@/components/bits';
 import { ErrorText, Icon, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { timeOf } from '@/lib/format';
@@ -82,8 +82,8 @@ export default function Families() {
 
 function KidCircle({ kid, first }: { kid: Kid; first: boolean }) {
   return (
-    <View style={[st.kid, { backgroundColor: kidShade(kid.color) }, !first && { marginLeft: -10 }]}>
-      <Text style={st.kidLetter}>{kid.name[0]?.toUpperCase()}</Text>
+    <View style={[st.kid, { backgroundColor: kidBadge(kid).bg }, !first && { marginLeft: -10 }]}>
+      <Text style={[st.kidLetter, { color: kidBadge(kid).ink }]}>{kid.name[0]?.toUpperCase()}</Text>
     </View>
   );
 }
