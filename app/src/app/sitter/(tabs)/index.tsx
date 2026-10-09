@@ -10,6 +10,7 @@ import { dayOf, firstName, timeOf } from '@/lib/format';
 import { familyPossessive, sitterRulesState } from '@/lib/house-rules';
 import { inviteApi } from '@/lib/invites';
 import { availabilityApi } from '@/lib/availability';
+import { dateClash, sitterSeriesSub, sitterSeriesTitle } from '@/lib/booking-logic';
 import { cardReminders, sitterCredentials } from '@/lib/credentials';
 import { MARKETPLACE } from '@/lib/features';
 import { familyRequirements } from '@/lib/requirements';
@@ -30,7 +31,7 @@ import { Text } from '@/components/Text';
 // new family invites sent to her email (S0e, open S1); what families asked her to share ("The Lee family asked for: …",
 // S53); her cards that expire within 30 days or have expired ("Infant CPR expires in 21 days" · "Renew and share the
 // new card · Lee family requires it", S41); pool requests waiting for her answer ("Lee family asks for Sat 6 – 10 PM",
-// S33 / S20); house rules (S42) and location notices. Stats: only the hours booked; earnings, payout and the "unpaid
+// S33 / S20; a repeating booking is one row, "Lee family · 12 shifts from Oct 12", S33s); house rules (S42) and location notices. Stats: only the hours booked; earnings, payout and the "unpaid
 // invoice" row wait for in-app payments (canvas S3p). TOOLS: Availability, Time off (S11), New invoice ("Soon"),
 // Hours and pay (S7), Credentials (S14), My details, Requests (one waiting shift request opens it, otherwise the
 // calendar); "Get found" (S35) only with MARKETPLACE.
@@ -60,7 +61,10 @@ export default function SitterHome() {
     const list = await requestsApi.waitingForMe(uid).catch(() => []);
     return { list, off: list.length ? await availabilityApi.myTimeOff(uid).catch(() => []) : [] };
   }, [uid]);
-  const asks = requests?.list ?? [];
+  // A repeating booking (migration 35) is one row: its first date stands for the series.
+  const allAsks = requests?.list ?? [];
+  const asks = allAsks.filter((r, i) => !r.series_id || allAsks.findIndex((x) => x.series_id === r.series_id) === i);
+  const seriesOf = (sid: string) => allAsks.filter((x) => x.series_id === sid);
   // New family invites sent to her email (S0e, migration 28): listed until she answers; each opens S1 (/i/<token>).
   const { data: invites } = useQuery(() => inviteApi.mine(), [uid]);
   const newInvites = invites ?? [];
@@ -114,8 +118,10 @@ export default function SitterHome() {
       key: `req-${r.id}`,
       icon: 'calendar',
       pool: true,
-      title: sitterRowTitle(famName(r.family_id), requestWindow(r)),
-      sub: sitterRowSub(calendarFit(requestWindow(r), requests?.off ?? [], shifts ?? []), timeLeft(r.expires_at, today, true)),
+      title: r.series_id ? sitterSeriesTitle(famName(r.family_id), seriesOf(r.series_id).length, new Date(r.starts_at)) : sitterRowTitle(famName(r.family_id), requestWindow(r)),
+      sub: r.series_id
+        ? sitterSeriesSub(seriesOf(r.series_id).filter((x) => dateClash(requestWindow(x), requests?.off ?? [], shifts ?? [])).length, timeLeft(r.expires_at, today, true))
+        : sitterRowSub(calendarFit(requestWindow(r), requests?.off ?? [], shifts ?? []), timeLeft(r.expires_at, today, true)),
       onPress: () => router.push({ pathname: '/sitter/request/[id]', params: { id: r.id } }),
     })),
     ...needsRules.map((l): Need => ({

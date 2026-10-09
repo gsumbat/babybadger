@@ -22,6 +22,12 @@ export type ShiftRequest = {
   shift_id: string | null;
   filled_by: string | null;
   created_at: string;
+  /** Migration 35: the dates of one repeating booking share it (null = one date). */
+  series_id?: string | null;
+  /** Migration 35: the task lines the shift gets when it's booked. */
+  tasks?: string[];
+  /** Migration 35: 'booking' = the booking drawer asking one sitter; 'pool' = Ask your pool. */
+  kind?: 'pool' | 'booking';
 };
 
 export type AskedSitter = {

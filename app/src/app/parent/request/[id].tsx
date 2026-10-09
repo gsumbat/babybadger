@@ -7,10 +7,11 @@ import { AVATAR, backOr, Initial, Pill, PillButton, RequestHeader } from '@/comp
 import { Text } from '@/components/Text';
 import { ErrorText, Icon, Screen } from '@/components/ui';
 import { shiftDayDetails } from '@/lib/availability';
+import { bookingApi, dateAnswer, seriesLine, seriesRowTitle, seriesSub, type BookingItem } from '@/lib/booking';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { windowLabel } from '@/lib/pool';
-import { askedRow, effectiveStatus, elapsedShare, requestsApi, requestWindow, shiftNumberText, toldNote, useRequestLive, waitingCard, type AskedSitter } from '@/lib/pool-requests';
+import { askedRow, effectiveStatus, elapsedShare, requestsApi, requestWindow, shiftNumberText, spanText, timeLeft, toldNote, useRequestLive, waitingCard, type AskedSitter } from '@/lib/pool-requests';
 import { useSession } from '@/lib/session';
 import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
@@ -23,6 +24,11 @@ import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 // request" asks first. Expired / cancelled: canvas P46d with "Ask again". Filled: P47 "Priya took the shift" with the
 // shift's kids, "Message Priya" (P10) and Done (Calendar). Updates live (Realtime) and every 30 s for the countdown.
 // Left out: "Your calendar shows Saturday as Pending until then" (the calendar doesn't show requests yet).
+// Booking requests (migration 35, sent from the booking drawer to one sitter): the card reads "Waiting for Maya" ·
+// "Asked directly · 2 d left". A repeating one opens on any of its dates and shows the whole series: "12 shifts with
+// Maya", "Waiting for Maya" (or "Maya took 10 · can’t make 2"), DATES with each date's answer (Waiting / Seen /
+// Booked / Can’t make it / Cancelled / Expired); tapping a date still open cancels it (confirm); "Cancel the open
+// dates" cancels the rest.
 export default function RequestScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { family } = useSession();
@@ -78,6 +84,9 @@ export default function RequestScreen() {
       </Screen>
     );
 
+  // ---------------------------------------------------------------- a repeating booking
+  if (req.series_id) return <SeriesOut seriesId={req.series_id} name={firstName(nameOf(data?.asked[0]?.sitter_id ?? ''))} now={now} />;
+
   const status = effectiveStatus(req, now);
   const win = requestWindow(req);
 
@@ -127,7 +136,9 @@ export default function RequestScreen() {
   // ---------------------------------------------------------------- P46 Request out (and P46d closed)
   const open = status === 'open';
   const card = open
-    ? waitingCard(req, data?.asked ?? [], now)
+    ? req.kind === 'booking' && (data?.asked ?? []).some((a) => a.status === 'sent' || a.status === 'seen')
+      ? { title: `Waiting for ${firstName(nameOf(data!.asked[0].sitter_id))}`, sub: `Asked directly · ${timeLeft(req.expires_at, now)}` }
+      : waitingCard(req, data?.asked ?? [], now)
     : status === 'expired'
       ? { title: 'Request expired', sub: 'No one accepted in time' }
       : { title: 'Request cancelled', sub: 'The sitters can’t take it anymore' };
@@ -203,6 +214,95 @@ export default function RequestScreen() {
         <View style={st.bell}>
           <Icon name="bell" size={20} tint={color.ink2} />
           <Text style={st.bellText}>We’ll tell you the moment someone accepts.</Text>
+        </View>
+      ) : null}
+    </Screen>
+  );
+}
+
+/** A repeating booking: every date and its answer; cancel one date or every open one. */
+function SeriesOut({ seriesId, name, now }: { seriesId: string; name: string; now: Date }) {
+  const { data: items, error, reload } = useQuery(() => bookingApi.series(seriesId), [seriesId]);
+  const [busy, setBusy] = useState('');
+  const [err, setErr] = useState('');
+  const isOpen = (x: BookingItem) => effectiveStatus(x.request, now) === 'open';
+  const openOnes = (items ?? []).filter(isOpen);
+
+  function confirm(title: string, msg: string, yes: string, go: () => void) {
+    if (Platform.OS === 'web') {
+      if (globalThis.confirm?.(`${title} ${msg}`)) go();
+    } else Alert.alert(title, msg, [{ text: 'Keep it', style: 'cancel' }, { text: yes, style: 'destructive', onPress: go }]);
+  }
+  async function cancel(key: string, ids: string[]) {
+    setBusy(key);
+    setErr('');
+    try {
+      for (const id of ids) await requestsApi.cancel(id);
+      await reload();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy('');
+    }
+  }
+
+  const wins = (items ?? []).map((x) => requestWindow(x.request));
+  const waiting = openOnes.some((x) => x.asked?.status === 'sent' || x.asked?.status === 'seen');
+  return (
+    <Screen
+      gap={12}
+      header={<RequestHeader title="Request out" sub={seriesLine(wins)} back={backOr('/parent/calendar')} />}
+      footer={
+        openOnes.length ? (
+          <View style={{ flexDirection: 'row' }}>
+            <PillButton
+              kind="danger"
+              height={46}
+              label="Cancel the open dates"
+              busy={busy === 'all'}
+              onPress={() => confirm('Cancel the open dates?', `${name} can’t take them anymore. Booked dates stay booked.`, 'Cancel dates', () => cancel('all', openOnes.map((x) => x.request.id)))}
+            />
+          </View>
+        ) : undefined
+      }>
+      <ErrorText>{error || err}</ErrorText>
+      <View style={[st.status, !waiting && { backgroundColor: color.muted }]}>
+        <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+          <View style={st.statusIcon}>
+            <Icon name="clock" size={24} tint={waiting ? color.primary : color.ink2} />
+          </View>
+          <View style={{ flexShrink: 1 }}>
+            <Text style={[st.statusTitle, !waiting && { color: color.ink }]}>{seriesRowTitle(wins.length, name)}</Text>
+            <Text style={[st.statusSub, !waiting && { color: color.ink2 }]}>{items ? seriesSub(items, name, now) : ''}</Text>
+          </View>
+        </View>
+      </View>
+      <Text style={[st.label, { marginTop: SECTION_GAP }]}>DATES</Text>
+      <View style={st.card}>
+        {(items ?? []).map((x, i, all) => {
+          const w = requestWindow(x.request);
+          const a = dateAnswer(x, now);
+          const can = isOpen(x);
+          return (
+            <Pressable
+              key={x.request.id}
+              accessibilityRole="button"
+              accessibilityHint={can ? 'Cancels this date' : undefined}
+              disabled={!can || !!busy}
+              onPress={() => confirm('Cancel this date?', `${name} can’t take it anymore.`, 'Cancel date', () => cancel(x.request.id, [x.request.id]))}
+              style={[st.row, { minHeight: 52 }, i < all.length - 1 && st.line]}>
+              <Text style={[st.name, { flexGrow: 1, flexShrink: 1 }]}>
+                {w.start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} · {spanText(w.start, w.end)}
+              </Text>
+              <Pill label={a.pill} kind={a.kind} />
+            </Pressable>
+          );
+        })}
+      </View>
+      {waiting ? (
+        <View style={st.bell}>
+          <Icon name="bell" size={20} tint={color.ink2} />
+          <Text style={st.bellText}>We’ll tell you when {name} answers. Tap a date to cancel it.</Text>
         </View>
       ) : null}
     </Screen>

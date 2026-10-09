@@ -93,10 +93,11 @@ export function TimeWheel({ title, value, onChange, step = 5, fallback, style, c
   );
 }
 
-type Props = { label: string; value: string; onChange: (text: string) => void; placeholder?: string; step?: number };
+type Props = { label: string; value: string; onChange: (text: string) => void; placeholder?: string; step?: number; warn?: boolean };
 
-/** The standard time input: label over the wireframe's dropdown box (P20a), opening the time wheel. */
-export function TimeField({ label, value, onChange, placeholder = 'Set a time', step }: Props) {
+/** The standard time input: label over the wireframe's dropdown box (P20a), opening the time wheel. `warn`: the amber
+ * 2px border (P6g, the sitter isn't free until then). */
+export function TimeField({ label, value, onChange, placeholder = 'Set a time', step, warn }: Props) {
   return (
     <View style={st.wrap}>
       <Text style={st.label}>{label}</Text>
@@ -105,8 +106,8 @@ export function TimeField({ label, value, onChange, placeholder = 'Set a time', 
         value={value}
         onChange={onChange}
         step={step}
-        style={st.box}
-        fallback={<TextInput value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor={color.quiet} autoCorrect={false} style={[st.box, st.typed]} />}>
+        style={[st.box, warn && st.warn]}
+        fallback={<TextInput value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor={color.quiet} autoCorrect={false} style={[st.box, st.typed, warn && st.warn]} />}>
         <Text style={[st.value, !value && { color: color.quiet }]}>{value || placeholder}</Text>
         <Icon name="chevron-down" size={18} tint={color.ink2} strokeWidth={2} />
       </TimeWheel>
@@ -140,6 +141,7 @@ const st = StyleSheet.create({
   wrap: { gap: 6, flex: 1, minWidth: 0 },
   label: { fontFamily: font.bodySemi, fontSize: 14, color: color.ink },
   box: { height: 48, borderWidth: 1, borderColor: '#C3CCD5', borderRadius: 8, backgroundColor: '#FFFFFF', paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  warn: { borderWidth: 2, borderColor: color.warn },
   typed: { fontFamily: font.body, fontSize: 16, color: color.ink },
   value: { fontFamily: font.body, fontSize: 16, color: color.ink },
   scrim: { flex: 1, backgroundColor: 'rgba(27,35,40,0.35)' },

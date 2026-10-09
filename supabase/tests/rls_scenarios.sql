@@ -3345,4 +3345,145 @@ do $$ begin
   if exists (select 1 from shift_tasks where id = (select v::uuid from ctx where k = 'oldtask34')) then raise exception 'FAIL tasks left behind'; end if;
 end $$;
 
+-- 35. Booking requests (migration 35, P6d / P6e / S33s). Pia Moss (parent), Rae Diaz (her sitter), Oli Park (parent of
+-- another family), the stranger. The booking drawer asks one sitter: a single date or a repeating series (one push);
+-- only a full-access parent of the sitter's family can ask; the sitter reads only what was sent to her; she answers a
+-- series at once: ticked dates are booked with their tasks (her time off on them given up), a clash is reported for
+-- that date only, the rest declined; one push to the parents; the parent cancels what's left.
+reset role;
+insert into auth.users (id, email) values
+  ('00000000-0000-0000-0000-0000000a3501', 'pia-parent@example.com'),
+  ('00000000-0000-0000-0000-0000000a3502', 'rae-sitter@example.com'),
+  ('00000000-0000-0000-0000-0000000a3503', 'oli-parent@example.com');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3501');
+insert into ctx values ('fam35', (select public.create_family('The Moss family', 'Pia Moss')::text));
+insert into kids (family_id, name) select v::uuid, 'Nia' from ctx where k = 'fam35';
+select public.register_push_token('ExponentPushToken[pia35]', 'ios');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3502');
+select public.register_push_token('ExponentPushToken[rae35]', 'ios');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3503');
+insert into ctx values ('fam35b', (select public.create_family('The Park family', 'Oli Park')::text));
+reset role;
+update profiles set full_name = 'Rae Diaz' where id = '00000000-0000-0000-0000-0000000a3502';
+insert into family_sitters (family_id, sitter_id, status) select v::uuid, '00000000-0000-0000-0000-0000000a3502', 'active' from ctx where k = 'fam35';
+-- dates 20, 22, 24, 26 days out, 6 – 10 PM (UTC is fine here)
+insert into ctx select 'w35', jsonb_agg(jsonb_build_object('starts', (current_date + d)::timestamptz + interval '18 hours',
+  'ends', (current_date + d)::timestamptz + interval '22 hours', 'tasks', jsonb_build_array('6:30 Dinner · Nia', '  ', '8:00 Bath · Nia')) order by d)::text
+  from unnest(array[20, 22, 24, 26]) d;
+delete from net.sent;
+set role authenticated;
+
+-- Refused: a stranger, another family's parent, no dates, a past date, overlapping dates, more than 60 dates
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+do $$ begin
+  perform pg_temp.must_fail(format('select public.create_booking_request(%L, %L::jsonb, %L, null)', '00000000-0000-0000-0000-0000000a3502', (select v from ctx where k = 'w35'), '{}'), 'you can only ask%');
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3503');
+do $$ begin
+  perform pg_temp.must_fail(format('select public.create_booking_request(%L, %L::jsonb, %L, null)', '00000000-0000-0000-0000-0000000a3502', (select v from ctx where k = 'w35'), '{}'), 'you can only ask%');
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3501');
+do $$ declare rae text := '00000000-0000-0000-0000-0000000a3502'; begin
+  perform pg_temp.must_fail(format('select public.create_booking_request(%L, %L::jsonb, %L, null)', rae, '[]', '{}'), 'pick a day and time');
+  perform pg_temp.must_fail(format('select public.create_booking_request(%L, %L::jsonb, %L, null)', rae,
+    jsonb_build_array(jsonb_build_object('starts', now() - interval '1 hour', 'ends', now() + interval '2 hours')), '{}'), 'pick a time that hasn''t started yet');
+  perform pg_temp.must_fail(format('select public.create_booking_request(%L, %L::jsonb, %L, null)', rae,
+    jsonb_build_array(jsonb_build_object('starts', now() + interval '1 day', 'ends', now() + interval '1 day 3 hours'),
+                      jsonb_build_object('starts', now() + interval '1 day 2 hours', 'ends', now() + interval '1 day 5 hours')), '{}'), 'two of these dates overlap');
+  perform pg_temp.must_fail(format('select public.create_booking_request(%L, %L::jsonb, %L, null)', rae,
+    (select jsonb_agg(jsonb_build_object('starts', now() + make_interval(days => d), 'ends', now() + make_interval(days => d, hours => 2))) from generate_series(1, 61) d), '{}'), 'ask for at most 60 dates%');
+  if (select count(*) from shift_requests) <> 0 then raise exception 'FAIL a refused request was saved'; end if;
+end $$;
+
+-- A single date with tasks, then a 4-date series; one push each to Rae
+do $$ declare res jsonb; begin
+  res := public.create_booking_request('00000000-0000-0000-0000-0000000a3502',
+    jsonb_build_array(jsonb_build_object('starts', (current_date + 15)::timestamptz + interval '18 hours', 'ends', (current_date + 15)::timestamptz + interval '22 hours',
+      'tasks', jsonb_build_array('7:00 Snack · Nia'))), '{}', null, 'Back by 10');
+  if res->>'series_id' is not null or jsonb_array_length(res->'request_ids') <> 1 then raise exception 'FAIL single booking request %', res; end if;
+  insert into ctx values ('one35', res->'request_ids'->>0);
+  res := public.create_booking_request('00000000-0000-0000-0000-0000000a3502', (select v::jsonb from ctx where k = 'w35'), '{}', null);
+  if res->>'series_id' is null or jsonb_array_length(res->'request_ids') <> 4 then raise exception 'FAIL series %', res; end if;
+  insert into ctx values ('ser35', res->>'series_id');
+  if (select count(*) from shift_requests where series_id = (res->>'series_id')::uuid and kind = 'booking' and first_to_accept and expires_at = starts_at
+      and tasks = array['6:30 Dinner · Nia', '8:00 Bath · Nia'] and cardinality(kid_ids) = 1) <> 4 then raise exception 'FAIL series rows'; end if;
+  if (select count(*) from shift_request_sitters) <> 5 then raise exception 'FAIL parent reads the asked rows'; end if;
+end $$;
+reset role;
+do $$ begin
+  if (select count(*) from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[rae35]') <> 2 then
+    raise exception 'FAIL expected two pushes to the sitter %', (select json_agg(body) from net.sent); end if;
+  if not exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'title' = 'Pia asks you to sit') then raise exception 'FAIL single push'; end if;
+  if not exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'title' = 'Pia asks you to sit 4 times'
+                 and x->>'body' ~ '^[A-Z][a-z]{2}(, [A-Z][a-z]{2})* · [A-Z][a-z]{2} \d+ – [A-Z][a-z]{2} \d+ · ') then
+    raise exception 'FAIL series push %', (select json_agg(body) from net.sent); end if;
+end $$;
+delete from net.sent;
+-- Rae already has a shift on the third date (Pia booked it by hand earlier) and time off on the second
+insert into shifts (family_id, sitter_id, starts_at, ends_at, created_by)
+  select v::uuid, '00000000-0000-0000-0000-0000000a3502', (current_date + 24)::timestamptz + interval '17 hours', (current_date + 24)::timestamptz + interval '19 hours',
+    '00000000-0000-0000-0000-0000000a3501' from ctx where k = 'fam35';
+insert into sitter_time_off (sitter_id, starts, ends, note) values ('00000000-0000-0000-0000-0000000a3502', current_date + 21, current_date + 23, 'Away');
+set role authenticated;
+
+-- Oli and the stranger see nothing and can't answer
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3503');
+do $$ begin
+  if (select count(*) from shift_requests) + (select count(*) from shift_request_sitters) <> 0 then raise exception 'FAIL other family sees the requests'; end if;
+  perform pg_temp.must_fail(format('select public.answer_booking_series(%L, %L)', (select v from ctx where k = 'ser35'), '{}'), 'this request wasn''t sent to you');
+  perform pg_temp.must_fail(format('select public.cancel_shift_request(%L)', (select v from ctx where k = 'one35')), 'request not found');
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+do $$ begin
+  if (select count(*) from shift_requests) <> 0 then raise exception 'FAIL stranger sees booking requests'; end if;
+end $$;
+
+-- Rae reads her five, accepts dates 1 – 3 (giving up her time off) and leaves date 4: 1 and 2 booked with their
+-- tasks, 3 clashes (reported, still open), 4 declined
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3502');
+do $$ declare ids uuid[]; res jsonb; begin
+  if (select count(*) from shift_requests) <> 5 or (select count(*) from shift_request_sitters) <> 5 then raise exception 'FAIL sitter reads her requests'; end if;
+  ids := array(select id from shift_requests where series_id = (select v::uuid from ctx where k = 'ser35') order by starts_at);
+  res := public.answer_booking_series((select v::uuid from ctx where k = 'ser35'), ids[1:3], true);
+  if (select string_agg(x->>'result', ',' order by o) from jsonb_array_elements(res) with ordinality t(x, o)) <> 'booked,booked,busy,declined' then
+    raise exception 'FAIL series answer %', res; end if;
+  if (select count(*) from shifts s join shift_requests q on q.shift_id = s.id where q.series_id = (select v::uuid from ctx where k = 'ser35') and s.sitter_id = auth.uid()) <> 2 then
+    raise exception 'FAIL booked shifts'; end if;
+  if (select count(*) from shift_tasks t join shift_requests q on q.shift_id = t.shift_id where q.id = ids[1]) <> 2 then raise exception 'FAIL tasks not on the shift'; end if;
+  if (select string_agg(title, '|' order by position) from shift_tasks t join shift_requests q on q.shift_id = t.shift_id where q.id = ids[2]) <> '6:30 Dinner · Nia|8:00 Bath · Nia' then
+    raise exception 'FAIL task order'; end if;
+  if exists (select 1 from sitter_time_off where starts <= current_date + 22 and ends >= current_date + 22) then raise exception 'FAIL time off not given up'; end if;
+  if (select count(*) from sitter_time_off) <> 2 then raise exception 'FAIL time off not split around the date'; end if;
+  if (select status from shift_requests where id = ids[3]) <> 'open' or (select status from shift_requests where id = ids[4]) <> 'open' then raise exception 'FAIL unbooked dates closed'; end if;
+  if (select status from shift_request_sitters where request_id = ids[4]) <> 'declined' then raise exception 'FAIL not declined'; end if;
+  insert into ctx values ('ser35_3', ids[3]::text);
+  -- answering again changes nothing that was answered
+  res := public.answer_booking_series((select v::uuid from ctx where k = 'ser35'), '{}');
+  if (select string_agg(x->>'result', ',' order by o) from jsonb_array_elements(res) with ordinality t(x, o)) <> 'filled,filled,declined,declined' then
+    raise exception 'FAIL second answer %', res; end if;
+end $$;
+reset role;
+do $$ begin
+  if not exists (select 1 from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[pia35]' and x->>'title' = 'Rae accepted 2 of 4 shifts') then
+    raise exception 'FAIL answer push %', (select json_agg(body) from net.sent); end if;
+  if (select count(*) from net.sent, jsonb_array_elements(body) x where x->>'to' = 'ExponentPushToken[pia35]') <> 2 then raise exception 'FAIL one push per answer'; end if;
+end $$;
+set role authenticated;
+
+-- Pia sees the answers and cancels the date that's still open; the single date: Rae accepts, it's booked with its task
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3501');
+do $$ begin
+  if (select count(*) from shift_requests where series_id = (select v::uuid from ctx where k = 'ser35') and status = 'filled') <> 2 then raise exception 'FAIL parent sees filled'; end if;
+  perform public.cancel_shift_request((select v::uuid from ctx where k = 'ser35_3'));
+  if (select status from shift_requests where id = (select v::uuid from ctx where k = 'ser35_3')) <> 'cancelled' then raise exception 'FAIL cancel a date'; end if;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000a3502');
+do $$ declare res jsonb; begin
+  res := public.accept_shift_request((select v::uuid from ctx where k = 'one35'));
+  if res->>'result' <> 'booked' then raise exception 'FAIL single accept %', res; end if;
+  if (select string_agg(title, '|') from shift_tasks where shift_id = (res->>'shift_id')::uuid) <> '7:00 Snack · Nia' then raise exception 'FAIL single task'; end if;
+end $$;
+reset role;
+
 select 'ALL RLS SCENARIOS PASSED' as result;

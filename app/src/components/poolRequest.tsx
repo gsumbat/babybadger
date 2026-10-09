@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View, type StyleProp, type Vi
 
 import { Text } from '@/components/Text';
 import { Icon, type IconName } from '@/components/ui';
+import { seriesRowTitle, seriesSub } from '@/lib/booking-logic';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { parentRowSub, requestRowTitle, requestWindow, requestsApi, type PillKind } from '@/lib/pool-requests';
@@ -81,23 +82,36 @@ const BTN: Record<Kind, ViewStyle> = {
   danger: { backgroundColor: 'transparent' },
 };
 
-/** Parent Home "Needs you" (P4b "Sat 6–7 PM request · Waiting for Maya to answer"): the family's open pool requests,
- * each opening P46. Nothing before migration 25 runs. */
+/** Parent Home "Needs you" (P4b "Sat 6–7 PM request · Waiting for Maya to answer"): the family's open pool and
+ * booking requests, each opening P46. A repeating booking (migration 35) is one row, "12 shifts with Maya ·
+ * Waiting for Maya", opening its first open date. Nothing before migration 25 runs. */
 export function ParentRequestsNeedYou({ familyId }: { familyId: string }) {
   const { data } = useQuery(async () => {
     const [open, sitters] = await Promise.all([requestsApi.openForFamily(familyId).catch(() => []), api.familySitters(familyId).catch(() => [])]);
-    return open.map(({ request, asked }) => ({
-      request,
-      sub: parentRowSub(asked.map((a) => ({ ...a, name: firstName(sitters.find((s) => s.sitter_id === a.sitter_id)?.profile?.full_name) }))),
-    }));
+    const nameOf = (id: string) => firstName(sitters.find((s) => s.sitter_id === id)?.profile?.full_name);
+    const rows: { request: (typeof open)[number]['request']; title: string; sub: string }[] = [];
+    const seen = new Set<string>();
+    for (const { request, asked } of open) {
+      const sid = request.series_id;
+      if (!sid) {
+        rows.push({ request, title: requestRowTitle(requestWindow(request)), sub: parentRowSub(asked.map((a) => ({ ...a, name: nameOf(a.sitter_id) }))) });
+        continue;
+      }
+      if (seen.has(sid)) continue;
+      seen.add(sid);
+      const all = open.filter((x) => x.request.series_id === sid).map((x) => ({ request: x.request, asked: x.asked[0] }));
+      const name = nameOf(asked[0]?.sitter_id ?? '');
+      rows.push({ request, title: seriesRowTitle(all.length, name), sub: seriesSub(all, name) });
+    }
+    return rows;
   }, [familyId]);
   if (!data?.length) return null;
   return (
     <>
       <Text style={[st.needLabel, { marginTop: SECTION_GAP }]}>NEEDS YOU</Text>
       <View style={st.needCard}>
-        {data.map(({ request, sub }, i) => (
-          <RequestRow key={request.id} title={requestRowTitle(requestWindow(request))} sub={sub} last={i === data.length - 1} onPress={() => router.push({ pathname: '/parent/request/[id]', params: { id: request.id } })} />
+        {data.map(({ request, title, sub }, i) => (
+          <RequestRow key={request.id} title={title} sub={sub} last={i === data.length - 1} onPress={() => router.push({ pathname: '/parent/request/[id]', params: { id: request.id } })} />
         ))}
       </View>
     </>

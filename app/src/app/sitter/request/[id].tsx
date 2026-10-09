@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
 import { Hatch } from '@/components/calendar';
@@ -7,13 +7,14 @@ import { backOr, Pill, PillButton, RequestHeader } from '@/components/poolReques
 import { Text } from '@/components/Text';
 import { ErrorText, Icon, Screen } from '@/components/ui';
 import { availabilityApi, type TimeOff } from '@/lib/availability';
+import { answerProblems, bookingApi, dateClash, seriesLine, seriesTitle, type BookingItem } from '@/lib/booking';
 import { familyColor } from '@/lib/calendar-logic';
 import { itemsForShift } from '@/lib/care-plan';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { familyPlaces } from '@/lib/places';
 import { windowLabel } from '@/lib/pool';
-import { calendarFit, effectiveStatus, fitsSub, hoursText, kidAge, overlapBar, requestsApi, requestWindow, spanText, timeLeft, useRequestLive, type CalendarFit } from '@/lib/pool-requests';
+import { calendarFit, effectiveStatus, fitsSub, hoursText, kidAge, overlapBar, requestsApi, requestWindow, spanText, timeLeft, useRequestLive, type CalendarFit, type PillKind } from '@/lib/pool-requests';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { Kid } from '@/lib/types';
@@ -29,6 +30,11 @@ import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 // adds the time-left pill and the note): offer the free part only (the longest stretch she isn't off), accept all and
 // give up those days off, or decline; "Send answer". Filled by someone else: S34. Cancelled / expired / passed on her
 // offer / declined: canvas S34b with its own title and line.
+// A booking request (migration 35, kind 'booking': the parent asked her from the booking drawer) reads "Jen asked you
+// directly". A repeating one (series_id) is S33s: "Jen asks you to sit 12 times", the days, times and kids, a DATES
+// checklist (her time off or another shift: tagged and unticked; another shift can't be ticked), the note, Decline
+// all / "Accept 11 shifts" (answer_booking_series; ticking a time-off date gives up that time off). Dates that
+// couldn't be booked are listed under the card and stay open to answer again.
 export default function SitterRequest() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { session, sitterLinks } = useSession();
@@ -69,7 +75,7 @@ export default function SitterRequest() {
   }, [data?.mine?.status, id]);
 
   // She got the shift (this screen opened again later): it's on her calendar.
-  const won = data?.request?.status === 'filled' && data.request.filled_by === uid;
+  const won = data?.request?.status === 'filled' && data.request.filled_by === uid && !data.request.series_id;
   useEffect(() => {
     if (won) router.replace('/sitter/calendar');
   }, [won]);
@@ -92,6 +98,8 @@ export default function SitterRequest() {
   const famName = sitterLinks.find((l) => l.family_id === req.family_id)?.family.name ?? 'The family';
   const stripe = familyColor(sitterLinks, req.family_id).dot;
   const parent = firstName(data.parents?.find((p) => p.id === req.created_by)?.full_name);
+  // "Jen asks you to sit 12 times" / "Jen asked you directly" (the family's name when her name isn't set).
+  const asker = data.parents?.find((p) => p.id === req.created_by)?.full_name?.trim() ? parent : famName;
 
   async function run(key: string, fn: () => Promise<{ result: string } | void>) {
     setBusy(key);
@@ -116,6 +124,37 @@ export default function SitterRequest() {
     }
   }
   const decline = () => run('decline', () => requestsApi.decline(req.id));
+
+  const kidsLine = (data.kids ?? []).map((k) => kidAge(k.name, k.birthdate, now));
+  const where = data.place ? `at ${data.place.name}` : 'at their home';
+  const rate = data.rate != null ? `$${Number(data.rate).toFixed(Number(data.rate) % 1 ? 2 : 0)} / hr` : '';
+  const note = req.note ? (
+    <View style={[st.card, { paddingVertical: 14, paddingHorizontal: 16, gap: 6 }]}>
+      <Text style={st.label}>NOTE FROM {parent.toUpperCase()}</Text>
+      <Text style={st.noteText}>“{req.note}”</Text>
+    </View>
+  ) : null;
+
+  // ---------------------------------------------------------------- S33s: a repeating booking
+  if (req.series_id)
+    return (
+      <SeriesAnswer
+        seriesId={req.series_id}
+        parent={asker}
+        famName={famName}
+        stripe={stripe}
+        kids={kidsLine}
+        where={where}
+        rate={rate}
+        note={note}
+        off={data.off ?? []}
+        shifts={data.shifts ?? []}
+        now={now}
+        busy={busy}
+        err={err}
+        run={run}
+      />
+    );
 
   // ---------------------------------------------------------------- S34 / S34b: closed for her
   const closed = closedCopy(status, mine.status, req.first_to_accept, req.filled_by === uid);
@@ -158,16 +197,7 @@ export default function SitterRequest() {
     );
 
   const fit = calendarFit(win, data.off ?? [], data.shifts ?? []);
-  const kidsLine = (data.kids ?? []).map((k) => kidAge(k.name, k.birthdate, now));
-  const where = data.place ? `at ${data.place.name}` : 'at their home';
-  const rate = data.rate != null ? `$${Number(data.rate).toFixed(Number(data.rate) % 1 ? 2 : 0)} / hr` : '';
   const left = <Pill label={timeLeft(req.expires_at, now, true)} kind="warn" />;
-  const note = req.note ? (
-    <View style={[st.card, { paddingVertical: 14, paddingHorizontal: 16, gap: 6 }]}>
-      <Text style={st.label}>NOTE FROM {parent.toUpperCase()}</Text>
-      <Text style={st.noteText}>“{req.note}”</Text>
-    </View>
-  ) : null;
 
   // ---------------------------------------------------------------- S33c: she said yes / offered, the family picks
   if (mine.status === 'accepted' || mine.status === 'offered')
@@ -254,7 +284,15 @@ export default function SitterRequest() {
       <View style={st.info}>
         <Icon name="users" size={22} tint={color.primaryStrong} />
         <Text style={st.infoText}>
-          <Text style={st.infoBold}>Sent to a few sitters.</Text> {req.first_to_accept ? 'The first to accept gets the shift. If someone beats you to it, we’ll let you know.' : 'The family picks from who says yes. We’ll let you know.'}
+          {req.kind === 'booking' ? (
+            <>
+              <Text style={st.infoBold}>{asker} asked you directly.</Text> Accept and it’s on your calendar.
+            </>
+          ) : (
+            <>
+              <Text style={st.infoBold}>Sent to a few sitters.</Text> {req.first_to_accept ? 'The first to accept gets the shift. If someone beats you to it, we’ll let you know.' : 'The family picks from who says yes. We’ll let you know.'}
+            </>
+          )}
         </Text>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -271,6 +309,138 @@ export default function SitterRequest() {
       </Text>
     </Screen>
   );
+}
+
+/** S33s: one repeating booking. Loads every date sent to her; ticks the open ones that fit her calendar. */
+function SeriesAnswer(p: {
+  seriesId: string;
+  parent: string;
+  famName: string;
+  stripe: string;
+  kids: string[];
+  where: string;
+  rate: string;
+  note: ReactNode;
+  off: TimeOff[];
+  shifts: { family_id: string; status: string; starts_at: string; ends_at: string }[];
+  now: Date;
+  busy: string;
+  err: string;
+  run: (key: string, fn: () => Promise<{ result: string } | void>) => Promise<void>;
+}) {
+  const { data: items, error, reload } = useQuery(() => bookingApi.series(p.seriesId), [p.seriesId]);
+  const [picked, setPicked] = useState<string[] | null>(null);
+  const [more, setMore] = useState(false);
+  const [problem, setProblem] = useState('');
+  const mine = (items ?? []).filter((x) => x.asked);
+  const open = (x: BookingItem) => effectiveStatus(x.request, p.now) === 'open' && (x.asked?.status === 'sent' || x.asked?.status === 'seen');
+  const clash = (x: BookingItem) => dateClash(requestWindow(x.request), p.off, p.shifts);
+  const answerable = mine.filter(open);
+  // Ticked: what she picked, else every open date that fits her calendar.
+  const ticked = (picked ?? answerable.filter((x) => !clash(x)).map((x) => x.request.id)).filter((id) => answerable.some((x) => x.request.id === id));
+
+  // Opening it marks the dates Seen for the parent, once.
+  const seen = useRef(false);
+  useEffect(() => {
+    if (seen.current || !items) return;
+    seen.current = true;
+    for (const x of items) if (x.asked?.status === 'sent') requestsApi.markSeen(x.request.id).catch(() => undefined);
+  }, [items]);
+
+  if (!items)
+    return (
+      <Screen header={<RequestHeader title="Shift request" back={backOr('/sitter')} />}>
+        <ErrorText>{error}</ErrorText>
+      </Screen>
+    );
+
+  const wins = mine.map((x) => requestWindow(x.request));
+  const shown = more ? mine : mine.slice(0, 6);
+  const answer = (key: string, accept: string[]) =>
+    p.run(key, async () => {
+      setProblem('');
+      const res = await bookingApi.answer(p.seriesId, accept, answerable.some((x) => accept.includes(x.request.id) && clash(x) === 'time_off'));
+      setProblem(answerProblems(res, mine));
+      setPicked(null);
+      await reload();
+    });
+
+  return (
+    <Screen
+      gap={12}
+      header={<RequestHeader title="Shift request" back={backOr('/sitter')} right={answerable.length ? <Pill label="New" kind="primary" /> : undefined} />}
+      footer={
+        answerable.length ? (
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <PillButton kind="outline" label="Decline all" busy={p.busy === 'decline'} onPress={() => answer('decline', [])} />
+            <PillButton label={`Accept ${ticked.length} ${ticked.length === 1 ? 'shift' : 'shifts'}`} busy={p.busy === 'accept'} disabled={!ticked.length} onPress={() => answer('accept', ticked)} />
+          </View>
+        ) : (
+          <View style={{ flexDirection: 'row' }}>
+            <PillButton label="Back to Today" onPress={() => router.navigate('/sitter')} />
+          </View>
+        )
+      }>
+      <ErrorText>{p.err || problem}</ErrorText>
+      <View style={[st.card, { flexDirection: 'row', overflow: 'hidden' }]}>
+        <View style={{ width: 6, backgroundColor: p.stripe }} />
+        <View style={{ padding: 16, gap: 8, flexShrink: 1, flexGrow: 1 }}>
+          <Text style={st.family}>{p.famName}</Text>
+          <Text style={st.strong16}>{seriesTitle(p.parent, mine.length)}</Text>
+          <Text style={st.sub14}>{seriesLine(wins)}</Text>
+          <Text style={st.sub14}>{[...p.kids, p.where].join(' · ')}</Text>
+          {wins[0] ? <Text style={st.sub14}>{[`${hoursText(wins[0])} each`, p.rate].filter(Boolean).join(' · ')}</Text> : null}
+        </View>
+      </View>
+      <View style={[st.card, { paddingHorizontal: 16 }]}>
+        <View style={[st.row, st.line]}>
+          <Text style={st.label}>DATES</Text>
+          {answerable.length ? <Text style={st.sub13}>{`${ticked.length} of ${answerable.length} picked`}</Text> : null}
+        </View>
+        {shown.map((x, i) => {
+          const w = requestWindow(x.request);
+          const can = open(x);
+          const c = clash(x);
+          const on = ticked.includes(x.request.id);
+          const done = can ? null : dateDone(x, p.now);
+          const day = w.start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          return (
+            <Pressable
+              key={x.request.id}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: on, disabled: !can || c === 'busy' }}
+              disabled={!can || c === 'busy'}
+              onPress={() => setPicked(on ? ticked.filter((id) => id !== x.request.id) : [...ticked, x.request.id])}
+              style={[st.dateRow, i < shown.length - 1 && st.line]}>
+              {can ? (
+                <View style={[st.box, on && st.boxOn, c === 'busy' && { opacity: 0.4 }]}>{on ? <Icon name="check" size={16} tint="#FFFFFF" strokeWidth={3} /> : null}</View>
+              ) : null}
+              <Text style={[st.dateText, !can && { color: color.ink2 }]}>
+                {day} · {spanText(w.start, w.end)}
+              </Text>
+              {can && c && !on ? <Pill label={c === 'time_off' ? 'Your time off' : 'Busy'} kind="warn" /> : null}
+              {done ? <Pill label={done.label} kind={done.kind} /> : null}
+            </Pressable>
+          );
+        })}
+        {!more && mine.length > 6 ? (
+          <Text accessibilityRole="button" onPress={() => setMore(true)} style={[st.link, { paddingVertical: 12 }]}>
+            Show {mine.length - 6} more {mine.length - 6 === 1 ? 'date' : 'dates'}
+          </Text>
+        ) : null}
+      </View>
+      {p.note}
+    </Screen>
+  );
+}
+
+/** S33s: a date she can't answer anymore. */
+function dateDone(x: BookingItem, now: Date): { label: string; kind: PillKind } {
+  const st = effectiveStatus(x.request, now);
+  if (st === 'filled') return x.request.filled_by === x.asked?.sitter_id ? { label: 'Booked', kind: 'ok' } : { label: 'Filled', kind: 'muted' };
+  if (st === 'cancelled') return { label: 'Cancelled', kind: 'muted' };
+  if (st === 'expired') return { label: 'Expired', kind: 'muted' };
+  return { label: x.asked?.status === 'declined' ? 'Declined' : 'Answered', kind: 'muted' };
 }
 
 /** S34 / S34b: why the request is closed for her, or null while she can still answer. */
@@ -383,6 +553,10 @@ const st = StyleSheet.create({
   closedIcon: { width: 76, height: 76, borderRadius: 38, backgroundColor: color.muted, alignItems: 'center', justifyContent: 'center' },
   closedTitle: { fontFamily: font.display, fontSize: 26, lineHeight: 30, color: color.ink, textAlign: 'center' },
   closedText: { maxWidth: 300, fontFamily: font.body, fontSize: 15, lineHeight: 22, color: color.ink2, textAlign: 'center' },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48 },
+  dateText: { flexGrow: 1, flexShrink: 1, fontFamily: font.body, fontSize: 15, color: color.ink },
+  box: { width: 24, height: 24, borderRadius: 7, borderWidth: 2, borderColor: color.lineStrong, alignItems: 'center', justifyContent: 'center' },
+  boxOn: { backgroundColor: color.primary, borderColor: color.primary },
   fresh: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14 },
   freshIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
 });
