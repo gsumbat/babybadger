@@ -10,7 +10,7 @@ import { availabilityApi, availabilitySummary } from '@/lib/availability';
 import { backgroundCheck, backgroundStatus, certificates, expired, expiringSoon, languagesLine, profileLine, profileStrength, shortName, sitterBundle } from '@/lib/credentials';
 import { useQuery } from '@/lib/data';
 import { useSession } from '@/lib/session';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe S39, translated from its HTML (app/src/wireframes/S39.tsx).
@@ -178,7 +178,7 @@ const st = StyleSheet.create({
   name: { fontFamily: font.display, fontSize: 20, color: color.ink, marginVertical: -4.02 },
   sub13: { fontFamily: font.body, fontSize: 13, color: color.ink2 },
   sub12: { fontFamily: font.body, fontSize: 12, color: color.ink2 },
-  label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6 },
+  label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6, marginTop: SECTION_GAP },
   card: { paddingHorizontal: 14, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 46, paddingVertical: 3 },
   rowIcon: { width: 32, height: 32, borderRadius: 10, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },

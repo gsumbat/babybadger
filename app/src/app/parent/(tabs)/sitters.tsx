@@ -13,7 +13,7 @@ import { inviteApi, type InviteRow } from '@/lib/invites';
 import { poolData, statusFor, tabLabel, tonightWindow, type DotKind } from '@/lib/pool';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe P54, translated from its HTML (app/src/wireframes/P54.tsx); P54b when there are no sitters and no
@@ -127,7 +127,7 @@ export default function Sitters() {
             </View>
           ) : null}
 
-          <View style={st.labelRow}>
+          <View style={[st.labelRow, parent && { marginTop: SECTION_GAP }]}>
             <Text style={st.label}>YOUR POOL · {sitters.length}</Text>
             {parent ? (
               <Text accessibilityRole="link" onPress={() => openPool(tonight)} style={st.link}>
@@ -164,7 +164,7 @@ export default function Sitters() {
 
       {parent && invites.length ? (
         <>
-          <Text style={st.label}>IN PROGRESS</Text>
+          <Text style={[st.label, { marginTop: SECTION_GAP }]}>IN PROGRESS</Text>
           <View style={st.listCard}>
             {invites.map((inv, i) => {
               const state = inviteState(inv);

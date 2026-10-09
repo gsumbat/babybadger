@@ -25,7 +25,7 @@ import { membersApi } from '@/lib/family-members-api';
 import { namesLine } from '@/lib/invite-links';
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
-import { color } from '@/theme';
+import { color, SECTION_GAP } from '@/theme';
 
 // Wireframes P78 Family members (Settings › Family members), P78f (4 seats used) and P78v (not the owner). "4 SEATS ·
 // 3 USED" counts members plus open invites (migration 32 sends the count to everyone). Members first (the owner, then
@@ -115,7 +115,7 @@ export default function FamilyMembers() {
       }>
       <Text style={ms.lead}>{`Adults who look after ${kids || 'your kids'}. Your plan has ${max} seats.`}</Text>
       <ErrorText>{error || err}</ErrorText>
-      <Text style={ms.section}>{seatsLine(used, max).toUpperCase()}</Text>
+      <Text style={[ms.section, { marginTop: SECTION_GAP }]}>{seatsLine(used, max).toUpperCase()}</Text>
       <RowsCard>
         {members.map((m, i) => {
           const bg = memberColor(m.me ? 0 : other++, m.me);
@@ -139,7 +139,7 @@ export default function FamilyMembers() {
       </RowsCard>
       {manage && invites.length ? (
         <>
-          <Text style={[ms.section, { marginTop: 2 }]}>INVITES</Text>
+          <Text style={[ms.section, { marginTop: SECTION_GAP }]}>INVITES</Text>
           <RowsCard>
             {invites.map((inv, i) => {
               const pill = invitePill(inv);

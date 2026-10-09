@@ -8,7 +8,7 @@ import { Text } from '@/components/Text';
 import { ErrorText, Screen } from '@/components/ui';
 import { accessEnds, CANCEL_REASONS, DATA_KEPT_MONTHS, manageSubscription, PAUSE_MONTHS, pauseLabel, shortDate, SUPPORT_EMAIL, usePlan } from '@/lib/billing';
 import { useSession } from '@/lib/session';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframe P41 Cancel or pause (from P39 "Cancel subscription"). Cancel runs the billing-manage function: the plan
 // stops at the end of the period (or the trial) and the reason goes to Stripe as cancellation feedback.
@@ -99,7 +99,7 @@ export default function Cancel() {
         </View>
       ) : null}
       <ErrorText>{err}</ErrorText>
-      <Text style={st.section}>IF YOU CANCEL</Text>
+      <Text style={[st.section, { marginTop: SECTION_GAP }]}>IF YOU CANCEL</Text>
       <View style={st.card}>
         <Row label="Full access until" value={shortDate(accessEnds(plan.sub)) || '–'} />
         <Row label="Sitters" value="Keep their free accounts" />

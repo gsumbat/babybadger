@@ -9,7 +9,7 @@ import { cleanLanguage, languageChips, LEVELS, saveLanguages, sitterBundle, sitt
 import { useQuery } from '@/lib/data';
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 type Lang = { language: string; level: LanguageLevel };
 
@@ -154,7 +154,7 @@ const st = StyleSheet.create({
   lang: { gap: 8, paddingVertical: 12 },
   line: { borderBottomWidth: 1, borderBottomColor: color.divider },
   langName: { fontFamily: font.bodySemi, fontSize: 16, color: color.ink, flexShrink: 1 },
-  label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6, marginTop: 2 },
+  label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6, marginTop: SECTION_GAP },
   seg: { flexDirection: 'row', gap: 4, padding: 4, backgroundColor: color.muted, borderRadius: 12 },
   segItem: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, height: 34, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   segText: { fontFamily: font.bodyMedium, fontSize: 13, color: color.ink2 },

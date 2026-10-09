@@ -133,7 +133,7 @@ export default function NewShift() {
       bg={color.surface}
       header={<DrawerHeader title="Book a shift" sub={days[day].toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} />}
       footer={<Button label="Book shift" onPress={book} busy={busy} disabled={!valid} />}>
-      <Label>Sitter</Label>
+      <Label first>Sitter</Label>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {data?.sitters.map((s) => {
           const on = chosenSitter === s.sitter_id;

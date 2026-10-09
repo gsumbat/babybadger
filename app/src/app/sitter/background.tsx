@@ -14,7 +14,7 @@ import { useQuery } from '@/lib/data';
 import { isPdf, requestErrorText, requirementRequestsApi } from '@/lib/requirement-requests-api';
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 type Picked = { uri: string; name: string; pdf: boolean };
 
@@ -103,7 +103,7 @@ export default function Background() {
         </Pressable>
       ) : null}
 
-      <Text style={reqReqStyles.label}>UPLOAD A REPORT I HAVE</Text>
+      <Text style={[reqReqStyles.label, !!data.ask && { marginTop: SECTION_GAP }]}>UPLOAD A REPORT I HAVE</Text>
       <View style={st.card}>
         <View style={st.upload}>
           <View style={st.thumb}>
@@ -135,7 +135,7 @@ export default function Background() {
         </View>
       </View>
 
-      <Text style={[reqReqStyles.label, { marginTop: 2 }]}>RUN ONE IN THE APP</Text>
+      <Text style={[reqReqStyles.label, { marginTop: SECTION_GAP }]}>RUN ONE IN THE APP</Text>
       <View style={[st.card, st.soon]} accessibilityState={{ disabled: true }}>
         <CredTile which="background" />
         <View style={{ flexGrow: 1, flexShrink: 1, minWidth: 0 }}>

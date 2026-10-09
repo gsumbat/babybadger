@@ -9,7 +9,7 @@ import { daysLabel, homesOf, otherPlacesOf, placeIcon, placesApi, type Place } f
 import { useSession } from '@/lib/session';
 import type { Kid } from '@/lib/types';
 import { useCanManage } from '@/lib/use-family-role';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe P56 Homes and places, from app/src/wireframes/P56.tsx. Opened from Settings (P12b). Rows open P57;
@@ -41,7 +41,7 @@ export default function Places() {
         ))}
         {manage ? <AddRow label="Add a home address" onPress={() => router.push('/parent/places/new?kind=home')} /> : homes.length ? null : <NoneRow />}
       </View>
-      <Text style={[st.section, { marginTop: 4 }]}>OTHER PLACES · {others.length}</Text>
+      <Text style={[st.section, { marginTop: SECTION_GAP }]}>OTHER PLACES · {others.length}</Text>
       <Text style={st.lead}>You get an alert when the sitter and kids arrive or leave.</Text>
       <View style={st.card}>
         {others.map((p, i) => (

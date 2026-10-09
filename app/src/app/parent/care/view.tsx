@@ -7,7 +7,7 @@ import { Text } from '@/components/Text';
 import { ErrorText, Icon, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { isFood, itemLine, itemTitle, scheduleLabel, timeRangeLabel } from '@/lib/care-plan';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframe P20v Care plan item · read only (from app/src/wireframes/P20v.tsx). A read-only member taps a row on the
 // care plan (P7h) and sees the whole item: the type tile, who it's for ("Whole family" or the kid), the time and days,
@@ -95,7 +95,7 @@ const st = StyleSheet.create({
   line: { borderBottomWidth: 1, borderBottomColor: color.divider },
   label: { fontFamily: font.body, fontSize: 15, color: color.ink, flexShrink: 1 },
   value: { fontFamily: font.body, fontSize: 15, color: color.ink2, flexShrink: 1, textAlign: 'right' },
-  section: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6, marginTop: 2 },
+  section: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6, marginTop: SECTION_GAP },
   howCard: { paddingVertical: 14, paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   how: { fontFamily: font.body, fontSize: 15, lineHeight: 22, color: color.ink },
 });

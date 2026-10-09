@@ -14,7 +14,7 @@ import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
 import { offPlanCards, type TripAlert, tripAlertRows, tripsApi, useShiftAlerts } from '@/lib/trips';
 import { useCanManage, useParentNames } from '@/lib/use-family-role';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframe P9 "Alerts", translated from its HTML (app/src/wireframes/P9.tsx). Opened by tapping an incident push.
 // Shows today's live (or latest) shift: incidents and open off-plan alerts as red cards on top, everything else
@@ -119,7 +119,7 @@ export default function Alerts() {
       {offPlan.map((c) => (
         <IncidentCard key={c.id} card={c} action="See on map" right onAction={() => router.push(`/parent/shift/${c.shiftId}`)} onDismiss={manage ? () => dismiss(c.id) : undefined} />
       ))}
-      <Text style={[st.section, incidents.length + offPlan.length > 0 && { marginTop: 6 }]}>EARLIER TODAY</Text>
+      <Text style={[st.section, incidents.length + offPlan.length > 0 && { marginTop: SECTION_GAP }]}>EARLIER TODAY</Text>
       {rows.length ? (
         <View style={st.list}>
           {rows.map((r, i) => (

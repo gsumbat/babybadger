@@ -49,7 +49,7 @@ export default function HouseRules() {
       <ErrorText>{error}</ErrorText>
       {sections.map((s, i) => (
         <View key={s.label} style={{ gap: 8 }}>
-          <RuleSection label={s.label} right={i === 0 && s.label === 'UPDATES AND LOGS' ? 'Sitters get reminders' : undefined} />
+          <RuleSection first={i === 0} label={s.label} right={i === 0 && s.label === 'UPDATES AND LOGS' ? 'Sitters get reminders' : undefined} />
           <RuleCard>
             {s.rules.map((r, n) => (
               <RuleRow key={r.id} icon={ruleIcon(r)} title={r.title} sub={r.sub} strength={r.strength} last={n === s.rules.length - 1} onPress={manage ? () => router.push(`/parent/rules/rule?id=${r.id}`) : undefined} />

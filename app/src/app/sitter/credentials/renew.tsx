@@ -6,7 +6,7 @@ import { Text } from '@/components/Text';
 import { Button, ErrorText, Loading, Pill, Screen } from '@/components/ui';
 import { credentialApi, credentialState, daysUntil, monthDay, needsMigration19, MIGRATION_19_TEXT } from '@/lib/credentials';
 import { useQuery } from '@/lib/data';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframe S18 Renew certification, from app/src/wireframes/S18.tsx. Opened from the S14 banner (the certificate
 // expiring soonest, within 30 days). "Upload new card" opens S15 filled in.
@@ -28,7 +28,7 @@ export default function Renew() {
         <Text style={[st.big, gone && { color: color.badInk }]}>{left}</Text>
         <Text style={[st.countText, gone && { color: color.badInk }]}>{gone ? `days left · expired ${date}` : `${left === 1 ? 'day' : 'days'} until it expires · ${date}`}</Text>
       </View>
-      <Text style={st.label}>WHAT HAPPENS</Text>
+      <Text style={[st.label, { marginTop: SECTION_GAP }]}>WHAT HAPPENS</Text>
       <View style={st.card}>
         <Step pill={<Pill label="Now" kind="warn" />} text="Families you shared it with still see it. Reminders at 30, 14 and 3 days." />
         <Step pill={<Pill label={date || 'Expiry'} kind="bad" />} text="It shows as Expired to families you shared it with." />

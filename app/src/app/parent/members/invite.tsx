@@ -32,7 +32,7 @@ import { membersApi } from '@/lib/family-members-api';
 import { inviteMailto } from '@/lib/invite-links';
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframes P78b Add a family member (Full access on), P78br (off = Read only) and P78s Invite sent. Only the owner
 // (migration 32) gets here. "4 seats · 2 used" on top; a name, the relation (SelectField), the "Full access" switch
@@ -178,7 +178,7 @@ function InviteForm({ kids, used, textFor, onSent, loadErr }: { kids: string[]; 
           style={{ flex: 1 }}
         />
       </View>
-      <Text style={[ms.section, { marginTop: 2 }]}>ACCESS</Text>
+      <Text style={[ms.section, { marginTop: SECTION_GAP }]}>ACCESS</Text>
       <AccessSwitch
         role={f.role}
         onChange={(role) => {

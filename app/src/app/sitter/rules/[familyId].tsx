@@ -71,9 +71,9 @@ export default function SitterHouseRules() {
           </Text>
         </View>
       ) : null}
-      {sections.map((s) => (
+      {sections.map((s, i) => (
         <View key={s.label} style={{ gap: 8 }}>
-          <RuleSection label={s.label} />
+          <RuleSection first={i === 0 && !count} label={s.label} />
           <RuleCard>
             {s.rules.map((r, n) => {
               const line = sitterLine(r);

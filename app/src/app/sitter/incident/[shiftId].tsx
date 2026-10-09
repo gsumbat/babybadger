@@ -14,7 +14,7 @@ import { useShiftLive } from '@/lib/data';
 import { timeOf } from '@/lib/format';
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
-import { color, font } from '@/theme';
+import { color, font, SECTION_GAP } from '@/theme';
 
 // Wireframe S24 "Log an incident", translated from its HTML (app/src/wireframes/S24.tsx). Opened from S4.
 // Saved as an urgent log (kind 'incident'): parents get the push at once, it opens P9 Alerts, and it's in the report.
@@ -78,7 +78,7 @@ export default function LogIncident() {
           <Pick key={k.id} label={k.name} on={d.kidIds.includes(k.id)} onPress={() => toggleKid(k.id)} />
         ))}
       </View>
-      <Text style={st.section}>WHAT KIND</Text>
+      <Text style={[st.section, { marginTop: SECTION_GAP }]}>WHAT KIND</Text>
       <View style={[st.row, { flexWrap: 'wrap' }]}>
         {INCIDENT_TYPES.map((t) => (
           <Pick key={t} label={t} on={d.type === t} onPress={() => set('type')(t)} />

@@ -7,7 +7,7 @@ import { Text } from '@/components/Text';
 import { Field, Icon } from '@/components/ui';
 import { kidIdsFor, PAY_OPTIONS, parseRate, type InviteChoices, type PaySchedule } from '@/lib/invites';
 import type { Kid } from '@/lib/types';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframe P23's choices (who she looks after, what she can do, pay, sitter requirements), shared by P23 (parent/
 // invite.tsx) and P3d Connect with Maya (app/f/[token].tsx). Every kid starts chosen and every switch on, as P23
@@ -67,13 +67,13 @@ export function InviteAccessFields({ c, parentNames }: { c: InviteChoicesState; 
           </View>
         </>
       ) : null}
-      <Text style={[st.section, { marginTop: 2 }]}>WHAT SHE CAN DO</Text>
+      <Text style={[st.section, c.kids.length > 0 && { marginTop: SECTION_GAP }]}>WHAT SHE CAN DO</Text>
       <View style={st.permCard}>
         <Perm label="Drive the kids" sub="Needs a driver’s license" value={c.canDrive} onChange={c.setCanDrive} />
         <Perm label="Start trips to saved places" value={c.canTrip} onChange={c.setCanTrip} />
         <Perm label="Message the family" sub={parentNames || undefined} value={c.canMessage} onChange={c.setCanMessage} last />
       </View>
-      <Text style={[st.section, { marginTop: 2 }]}>PAY</Text>
+      <Text style={[st.section, { marginTop: SECTION_GAP }]}>PAY</Text>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 1, minWidth: 0 }}>
           <Field label="Hourly rate" value={c.rateText} onChangeText={c.setRateText} keyboardType="decimal-pad" style={st.rateInput} />

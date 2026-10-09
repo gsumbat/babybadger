@@ -11,7 +11,7 @@ import { credentialSub, sitterCredentials, sitterProfile, shortExpiry } from '@/
 import { useQuery } from '@/lib/data';
 import { addKindFor, ageCheck, isSelfDeclared, matchingCredentials, requestErrorText, requirementRequestsApi, selfPrompt } from '@/lib/requirement-requests-api';
 import { useSession } from '@/lib/session';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframes S53b Share a card and S53d Share a confirmation, from app/src/wireframes/S53b.tsx / S53d.tsx; S53c "I
 // don't have it" is the sheet at the bottom. Opened from S53. A card request lists her cards of a matching kind
@@ -96,7 +96,7 @@ export default function ShareRequest() {
         )
       ) : (
         <>
-          <Text style={[reqReqStyles.label, { marginTop: 2 }]}>YOUR CARDS</Text>
+          <Text style={[reqReqStyles.label, { marginTop: SECTION_GAP }]}>YOUR CARDS</Text>
           {cards.map(({ cred, expired }) => {
             const on = !expired && chosen === cred.id;
             return (

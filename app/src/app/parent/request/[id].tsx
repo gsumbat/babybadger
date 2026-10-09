@@ -12,7 +12,7 @@ import { firstName } from '@/lib/format';
 import { windowLabel } from '@/lib/pool';
 import { askedRow, effectiveStatus, elapsedShare, requestsApi, requestWindow, shiftNumberText, toldNote, useRequestLive, waitingCard, type AskedSitter } from '@/lib/pool-requests';
 import { useSession } from '@/lib/session';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframes P46 Request out and P47 Booked (app/src/wireframes/P46.tsx, P47.tsx), for one pool request
 // (/parent/request/<id>, opened after P45 "Send", from Home's Needs you row and from the pushes).
@@ -180,7 +180,7 @@ export default function RequestScreen() {
         ) : null}
       </View>
 
-      <Text style={st.label}>SENT TO</Text>
+      <Text style={[st.label, { marginTop: SECTION_GAP }]}>SENT TO</Text>
       <View style={st.card}>
         {(data?.asked ?? []).map((a, i, all) => (
           <AskedRow

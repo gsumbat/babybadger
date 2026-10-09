@@ -35,7 +35,7 @@ import {
 } from '@/lib/requirements';
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 import { Text, TextInput } from '@/components/Text';
 
 // Wireframe P7a Sitter requirements, from app/src/wireframes/P7a.tsx. Opened from the Care plan's Requirements pill
@@ -155,7 +155,7 @@ export default function SitterRequirements() {
           </Pressable>
         ))}
       </View>
-      <ReqSection label="PREFERRED LANGUAGE" />
+      <ReqSection label="PREFERRED LANGUAGE" style={{ marginTop: SECTION_GAP }} />
       <View style={st.chips}>
         {chips.map((l) => {
           const on = langs.some((d) => languageOf(d) === l);
@@ -185,7 +185,7 @@ export default function SitterRequirements() {
           </Pressable>
         )}
       </View>
-      <ReqSection label="IF A SITTER IS MISSING ONE" />
+      <ReqSection label="IF A SITTER IS MISSING ONE" style={{ marginTop: SECTION_GAP }} />
       <ModeSeg value={mode} onChange={setMode} />
       {data.lines.map((l) => (
         <Text key={l} style={st.note}>
@@ -194,7 +194,7 @@ export default function SitterRequirements() {
       ))}
       {data.bySitter.length ? (
         <>
-          <ReqSection label="BY SITTER" style={{ marginTop: 4 }} />
+          <ReqSection label="BY SITTER" style={{ marginTop: SECTION_GAP }} />
           <Text style={st.lead2}>Ask a sitter to share what she has. It counts once you say it looks good.</Text>
           {data.bySitter.map((b) => {
             const name = firstName(b.full);

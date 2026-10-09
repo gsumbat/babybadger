@@ -7,7 +7,7 @@ import { useQuery } from '@/lib/data';
 import { dayOf, timeOf } from '@/lib/format';
 import { dollars, familyShort, familyTitle, hoursBig, hoursShort, payApi, payFor, periodLabel, periodRange, plural, type PayPeriod } from '@/lib/pay';
 import { useSession } from '@/lib/session';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe S7 Pay ("Hours and pay", from S39 Me › Money), translated from app/src/wireframes/S7.tsx.
@@ -124,7 +124,7 @@ export default function Pay() {
         </Pressable>
       </View>
 
-      <Text style={[st.section, { marginTop: 4 }]}>TIMESHEET</Text>
+      <Text style={[st.section, { marginTop: SECTION_GAP }]}>TIMESHEET</Text>
       <View style={[st.card, { paddingVertical: 4, paddingHorizontal: 16 }]}>
         {pay?.shifts.length ? (
           pay.shifts.map((s, i) => (

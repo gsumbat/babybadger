@@ -6,7 +6,7 @@ import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboa
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 
-import { cardShadow, color, font, radius, space } from '@/theme';
+import { cardShadow, color, font, radius, SECTION_GAP, space } from '@/theme';
 
 import { wfSvg } from './wfIcons';
 import { Text, TextInput } from '@/components/Text';
@@ -145,9 +145,10 @@ export function Card({ children, style, onPress }: { children: ReactNode; style?
   return <View style={[s.card, style]}>{children}</View>;
 }
 
-export function Label({ children, right }: { children: string; right?: ReactNode }) {
+/** A section label. It starts a new block, so it gets SECTION_GAP above it; pass `first` when nothing sits above it. */
+export function Label({ children, right, first }: { children: string; right?: ReactNode; first?: boolean }) {
   return (
-    <View style={s.labelRow}>
+    <View style={[s.labelRow, !first && { marginTop: SECTION_GAP }]}>
       <Text style={s.label}>{children.toUpperCase()}</Text>
       {right}
     </View>
@@ -455,7 +456,7 @@ const s = StyleSheet.create({
   content: { paddingHorizontal: space.xl, paddingTop: 4, gap: space.m },
   footer: { paddingHorizontal: space.xl, paddingTop: 8, paddingBottom: 32, gap: 8, backgroundColor: 'transparent' },
   card: { backgroundColor: color.surface, borderRadius: radius.card, padding: space.l, gap: space.s, ...cardShadow },
-  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 },
+  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   label: { fontFamily: font.bodyBold, fontSize: 13, letterSpacing: 0.6, color: color.ink2 },
   body: { fontFamily: font.body, fontSize: 15, lineHeight: 21, color: color.ink },
   muted: { fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink2 },

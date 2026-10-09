@@ -8,7 +8,7 @@ import { manageSubscription, openPortal, planLine, planTitle, statePill, usePlan
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { useSession } from '@/lib/session';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframes P39 Manage subscription (active), P39b (free trial), P39c (canceled, runs to the period end),
 // P39d (paused). Opens from Settings › Subscription and the P40 Home banner. Receipts, the payment method and
@@ -78,7 +78,7 @@ export default function Subscription() {
         </Pressable>
       ) : null}
       <ErrorText>{err}</ErrorText>
-      <Text style={st.section}>WHO’S COVERED</Text>
+      <Text style={[st.section, { marginTop: SECTION_GAP }]}>WHO’S COVERED</Text>
       <View style={[st.card, { paddingHorizontal: 16 }]}>
         {parents.map((p) => (
           <View key={p.id} style={[st.person, st.line]}>

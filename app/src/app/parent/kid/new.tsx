@@ -9,7 +9,7 @@ import { setupApi } from '@/lib/family-setup';
 import { ageInMonths, ageLabel, isoToUS, KID_COLORS, maskUSDate, parseUSDate, suggestedFoods } from '@/lib/kid-profile';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
-import { cardShadow, color, font, radius } from '@/theme';
+import { cardShadow, color, font, radius, SECTION_GAP } from '@/theme';
 import { Text, TextInput } from '@/components/Text';
 
 // Wireframes P18 (who), P19 (keeping them safe), P21 (who looks after them) and P22 (all set). P19 saves the child;
@@ -256,7 +256,7 @@ export default function NewKid() {
         {editId ? null : <Text style={st.title19}>Keeping {kid} safe</Text>}
         <Text style={st.lead}>Sitters see this on every shift. Red items show at the top.</Text>
       </View>
-      <Text style={st.section}>FOOD TO AVOID</Text>
+      <Text style={[st.section, { marginTop: SECTION_GAP }]}>FOOD TO AVOID</Text>
       <View style={st.chips}>
         {options.map((f) => {
           const on = foods.includes(f);

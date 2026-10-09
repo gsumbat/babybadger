@@ -13,7 +13,7 @@ import { rulesApi, rulesLabel } from '@/lib/house-rules';
 import { placesApi, placesCountLabel } from '@/lib/places';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
-import { color, font } from '@/theme';
+import { color, font, SECTION_GAP } from '@/theme';
 import { Text, TextInput } from '@/components/Text';
 
 // Wireframe P12b (settings · account; supersedes P12): grouped settings rows, account, sign out.
@@ -78,7 +78,7 @@ export default function Settings() {
         <SetRow label="House rules" value={rulesLabel(data?.rules.length ?? 0)} onPress={() => router.push('/parent/rules')} last />
       </Card>
 
-      <Text style={[st.section, { marginTop: 2 }]}>ALERTS</Text>
+      <Text style={[st.section, { marginTop: SECTION_GAP }]}>ALERTS</Text>
       <Card style={st.card}>
         <ToggleRow label="Arrivals and departures" sub="Trips to saved places" value={arrivals} onChange={(on) => savePref('alert_arrivals', on, setArrivals)} />
         <ToggleRow label="Food and tasks" sub="Each entry the sitter logs" value={logAlerts} onChange={(on) => savePref('alert_logs', on, setLogAlerts)} />
@@ -94,7 +94,7 @@ export default function Settings() {
       </Card>
       <ErrorText>{saveErr}</ErrorText>
 
-      <Text style={[st.section, { marginTop: 2 }]}>PRIVACY</Text>
+      <Text style={[st.section, { marginTop: SECTION_GAP }]}>PRIVACY</Text>
       <Card style={st.card}>
         <SetRow label="Consent records" value={`${signed} signed`} />
         <SetRow label="Keep location history" value="[RETENTION]" last={!isOwner} />
@@ -110,7 +110,7 @@ export default function Settings() {
         )}
       </Card>
 
-      <Text style={[st.section, { marginTop: 2 }]}>ACCOUNT</Text>
+      <Text style={[st.section, { marginTop: SECTION_GAP }]}>ACCOUNT</Text>
       <Card style={st.card}>
         <SetRow label="Name" value={profile?.full_name ?? ''} />
         {phone?.ok ? <SetRow label="Phone" value={phone.phone || 'Add'} onPress={() => setPhoneOpen(true)} /> : null}

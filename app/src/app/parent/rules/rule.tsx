@@ -96,7 +96,7 @@ export default function RuleDetail() {
       {!rule && <Field label="Rule" value={form.title} onChangeText={(title) => setForm({ ...form, title })} maxLength={120} autoFocus />}
       {phone && (
         <>
-          <RuleSection label="PERSONAL PHONE DURING A SHIFT" />
+          <RuleSection first={!!rule} label="PERSONAL PHONE DURING A SHIFT" />
           <View style={st.card}>
             {PHONE_USES.map((u, i) => {
               const on = form.use === u.value;
@@ -117,7 +117,7 @@ export default function RuleDetail() {
           </View>
         </>
       )}
-      <RuleSection label="HOW STRICT" />
+      <RuleSection first={!!rule && !phone} label="HOW STRICT" />
       <View style={st.seg}>
         {(['must', 'prefer'] as const).map((v) => {
           const on = form.strength === v;

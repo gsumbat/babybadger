@@ -8,7 +8,7 @@ import { familyColor } from '@/lib/calendar-logic';
 import { api, useQuery } from '@/lib/data';
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframe S12 Privacy, per family, from app/src/wireframes/S12.tsx (S12b: the LATER switch turned on). Opened from Me (S39) "Settings, privacy and help".
 // The banner says whether any family can see her location right now (only while she's clocked in). One card per
@@ -50,7 +50,7 @@ export default function Privacy() {
         </View>
       </View>
 
-      {sitterLinks.length ? <Text style={[st.label, { marginTop: 4 }]}>EACH FAMILY SEES</Text> : null}
+      {sitterLinks.length ? <Text style={[st.label, { marginTop: SECTION_GAP }]}>EACH FAMILY SEES</Text> : null}
       {sitterLinks.map((l) => {
         const signed = l.status === 'active';
         const chips = ['Location on shift', 'Hours', 'Tasks, food, notes', ...(data?.canMessage[l.family_id] ? ['Photos you send'] : [])];
@@ -79,7 +79,7 @@ export default function Privacy() {
       })}
 
       {/* S12 / S12b: "Be found by new families later" (consent only, migration 29). */}
-      <Text style={[st.label, { marginTop: 4 }]}>LATER</Text>
+      <Text style={[st.label, { marginTop: SECTION_GAP }]}>LATER</Text>
       <FoundLaterCard />
 
       <View style={st.listCard}>

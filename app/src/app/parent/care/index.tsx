@@ -10,7 +10,7 @@ import { familyItems, itemLine, routineSummary, scheduleLabel, shortTime } from 
 import { useSession } from '@/lib/session';
 import { useCanManage } from '@/lib/use-family-role';
 import type { CareItem, Kid } from '@/lib/types';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe P7 Care plan, from app/src/wireframes/P7.tsx. The family's plan, same model as a kid's day (P20k):
@@ -60,7 +60,7 @@ export default function CarePlan() {
         </>
       ) : null}
 
-      <Text style={[st.label, { marginTop: 6 }]}>FAMILY TO-DOS</Text>
+      <Text style={[st.label, kids.length > 0 && { marginTop: SECTION_GAP }]}>FAMILY TO-DOS</Text>
       {todos.length ? (
         <View style={st.card}>
           {todos.map((i, n) => (

@@ -17,7 +17,7 @@ import { calendarFit, effectiveStatus, fitsSub, hoursText, kidAge, overlapBar, r
 import { useSession } from '@/lib/session';
 import { supabase } from '@/lib/supabase';
 import type { Kid } from '@/lib/types';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframes S33 Shift request, S20 Shift request (overlaps her time off) and S34 This shift was filled
 // (app/src/wireframes/S33.tsx, S20.tsx, S34.tsx), for one pool request sent to this sitter (/sitter/request/<id>, from
@@ -226,7 +226,7 @@ export default function SitterRequest() {
         </View>
         <OverlapBox fit={fit} win={win} />
         {note}
-        <Text style={st.label}>YOUR ANSWER</Text>
+        <Text style={[st.label, { marginTop: SECTION_GAP }]}>YOUR ANSWER</Text>
         <View style={{ gap: 8 }}>
           {fit.offer ? (
             <Option on={pick === 'offer'} onPress={() => setChoice('offer')} icon="clock" tint={color.primaryTint} ink={color.primary} title={`Offer ${spanText(fit.offer.start, fit.offer.end)} only`} sub="The family can accept or look elsewhere" />

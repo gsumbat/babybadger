@@ -19,7 +19,7 @@ import { useSession } from '@/lib/session';
 import { formatClock } from '@/lib/shift-logic';
 import { spanLabel } from '@/lib/shift-page-logic';
 import type { Shift } from '@/lib/types';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframes S3 (shift today), S3b (no shift today) and S3d (nothing booked), translated from their HTML
@@ -218,7 +218,7 @@ export default function SitterHome() {
 
       {needCount > 0 && (
         <>
-          <View style={st.labelRow}>
+          <View style={[st.labelRow, { marginTop: SECTION_GAP }]}>
             <Text style={st.label}>NEEDS YOU</Text>
             <Text style={st.labelCount}>{needCount}</Text>
           </View>
@@ -238,7 +238,7 @@ export default function SitterHome() {
         </Pressable>
       )}
 
-      <View style={st.labelRow}>
+      <View style={[st.labelRow, { marginTop: SECTION_GAP }]}>
         <Text style={st.label}>TOOLS</Text>
       </View>
       {/* S3 / S3b / S3d: 4 x 2 tiles in the board's order. "Get found" (S35) shows only with the marketplace

@@ -42,7 +42,7 @@ import {
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
 import type { Kid } from '@/lib/types';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframes P28 Requirements start, P29 builder, P30 detail (Driving), P31 add your own, P32 review, from
@@ -168,7 +168,7 @@ export default function RequirementsSetup() {
           {nice.length ? <ReviewGroup title="Nice to have" count={niceCount} kind="muted" rows={nice} /> : null}
           {!must.length && !nice.length ? <Text style={st.note}>No requirements. Every sitter you invite can be booked.</Text> : null}
         </View>
-        <ReqSection label="IF A SITTER IS MISSING A MUST-HAVE" />
+        <ReqSection label="IF A SITTER IS MISSING A MUST-HAVE" style={{ marginTop: SECTION_GAP }} />
         <ModeSeg value={mode} onChange={setMode} />
         <Text style={st.note}>{modeNote(mode)}</Text>
         <ErrorText>{err}</ErrorText>
@@ -216,13 +216,13 @@ export default function RequirementsSetup() {
       <Text style={st.note}>
         <Text style={st.bold}>Must</Text> is checked before booking. <Text style={st.bold}>Nice</Text> helps you compare.
       </Text>
-      <ReqSection label="SAFETY" />
+      <ReqSection label="SAFETY" style={{ marginTop: SECTION_GAP }} />
       <View style={st.builderCard}>
         {safety.map((c, i) => (
           <BuilderRow key={c.key} icon={c.icon} title={c.title} sub={c.sub} choice={choiceOf(drafts, c.key)} onChoice={(v) => choose(c.key, c.key, v)} last={i === safety.length - 1} />
         ))}
       </View>
-      <ReqSection label="SKILLS AND LIFESTYLE" />
+      <ReqSection label="SKILLS AND LIFESTYLE" style={{ marginTop: SECTION_GAP }} />
       <View style={st.builderCard}>
         {skills.map((r, i) => (
           <BuilderRow
@@ -422,7 +422,7 @@ function Custom({ draft, onBack, onDone }: { draft: ReqDraft | null; onBack: () 
       </View>
       <Field label="Requirement" value={title} onChangeText={setTitle} maxLength={120} style={{ minHeight: 48, height: 48 }} />
       <Field label="Why it matters (sitter sees this)" value={why} onChangeText={setWhy} multiline maxLength={300} style={{ minHeight: 66, fontSize: 15, lineHeight: 21, paddingBottom: 12 }} />
-      <ReqSection label="HOW SHE SHOWS IT" />
+      <ReqSection label="HOW SHE SHOWS IT" style={{ marginTop: SECTION_GAP }} />
       <View style={{ gap: 8 }}>
         {proofs.map((p) => {
           const on = proof === p.value;

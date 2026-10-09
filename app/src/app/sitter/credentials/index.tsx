@@ -8,7 +8,7 @@ import { backgroundCheck, backgroundStatus, certificates, credentialSub, daysUnt
 import { useQuery } from '@/lib/data';
 import { askedLine, requirementRequestsApi, usDate, waitingOnHer } from '@/lib/requirement-requests-api';
 import { useSession } from '@/lib/session';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframe S14 Credentials, from app/src/wireframes/S14.tsx. Opened from Me (S39) "Certifications" and S13 "Manage".
 // The amber banner names the certificate expiring soonest (within 30 days) and opens S18. SAFETY = CPR / first aid /
@@ -55,7 +55,7 @@ export default function Credentials() {
 
       {waiting.length ? (
         <>
-          <Text style={credStyles.label}>REQUESTS</Text>
+          <Text style={[credStyles.label, { marginTop: SECTION_GAP }]}>REQUESTS</Text>
           {waiting.map(({ g, open: o }) => (
             <Pressable key={g.family_id} accessibilityRole="button" onPress={() => router.push('/sitter/requests')} style={st.req}>
               <View style={st.reqIcon}>
@@ -71,7 +71,7 @@ export default function Credentials() {
         </>
       ) : null}
 
-      <Text style={credStyles.label}>SAFETY</Text>
+      <Text style={[credStyles.label, { marginTop: SECTION_GAP }]}>SAFETY</Text>
       <View style={credStyles.listCard}>
         {safety.map((c) => (
           <CredRow key={c.id} tile={credTileKey(c)} title={c.title} sub={credentialSub(c)} right={<CredPill c={c} />} onPress={() => open(c.id)} />
@@ -92,7 +92,7 @@ export default function Credentials() {
         />
       </View>
 
-      <Text style={[credStyles.label, { marginTop: 2 }]}>SKILLS</Text>
+      <Text style={[credStyles.label, { marginTop: SECTION_GAP }]}>SKILLS</Text>
       <View style={credStyles.listCard}>
         {skills.map((c) => (
           <CredRow key={c.id} tile={credTileKey(c)} title={c.title} sub={credentialSub(c)} right={<CredPill c={c} />} onPress={() => open(c.id)} />

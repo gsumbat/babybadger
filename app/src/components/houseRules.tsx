@@ -5,12 +5,13 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
 import { type RuleIcon, type RuleStrength, ruleIconXml } from '@/lib/house-rules';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 import { Text } from '@/components/Text';
 
-export function RuleSection({ label, right }: { label: string; right?: string }) {
+/** A section label: SECTION_GAP above it, unless `first` (nothing above it on the screen). */
+export function RuleSection({ label, right, first }: { label: string; right?: string; first?: boolean }) {
   return (
-    <View style={st.labelRow}>
+    <View style={[st.labelRow, !first && { marginTop: SECTION_GAP }]}>
       <Text style={st.label}>{label}</Text>
       {right ? <Text style={st.labelRight}>{right}</Text> : null}
     </View>
@@ -52,7 +53,7 @@ export function RuleRow({ icon, title, sub, strength, last, compact, onPress }: 
 }
 
 const st = StyleSheet.create({
-  labelRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', marginTop: 2 },
+  labelRow: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' },
   label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6, flexShrink: 1 },
   labelRight: { fontFamily: font.body, fontSize: 12, color: color.ink2, flexShrink: 1 },
   card: { paddingHorizontal: 14, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },

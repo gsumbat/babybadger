@@ -8,7 +8,7 @@ import { Loading, Screen } from '@/components/ui';
 import { useQuery } from '@/lib/data';
 import { requirementRequestsApi, shortDay, SITTER_LABEL, SITTER_PILL, sitterState, sitterSub, type ReqRequest } from '@/lib/requirement-requests-api';
 import { reqIcon } from '@/lib/requirements';
-import { color, font } from '@/theme';
+import { color, font, SECTION_GAP } from '@/theme';
 
 // Wireframe S53 Requests, from app/src/wireframes/S53.tsx. Opened from Home "Needs you", Me › Certifications (S14) and
 // the "The Lee family asked for …" push (/sitter/requests). One section per family: who asked and when, the parent's
@@ -30,7 +30,7 @@ export default function Requests() {
         const first = asked[0];
         const note = g.requests.find((q) => q.status === 'asked' && q.note)?.note;
         return (
-          <View key={g.family_id} style={{ gap: 12, marginTop: gi ? 4 : 0 }}>
+          <View key={g.family_id} style={{ gap: 12, marginTop: SECTION_GAP }}>
             <View style={st.head}>
               <Text style={reqReqStyles.label}>{g.family_name.toUpperCase()}</Text>
               {first ? (

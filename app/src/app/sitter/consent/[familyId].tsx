@@ -10,7 +10,7 @@ import { sitterRulesState } from '@/lib/house-rules';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { NOTICE_VERSION, TERMS_VERSION } from '@/lib/types';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 import { Text } from '@/components/Text';
 
 // [LEGAL REVIEW] Placeholder text. Final notice wording depends on state law and must come from counsel.
@@ -155,7 +155,7 @@ export default function Consent() {
           </View>
         ))}
       </View>
-      <View style={{ gap: 6 }}>
+      <View style={{ gap: 6, marginTop: SECTION_GAP }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <Text style={st.label}>READ BEFORE YOU SIGN</Text>
           <Text style={st.labelRight}>Required</Text>

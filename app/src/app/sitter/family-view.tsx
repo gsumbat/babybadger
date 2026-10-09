@@ -8,7 +8,7 @@ import { Button, ErrorText, Loading, Pill, Screen } from '@/components/ui';
 import { familyViewLines, shortName, sitterBundle } from '@/lib/credentials';
 import { useQuery } from '@/lib/data';
 import { useSession } from '@/lib/session';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 const NEVER_SHOWN = ['Cards you haven’t shared', 'Certificate numbers', 'Other families'];
 
@@ -53,7 +53,7 @@ export default function FamilyView() {
         {bio ? <Text style={st.bio}>{`"${bio}"`}</Text> : null}
       </View>
       <Text style={st.cards}>Your cards stay private. A family sees one only after you share it with them.</Text>
-      <Text style={[profileStyles.label, { marginTop: 2 }]}>NEVER SHOWN TO FAMILIES</Text>
+      <Text style={[profileStyles.label, { marginTop: SECTION_GAP }]}>NEVER SHOWN TO FAMILIES</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
         {NEVER_SHOWN.map((t) => (
           <Pill key={t} label={t} kind="muted" />

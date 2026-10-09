@@ -9,7 +9,7 @@ import { agesLabel, backgroundCheck, backgroundStatus, certificates, driveLabel,
 import { useQuery } from '@/lib/data';
 import { usDate } from '@/lib/requirement-requests';
 import { useSession } from '@/lib/session';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframe S13 My profile, from app/src/wireframes/S13.tsx (S13c: "Be found by new families later" turned on). Opened from Me (S39) "My profile · N%".
 // "Edit details and photo" opens S40; CREDENTIALS "Manage" opens S14; each certificate opens S41, the background
@@ -73,7 +73,7 @@ export default function Profile() {
       {/* S13 / S13c: "Be found by new families later" (consent only, migration 29; the same switch as S12). */}
       <FoundLaterCard />
 
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: SECTION_GAP }}>
         <Text style={credStyles.label}>CREDENTIALS</Text>
         <Pressable accessibilityRole="link" onPress={() => router.push('/sitter/credentials')} hitSlop={6}>
           <Text style={credStyles.link}>Manage</Text>
@@ -102,7 +102,7 @@ export default function Profile() {
 
       {about.length ? (
         <>
-          <Text style={[credStyles.label, { marginTop: 2 }]}>ABOUT</Text>
+          <Text style={[credStyles.label, { marginTop: SECTION_GAP }]}>ABOUT</Text>
           <View style={credStyles.listCard}>
             {about.map(([k, v], i) => (
               <View key={k} style={[st.aboutRow, i < about.length - 1 && st.line]}>

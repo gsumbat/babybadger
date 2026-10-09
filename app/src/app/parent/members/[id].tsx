@@ -11,7 +11,7 @@ import { membersApi } from '@/lib/family-members-api';
 import { namesLine } from '@/lib/invite-links';
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
-import { color, font } from '@/theme';
+import { color, font, SECTION_GAP } from '@/theme';
 
 // Wireframes P78c Family member (the owner looks at Sue, read only), P78g (the owner looks at Sam, full access), P78t
 // Make Sam the owner (confirm) and P78e You (read only). Only the owner changes someone's access (the "Full access"
@@ -164,7 +164,7 @@ export default function Member() {
       </View>
       {readOnlySelf ? (
         <>
-          <Text style={[ms.section, { marginTop: 2 }]}>WHAT YOU CAN DO</Text>
+          <Text style={[ms.section, { marginTop: SECTION_GAP }]}>WHAT YOU CAN DO</Text>
           <RowsCard>
             <CanRow icon="eye" text={`${kidsOwn} care info, schedule, live shifts and updates`} />
             <CanRow icon="message-square" text="Message the sitter and send hearts on photos" />
@@ -174,7 +174,7 @@ export default function Member() {
         </>
       ) : fullSelf ? (
         <>
-          <Text style={[ms.section, { marginTop: 2 }]}>WHAT YOU CAN DO</Text>
+          <Text style={[ms.section, { marginTop: SECTION_GAP }]}>WHAT YOU CAN DO</Text>
           <RowsCard>
             <CanRow icon="calendar" text="Book shifts, edit the care plan and manage sitters" />
             <CanRow icon="message-square" text="Message the sitter and send hearts on photos" />
@@ -186,7 +186,7 @@ export default function Member() {
         <Text style={ms.note13}>You’re the owner: you manage seats and the subscription. To leave, make someone with full access the owner first.</Text>
       ) : manage ? (
         <>
-          <Text style={[ms.section, { marginTop: 2 }]}>ACCESS</Text>
+          <Text style={[ms.section, { marginTop: SECTION_GAP }]}>ACCESS</Text>
           <AccessSwitch role={m.role} onChange={setRole} disabled={busy} />
           <Text style={ms.note13}>{`Changes right away. ${first} keeps their account; removing them only takes them out of your family.`}</Text>
         </>

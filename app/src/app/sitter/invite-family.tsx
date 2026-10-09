@@ -11,7 +11,7 @@ import { familyLinkApi } from '@/lib/family-referrals';
 import { inviteMailto } from '@/lib/invite-links';
 import { useSession } from '@/lib/session';
 import { errorText } from '@/lib/supabase';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframes S52 Invite a family and S52b Family invites (sent list). Opened from Me (S39) "Invite a family you sit
 // for". A sitter invites a family she ALREADY sits for (phase 1: no marketplace; a family only reaches her through
@@ -225,7 +225,7 @@ function SentList({ list, sitter, reload, onNew, error }: { list: Referral[]; si
   return (
     <Screen title="Family invites" back gap={12} footer={<Button label="Invite another family" onPress={onNew} style={{ marginTop: -4 }} />}>
       <Text style={st.lead}>Families you sit for, invited from your phone. When one joins, you review their invite.</Text>
-      <Text style={st.label}>SENT</Text>
+      <Text style={[st.label, { marginTop: SECTION_GAP }]}>SENT</Text>
       {list.map((r) => {
         const pill = referralPill(r);
         return (

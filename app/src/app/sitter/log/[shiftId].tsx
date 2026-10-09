@@ -31,7 +31,8 @@ const TITLES: Record<LogKind, string> = { food: 'Log food', nap: 'Log a nap', ac
 function Choice({ label, options, value, onChange, labels }: { label: string; options: string[]; value: string; onChange: (v: string) => void; labels?: Record<string, string> }) {
   return (
     <View style={{ gap: 8 }}>
-      <Label>{label}</Label>
+      {/* A question in the form, like "Who" and "How much?" beside it: no section gap. */}
+      <Label first>{label}</Label>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {options.map((o) => <Chip key={o} label={labels?.[o] ?? cap(o)} on={value === o} onPress={() => onChange(o)} />)}
       </View>

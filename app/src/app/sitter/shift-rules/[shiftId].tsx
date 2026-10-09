@@ -63,7 +63,7 @@ export default function ShiftRules() {
       )}
       {rows.length > 0 && (
         <>
-          <RuleSection label="LOGS" />
+          <RuleSection first={due === 0} label="LOGS" />
           <View style={st.card}>
             {rows.map((r, i) => (
               <View key={r.rule.id} style={[st.logRow, i < rows.length - 1 && st.line]}>
@@ -91,7 +91,7 @@ export default function ShiftRules() {
       )}
       {remember.length > 0 && (
         <>
-          <RuleSection label="REMEMBER" />
+          <RuleSection first={due === 0 && !rows.length} label="REMEMBER" />
           <RuleCard>
             {remember.map((r, n) => {
               const line = sitterLine(r);

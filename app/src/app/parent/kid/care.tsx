@@ -5,7 +5,7 @@ import { HelperNote } from '@/components/familyMembers';
 import { Text } from '@/components/Text';
 import { ErrorText, Icon, Loading, Screen } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
-import { cardShadow, color, font, radius } from '@/theme';
+import { cardShadow, color, font, radius, SECTION_GAP } from '@/theme';
 
 // Wireframe P19v Keeping Ava safe · read only (from app/src/wireframes/P19v.tsx). What a read-only member sees from the
 // kid profile's "Care and safety" row (P55h): the foods to avoid as red chips, then allergies, medicine and health
@@ -48,7 +48,7 @@ export default function KidCareView() {
         </View>
       }>
       <Text style={st.lead}>What sitters see on every shift.</Text>
-      <Text style={st.section}>FOOD TO AVOID</Text>
+      <Text style={[st.section, { marginTop: SECTION_GAP }]}>FOOD TO AVOID</Text>
       {foods.length ? (
         <View style={st.chips}>
           {foods.map((f) => (

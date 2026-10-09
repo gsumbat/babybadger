@@ -13,7 +13,7 @@ import { inviteApi, type InviteRow } from '@/lib/invites';
 import { requirementStatus } from '@/lib/requirements';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe P27 Sitters (Settings › Sitters), translated from app/src/wireframes/P27.tsx. P54 (the Sitters tab) is the
@@ -152,7 +152,7 @@ export default function SitterList() {
 
       {rows.length ? (
         <>
-          <Text style={[st.section, { marginTop: 2 }]}>INVITES</Text>
+          <Text style={[st.section, active.length > 0 && { marginTop: SECTION_GAP }]}>INVITES</Text>
           <View style={st.card}>
             {rows.map((r, i) => {
               const last = i === rows.length - 1;

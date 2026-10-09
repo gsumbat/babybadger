@@ -16,7 +16,7 @@ import { poolData, poolRow, slotOf, statusFor, timeText, tonightWindow, windowLa
 import { askLabel } from '@/lib/pool-requests';
 import { requirementStatus } from '@/lib/requirements';
 import { useSession } from '@/lib/session';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Wireframe P42 Sitter pool, from app/src/wireframes/P42.tsx. Opened from the Sitters tab (P54) for a time window
 // (?start=ISO&end=ISO; tonight when missing). The family's active sitters, grouped by lib/pool-logic: FREE THE WHOLE
@@ -95,12 +95,12 @@ export default function Pool() {
     router.push({ pathname: '/parent/shift/new', params: { day: dayKey(win.start), start: timeText(win.start), end: timeText(win.end) } });
   }
 
-  const section = (g: PoolGroup, title: string, first: boolean) => {
+  const section = (g: PoolGroup, title: string) => {
     const list = group(g);
     if (!list.length) return null;
     return (
       <>
-        <Text style={[st.label, first && { marginTop: 2 }]}>
+        <Text style={[st.label, { marginTop: SECTION_GAP }]}>
           {title} · {list.length}
         </Text>
         <View style={st.card}>
@@ -200,9 +200,9 @@ export default function Pool() {
         </View>
       ) : null}
 
-      {section('free', 'FREE THE WHOLE TIME', true)}
-      {section('partly', 'PARTLY FREE', !free.length)}
-      {section('not_free', 'NOT FREE', !free.length && !group('partly').length)}
+      {section('free', 'FREE THE WHOLE TIME')}
+      {section('partly', 'PARTLY FREE')}
+      {section('not_free', 'NOT FREE')}
       {data && rows.length && !shown.length ? <Text style={st.sub}>No sitters match these filters.</Text> : null}
 
       <PickTimeSheet

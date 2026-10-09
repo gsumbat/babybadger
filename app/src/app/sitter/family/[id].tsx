@@ -10,7 +10,7 @@ import { ageLabel } from '@/lib/kid-profile';
 import { homesOf } from '@/lib/places';
 import { placesOrEmpty } from '@/lib/trips';
 import { useSession } from '@/lib/session';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 import { Text } from '@/components/Text';
 
 // Wireframe S10, translated from its HTML (app/src/wireframes/S10.tsx). Opened from the shift page (S4b) and the
@@ -208,7 +208,7 @@ const st = StyleSheet.create({
   kidLetter: { fontFamily: font.bodyBold, fontSize: 16, color: '#FFFFFF' },
   kidName: { fontFamily: font.bodyBold, fontSize: 16, color: color.ink },
   kidSub: { fontFamily: font.body, fontSize: 13, lineHeight: 18, color: color.ink2 },
-  label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6, marginTop: 4 },
+  label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6, marginTop: SECTION_GAP },
   card: { paddingVertical: 4, paddingHorizontal: 16, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   emRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 52 },
   line: { borderBottomWidth: 1, borderBottomColor: color.divider },
