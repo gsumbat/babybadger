@@ -170,7 +170,7 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
       {explore ? (
         // P4e: "Invite a sitter", "House rules" and "Care plan" are built; Devices is left out.
         <>
-          <View style={{ gap: 8, marginTop: 2 }}>
+          <View style={{ gap: 8, marginTop: SECTION_GAP }}>
             <Text style={st.label}>WHAT DO YOU NEED?</Text>
             <ActionGrid
               items={[
@@ -185,7 +185,7 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
         </>
       ) : state && !setup && !full ? (
         // The grid sits inside the content (gap 10), label to grid 8; the same six tiles in every state.
-        <View style={{ gap: 8 }}>
+        <View style={{ gap: 8, marginTop: SECTION_GAP }}>
           <Text style={st.label}>WHAT DO YOU NEED?</Text>
           <ActionGrid items={(helper ? HELPER_TILES : FULL_TILES).map((k) => TILES[k])} height={76} columns={3} />
         </View>
@@ -206,7 +206,7 @@ function span(start: string, end: string) {
 
 function LabelRow({ children, link, onLink }: { children: string; link?: string; onLink?: () => void }) {
   return (
-    <View style={[st.labelRow, { marginTop: 2 }]}>
+    <View style={[st.labelRow, { marginTop: SECTION_GAP }]}>
       <Text style={st.label}>{children}</Text>
       {link ? (
         <Text style={st.link} onPress={onLink}>
@@ -685,9 +685,7 @@ function NextShift({ shift, sitter }: { shift: Shift; sitter: string }) {
 function Kids({ kids, add = true }: { kids: Kid[]; add?: boolean }) {
   return (
     <>
-      <LabelRow link={add ? 'Add' : undefined} onLink={() => router.push('/parent/kid/new')}>
-        KIDS
-      </LabelRow>
+      <LabelRow>KIDS</LabelRow>
       <View style={[st.listCard, { paddingHorizontal: 16 }]}>
         {kids.map((k, i) => (
           <Pressable key={k.id} accessibilityRole="button" onPress={() => router.push(`/parent/kid/${k.id}`)} style={[st.kidRow, i < kids.length - 1 && st.line]}>
@@ -701,9 +699,18 @@ function Kids({ kids, add = true }: { kids: Kid[]; add?: boolean }) {
           </Pressable>
         ))}
       </View>
+      {/* A full-width button under the list (the small "Add" link next to KIDS was hard to find). */}
+      {add ? (
+        <Pressable accessibilityRole="button" onPress={() => router.push('/parent/kid/new')} style={({ pressed }) => [st.addKid, pressed && { opacity: 0.8 }]}>
+          <Text style={st.addKidText}>+ Add a child</Text>
+        </Pressable>
+      ) : null}
     </>
   );
 }
+
+// Extra space above each section label (on top of the screen's 10 gap), so sections read as separate blocks.
+const SECTION_GAP = 14;
 
 // Values from wireframes P4-P4d.
 const st = StyleSheet.create({
@@ -716,6 +723,8 @@ const st = StyleSheet.create({
   bold15: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink },
   line: { borderBottomWidth: 1, borderBottomColor: color.divider },
   listCard: { backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
+  addKid: { height: 48, borderRadius: 999, borderWidth: 2, borderStyle: 'dashed', borderColor: '#C9D3DD', alignItems: 'center', justifyContent: 'center' },
+  addKidText: { fontFamily: font.displayBold, fontSize: 16, color: color.primary },
   // P4a
   setupTrack: { height: 8, borderRadius: 4, backgroundColor: '#DDE3EA', overflow: 'hidden' },
   setupFill: { height: 8, backgroundColor: color.primary },

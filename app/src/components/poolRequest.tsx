@@ -94,7 +94,7 @@ export function ParentRequestsNeedYou({ familyId }: { familyId: string }) {
   if (!data?.length) return null;
   return (
     <>
-      <Text style={[st.needLabel, { marginTop: 2 }]}>NEEDS YOU</Text>
+      <Text style={[st.needLabel, { marginTop: 14 }]}>NEEDS YOU</Text>
       <View style={st.needCard}>
         {data.map(({ request, sub }, i) => (
           <RequestRow key={request.id} title={requestRowTitle(requestWindow(request))} sub={sub} last={i === data.length - 1} onPress={() => router.push({ pathname: '/parent/request/[id]', params: { id: request.id } })} />
