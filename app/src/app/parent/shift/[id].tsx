@@ -14,7 +14,7 @@ import { dayOf, firstName, timeOf } from '@/lib/format';
 import { ageLabel } from '@/lib/kid-profile';
 import { kidLogs, kidTasks, reportTitle, shiftLogRows } from '@/lib/shift-log-logic';
 import { type LogFilter, useShiftReactions } from '@/lib/shift-log';
-import { canEditShiftTasks, workedMinutes } from '@/lib/shift-logic';
+import { canEditShiftTasks, describeLog, workedMinutes } from '@/lib/shift-logic';
 import { useSession } from '@/lib/session';
 import { useCanManage } from '@/lib/use-family-role';
 import { errorText, supabase } from '@/lib/supabase';
@@ -142,15 +142,32 @@ export default function ParentShift() {
           </View>
           <Text style={st.summary}>{tasks.length ? tasks.map((t) => (t.done_at ? t.title : `${t.title} (not done)`)).join(' · ') : 'No tasks were set for this shift.'}</Text>
         </View>
+        {/* Incidents (S24: a fall, an injury…) stand alone above the log, one red card each, like Notes. */}
+        {logs
+          .filter((l) => l.kind === 'incident')
+          .map((l) => {
+            const d = describeLog(l);
+            const who = l.kid_ids?.length ? l.kid_ids.map((k) => kids.find((x) => x.id === k)?.name).filter(Boolean).join(', ') : '';
+            return (
+              <View key={l.id} style={st.incident}>
+                <View style={st.cardHead}>
+                  <Text style={st.incidentTitle}>{d.title}</Text>
+                  <Text style={st.incidentTime}>{timeOf(l.happened_at)}</Text>
+                </View>
+                {who ? <Text style={st.incidentWho}>{who}</Text> : null}
+                {d.detail ? <Text style={st.incidentText}>{d.detail}</Text> : null}
+              </View>
+            );
+          })}
         {/* P5 Logs: the whole log right here (P77's type chips and timeline, "Love it" on photos), no "See all" page. */}
         <View style={st.card}>
           <View style={st.cardHead}>
             <Text style={st.cardTitle}>Logs</Text>
-            {logs.length ? <Text style={st.count}>{logs.length}</Text> : null}
+            {logs.some((l) => l.kind !== 'incident') ? <Text style={st.count}>{logs.filter((l) => l.kind !== 'incident').length}</Text> : null}
           </View>
           {logs.length ? <LogTypeChips filter={logFilter} onChange={setLogFilter} inset={16} /> : null}
           <View style={{ marginTop: 2 }}>
-            <LogEntries rows={shiftLogRows(bundle.logs, bundle.tasks, kids, logFilter, kidId)} filter={logFilter} loved={loved.mine} onLove={loved.toggle} live={false} />
+            <LogEntries rows={shiftLogRows(bundle.logs, bundle.tasks, kids, logFilter, kidId).filter((r) => r.kind !== 'incident')} filter={logFilter} loved={loved.mine} onLove={loved.toggle} live={false} />
           </View>
         </View>
         <View style={st.card}>
@@ -249,5 +266,11 @@ const st = StyleSheet.create({
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   cardTitle: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink },
   count: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2 },
+  // An incident on the report: its own card, red tint, outside the log.
+  incident: { gap: 4, paddingVertical: 14, paddingHorizontal: 16, backgroundColor: color.badTint, borderRadius: 24 },
+  incidentTitle: { flexShrink: 1, fontFamily: font.bodyBold, fontSize: 15, color: color.badInk },
+  incidentTime: { fontFamily: font.bodySemi, fontSize: 13, color: color.badInk },
+  incidentWho: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink },
+  incidentText: { fontFamily: font.body, fontSize: 14, lineHeight: 20, color: color.ink },
   kidRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60 },
 });

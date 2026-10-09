@@ -112,6 +112,7 @@ import WF_P58 from './P58';
 import WF_P58b from './P58b';
 import WF_P5b from './P5b';
 import WF_P5e from './P5e';
+import WF_P5i from './P5i';
 import WF_P5k from './P5k';
 import WF_P6a from './P6a';
 import WF_P6b from './P6b';
@@ -362,6 +363,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P58b: WF_P58b,
   P5b: WF_P5b,
   P5e: WF_P5e,
+  P5i: WF_P5i,
   P5k: WF_P5k,
   P6a: WF_P6a,
   P6b: WF_P6b,
