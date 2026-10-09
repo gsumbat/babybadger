@@ -408,6 +408,20 @@ export function SheetHeader({ title, onClose }: { title: string; onClose?: () =>
   );
 }
 
+/** Top of a drawer (a formSheet you swipe down to close, e.g. P6 Book a shift): the grey grab line, then the title
+ * and an optional line under it. No back or close button; the sheet closes by dragging it down. */
+export function DrawerHeader({ title, sub }: { title: string; sub?: string }) {
+  return (
+    <View style={s.drawerHeader}>
+      <View style={s.grabber} />
+      <View>
+        <Text style={[s.hTitle, { fontSize: 20 }]}>{title}</Text>
+        {sub ? <Text style={s.drawerSub}>{sub}</Text> : null}
+      </View>
+    </View>
+  );
+}
+
 /** Gray empty state with an icon, used for features that aren't built yet. */
 export function Empty({ icon, title, children }: { icon: IconName; title: string; children?: ReactNode }) {
   return (
@@ -483,6 +497,9 @@ const s = StyleSheet.create({
   boxOn: { borderWidth: 2, borderColor: color.primary, backgroundColor: color.primaryTint },
   stat: { flex: 1, borderRadius: 18, padding: 12, gap: 2 },
   statValue: { fontFamily: font.display, fontSize: 22, color: color.ink },
+  drawerHeader: { gap: 14, paddingHorizontal: space.xl, paddingTop: 12, paddingBottom: 6 },
+  grabber: { alignSelf: 'center', width: 40, height: 5, borderRadius: 3, backgroundColor: '#C3CCD5' },
+  drawerSub: { fontFamily: font.body, fontSize: 14, color: color.ink2 },
   sheetHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: space.xl, paddingTop: 20, paddingBottom: 8 },
   banner: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', borderRadius: 16, padding: 12 },
 });

@@ -29,7 +29,8 @@ export default function ParentLayout() {
         <Stack.Screen name="members/invite" />
       </Stack.Protected>
       <Stack.Protected guard={parent}>
-        <Stack.Screen name="shift/new" options={{ presentation: 'modal' }} />
+        {/* P6 Book a shift: a drawer you swipe down to close (its own grey grab line, so the native one stays off). */}
+        <Stack.Screen name="shift/new" options={{ presentation: 'formSheet', sheetAllowedDetents: [0.92], sheetGrabberVisible: false, sheetCornerRadius: 24 }} />
         <Stack.Screen name="invite" options={{ presentation: 'modal' }} />
         <Stack.Screen name="invite/[id]" />
         <Stack.Screen name="sitter-list" />

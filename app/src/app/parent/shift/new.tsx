@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Avatar, Banner, Button, Chip, ErrorText, Field, Label, Screen, T } from '@/components/ui';
+import { Avatar, Banner, Button, Chip, DrawerHeader, ErrorText, Label, Screen, T } from '@/components/ui';
 import { dayKey } from '@/lib/calendar-logic';
 import { shiftTaskLines } from '@/lib/care-plan';
 import { api, useQuery } from '@/lib/data';
@@ -26,6 +26,12 @@ function nextDays(n: number) {
   });
 }
 
+// Wireframe P6 Book a shift: a drawer (formSheet) over the screen it was opened from, with the grey grab line and no
+// back button; swipe it down to close. Sitter chips plus "See who's free" (P42 Sitter pool), the day, Starts / Ends
+// (wheels), Kids, Where (only with two or more homes, E2w) and Book shift. There's no tasks box: the shift's tasks
+// come from the kids' days (P20k), the care plan items that fall inside the shift, listed read-only under "From
+// their days"; after booking they can be changed on the shift (P5e). Not built from P6: the sitter-unavailable
+// warning ("Book 6:00 – 7:00 PM" / "Ask anyway") and "Send request" (booking is direct).
 export default function NewShift() {
   // No plan (billing on): P36 instead (P40 "New bookings and care plan edits" pause).
   useRequirePlan();
@@ -51,8 +57,6 @@ export default function NewShift() {
   const [end, setEnd] = useState(prefill.end || '7:00 PM');
   const [kidIds, setKidIds] = useState<string[]>([]);
   const [placeId, setPlaceId] = useState<string>();
-  // Until the parent types in it, the tasks box follows the care plan items that fall inside the shift.
-  const [typed, setTyped] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
 
@@ -67,8 +71,8 @@ export default function NewShift() {
   const allowedKids = (data?.kids ?? []).filter((k) => !sitterKidIds?.length || sitterKidIds.includes(k.id));
   const shiftKidIds = kidIds.length ? kidIds.filter((id) => allowedKids.some((k) => k.id === id)) : allowedKids.map((k) => k.id);
   const valid = !!chosenSitter && !notAgreed && !!startAt && !!endAt;
-  const planned = data && startAt && endAt ? shiftTaskLines(data.care, startAt, endAt, shiftKidIds, (id) => data.kids.find((k) => k.id === id)?.name).join('\n') : '';
-  const tasks = typed ?? planned;
+  // The kids' days (P20k): care plan items that fall inside the shift become its tasks.
+  const tasks = data && startAt && endAt ? shiftTaskLines(data.care, startAt, endAt, shiftKidIds, (id) => data.kids.find((k) => k.id === id)?.name) : [];
   // Where (nP14): only when the kids live in more than one home. Until the parent picks, the home whose days
   // include the shift's day (and its kids), else the main home. place_id null means the main home, so it's only
   // sent for another home (keeps booking working before migration 16 runs).
@@ -97,7 +101,7 @@ export default function NewShift() {
       return setErr(errorText(error));
     }
     const kids = shiftKidIds;
-    const taskRows = tasks.split('\n').map((t) => t.trim()).filter(Boolean).map((title, position) => ({ shift_id: shift.id, title, position }));
+    const taskRows = tasks.map((title, position) => ({ shift_id: shift.id, title, position }));
     const results = await Promise.all([
       kids.length ? supabase.from('shift_kids').insert(kids.map((kid_id) => ({ shift_id: shift.id, kid_id }))) : Promise.resolve({ error: null }),
       taskRows.length ? supabase.from('shift_tasks').insert(taskRows) : Promise.resolve({ error: null }),
@@ -111,20 +115,24 @@ export default function NewShift() {
   // Same rule as the locked step on Home (P4a): kids first, so the sitter has their safety info (P19).
   if (data && data.kids.length === 0)
     return (
-      <Screen title="Book a shift" back footer={<Button label="Add a child" onPress={() => router.replace('/parent/kid/new')} />}>
+      <Screen bleedTop bg={color.surface} header={<DrawerHeader title="Book a shift" />} footer={<Button label="Add a child" onPress={() => router.replace('/parent/kid/new')} />}>
         <Banner kind="warn" icon="user-x">Add your kids first. The sitter sees their food to avoid and allergies on every shift.</Banner>
       </Screen>
     );
 
   if (data && data.sitters.length === 0)
     return (
-      <Screen title="Book a shift" back footer={<Button label="Invite a sitter" onPress={() => router.replace('/parent/invite')} />}>
+      <Screen bleedTop bg={color.surface} header={<DrawerHeader title="Book a shift" />} footer={<Button label="Invite a sitter" onPress={() => router.replace('/parent/invite')} />}>
         <Banner kind="warn" icon="user-x">You need an active sitter first. Invite one; she becomes active after signing your location notice.</Banner>
       </Screen>
     );
 
   return (
-    <Screen title="Book a shift" back footer={<Button label="Book shift" onPress={book} busy={busy} disabled={!valid} />}>
+    <Screen
+      bleedTop
+      bg={color.surface}
+      header={<DrawerHeader title="Book a shift" sub={days[day].toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} />}
+      footer={<Button label="Book shift" onPress={book} busy={busy} disabled={!valid} />}>
       <Label>Sitter</Label>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {data?.sitters.map((s) => {
@@ -136,6 +144,14 @@ export default function NewShift() {
             </Pressable>
           );
         })}
+        <Pressable accessibilityRole="button" onPress={() => {
+            // Close the drawer first so the pool opens as a normal screen, not on top of the sheet.
+            router.back();
+            router.push('/parent/pool');
+          }}
+          style={st.free}>
+          <Text style={st.freeText}>See who’s free</Text>
+        </Pressable>
       </View>
       {notAgreed && (
         <Banner kind="warn" icon="user-x">
@@ -176,7 +192,18 @@ export default function NewShift() {
           </View>
         </>
       )}
-      <Field label="Tasks, one per line" value={tasks} onChangeText={setTyped} placeholder={'Pick up Ava at 3:15\nSnack\nDinner at 6'} multiline />
+      <Label>From their days</Label>
+      {tasks.length ? (
+        <View style={st.tasks}>
+          {tasks.map((t, i) => (
+            <Text key={i} style={st.task}>
+              {t}
+            </Text>
+          ))}
+        </View>
+      ) : (
+        <T variant="small">Nothing from the kids’ days falls in this time. You can add tasks on the shift after booking.</T>
+      )}
       <ErrorText>{err}</ErrorText>
     </Screen>
   );
@@ -185,6 +212,11 @@ export default function NewShift() {
 const st = StyleSheet.create({
   person: { height: 44, paddingLeft: 6, paddingRight: 14, borderRadius: 999, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line },
   personOn: { borderWidth: 2, borderColor: color.primary, backgroundColor: color.primaryTint },
+  // P6 "See who's free": a tinted pill next to the sitters, opens the sitter pool (P42).
+  free: { height: 44, paddingHorizontal: 14, borderRadius: 999, justifyContent: 'center', backgroundColor: color.primaryTint, borderWidth: 1, borderColor: color.line },
+  freeText: { fontFamily: font.bodySemi, fontSize: 15, color: color.primary },
+  tasks: { gap: 6, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: color.canvas, borderRadius: 14 },
+  task: { fontFamily: font.body, fontSize: 15, color: color.ink },
   personText: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
   day: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 14, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line, gap: 2 },
   dayOn: { backgroundColor: color.primary, borderColor: color.primary },
