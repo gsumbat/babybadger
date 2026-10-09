@@ -1,4 +1,4 @@
-// GENERATED from wireframe P6d-BookDrawer.dc.html by tools/wf2rn/convert.py. Do not edit by hand:
+// GENERATED from wireframe P6e-BookRepeat.dc.html by tools/wf2rn/convert.py. Do not edit by hand:
 // regenerate, then copy into the real screen and bind data there.
 import { Text, TextInput, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
@@ -9,11 +9,12 @@ const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="non
 
 const SVG = [
   "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #4B5960; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M6 9l6 6 6-6\"></path></svg>",
+  "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #4B5960; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M6 9l6 6 6-6\"></path></svg>",
   "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #4B5960; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M6 9l6 6 6-6\"></path></svg>"
 ];
 
-/** Book a shift · drawer */
-export default function WF_P6d() {
+/** Book a shift · repeat */
+export default function WF_P6e() {
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F5F8", flexDirection: "column", overflow: "hidden" }}>
       <View style={{ backgroundColor: "rgba(27,35,40,0.32)", position: "absolute", top: 0, left: 0, right: 0, bottom: 0, flexDirection: "column" }}>
@@ -94,7 +95,7 @@ export default function WF_P6d() {
         </View>
         <View style={{ flexDirection: "column" }}>
           <Text style={{ fontFamily: font.display, fontSize: 20, color: "#1B2328" }}>Book a shift</Text>
-          <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960" }}>Sat, Oct 3</Text>
+          <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960" }}>Starting Mon, Oct 5</Text>
         </View>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 2.0, borderColor: "#47698A", flexShrink: 1 }}>
@@ -116,17 +117,17 @@ export default function WF_P6d() {
             <Text style={{ fontFamily: font.body, fontSize: 12, color: "#5F6D74" }}>Fri</Text>
             <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#1B2328", marginVertical: -3.62 }}>2</Text>
           </View>
-          <View style={{ flexDirection: "column", alignItems: "center", gap: 2, paddingTop: 6, paddingRight: 0, paddingBottom: 6, paddingLeft: 0, backgroundColor: "#47698A", borderRadius: 14, borderWidth: 1.0, borderColor: "#47698A", flexShrink: 1 }}>
-            <Text style={{ fontFamily: font.body, fontSize: 12, color: "#FFFFFF" }}>Sat</Text>
-            <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#FFFFFF", marginVertical: -3.62 }}>3</Text>
+          <View style={{ flexDirection: "column", alignItems: "center", gap: 2, paddingTop: 6, paddingRight: 0, paddingBottom: 6, paddingLeft: 0, backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.body, fontSize: 12, color: "#5F6D74" }}>Sat</Text>
+            <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#1B2328", marginVertical: -3.62 }}>3</Text>
           </View>
           <View style={{ flexDirection: "column", alignItems: "center", gap: 2, paddingTop: 6, paddingRight: 0, paddingBottom: 6, paddingLeft: 0, backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
             <Text style={{ fontFamily: font.body, fontSize: 12, color: "#5F6D74" }}>Sun</Text>
             <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#1B2328", marginVertical: -3.62 }}>4</Text>
           </View>
-          <View style={{ flexDirection: "column", alignItems: "center", gap: 2, paddingTop: 6, paddingRight: 0, paddingBottom: 6, paddingLeft: 0, backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
-            <Text style={{ fontFamily: font.body, fontSize: 12, color: "#5F6D74" }}>Mon</Text>
-            <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#1B2328", marginVertical: -3.62 }}>5</Text>
+          <View style={{ flexDirection: "column", alignItems: "center", gap: 2, paddingTop: 6, paddingRight: 0, paddingBottom: 6, paddingLeft: 0, backgroundColor: "#47698A", borderRadius: 14, borderWidth: 1.0, borderColor: "#47698A", flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.body, fontSize: 12, color: "#FFFFFF" }}>Mon</Text>
+            <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#FFFFFF", marginVertical: -3.62 }}>5</Text>
           </View>
           <View style={{ flexDirection: "column", alignItems: "center", gap: 2, paddingTop: 6, paddingRight: 0, paddingBottom: 6, paddingLeft: 0, backgroundColor: "#FFFFFF", borderRadius: 14, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
             <Text style={{ fontFamily: font.body, fontSize: 12, color: "#5F6D74" }}>Tue</Text>
@@ -156,13 +157,46 @@ export default function WF_P6d() {
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48 }}>
           <View style={{ flexDirection: "column", flexGrow: 1, flexShrink: 1 }}>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>Repeat</Text>
-            <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Book the same time on other days</Text>
+            <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>Every week on these days</Text>
           </View>
-          <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#C3CCD5", borderRadius: 15, flexDirection: "column" }}>
-            <View style={{ width: 24, height: 24, top: 3, left: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
+          <View style={{ width: 50, height: 30, flexShrink: 0, backgroundColor: "#47698A", borderRadius: 15, flexDirection: "column" }}>
+            <View style={{ width: 24, height: 24, top: 3, right: 3, backgroundColor: "#FFFFFF", borderRadius: 12, position: "absolute", flexDirection: "column" }}>
             </View>
           </View>
         </View>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, backgroundColor: "#FFFFFF", borderRadius: 20, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#1B2328" }}>S</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, backgroundColor: "#47698A", borderRadius: 20, flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#FFFFFF" }}>M</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, backgroundColor: "#FFFFFF", borderRadius: 20, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#1B2328" }}>T</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, backgroundColor: "#47698A", borderRadius: 20, flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#FFFFFF" }}>W</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, backgroundColor: "#FFFFFF", borderRadius: 20, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#1B2328" }}>T</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, backgroundColor: "#47698A", borderRadius: 20, flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#FFFFFF" }}>F</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, backgroundColor: "#FFFFFF", borderRadius: 20, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#1B2328" }}>S</Text>
+          </View>
+        </View>
+        <View style={{ flexDirection: "row", alignItems: "flex-end", gap: 10 }}>
+          <View style={{ flexDirection: "column", gap: 6, flexShrink: 1 }}>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>Until</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: 48, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, borderRadius: 8, borderWidth: 1.0, borderColor: "#C3CCD5" }}>
+              <Text style={{ fontFamily: font.body, fontSize: 16, color: "#1B2328" }}>Fri, Nov 13</Text>
+              <SvgXml xml={SVG[2]} width={18} height={18} />
+            </View>
+          </View>
+        </View>
+        <View style={{ paddingTop: 10, paddingRight: 14, paddingBottom: 10, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 12 }}><Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328" }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#34526E" }}>12 shifts</Text> · Mon, Wed, Fri · until Nov 13</Text></View>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>KIDS</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 40, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 6, backgroundColor: "#FBEAEE", borderRadius: 999, borderWidth: 1.5, borderColor: "#D9919F", flexShrink: 1 }}>
@@ -179,6 +213,7 @@ export default function WF_P6d() {
           </View>
         </View>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>FROM THEIR DAYS</Text>
+        <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", marginTop: -6 }}>Each date gets the tasks from that day’s plan. First date shown.</Text>
         <View style={{ flexDirection: "column", gap: 10 }}>
           <View style={{ paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#F3F5F8", borderRadius: 16, flexDirection: "column" }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 12, paddingRight: 0, paddingBottom: 8, paddingLeft: 0 }}>
@@ -211,7 +246,7 @@ export default function WF_P6d() {
           </View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", height: 54, marginTop: 2, backgroundColor: "#47698A", borderRadius: 999 }}>{/* -> P5b-BookedShift.dc.html */}
-          <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#FFFFFF" }}>Send request</Text>
+          <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#FFFFFF" }}>Send request for 12 shifts</Text>
         </View>
       </View>
     </View>

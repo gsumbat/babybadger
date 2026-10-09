@@ -1,4 +1,4 @@
-// GENERATED from wireframe P6d-BookDrawer.dc.html by tools/wf2rn/convert.py. Do not edit by hand:
+// GENERATED from wireframe P6g-BookUnavailable.dc.html by tools/wf2rn/convert.py. Do not edit by hand:
 // regenerate, then copy into the real screen and bind data there.
 import { Text, TextInput, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
@@ -12,8 +12,8 @@ const SVG = [
   "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #4B5960; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M6 9l6 6 6-6\"></path></svg>"
 ];
 
-/** Book a shift · drawer */
-export default function WF_P6d() {
+/** Book a shift · sitter unavailable */
+export default function WF_P6g() {
   return (
     <View style={{ flex: 1, backgroundColor: "#F3F5F8", flexDirection: "column", overflow: "hidden" }}>
       <View style={{ backgroundColor: "rgba(27,35,40,0.32)", position: "absolute", top: 0, left: 0, right: 0, bottom: 0, flexDirection: "column" }}>
@@ -141,15 +141,27 @@ export default function WF_P6d() {
           <View style={{ flexDirection: "column", gap: 6, flexShrink: 1 }}>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>Starts</Text>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: 48, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, borderRadius: 8, borderWidth: 1.0, borderColor: "#C3CCD5" }}>
-              <Text style={{ fontFamily: font.body, fontSize: 16, color: "#1B2328" }}>3:00 PM</Text>
+              <Text style={{ fontFamily: font.body, fontSize: 16, color: "#1B2328" }}>6:00 PM</Text>
               <SvgXml xml={SVG[0]} width={18} height={18} />
             </View>
           </View>
           <View style={{ flexDirection: "column", gap: 6, flexShrink: 1 }}>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>Ends</Text>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: 48, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, borderRadius: 8, borderWidth: 1.0, borderColor: "#C3CCD5" }}>
-              <Text style={{ fontFamily: font.body, fontSize: 16, color: "#1B2328" }}>7:00 PM</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", height: 48, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, borderRadius: 8, borderWidth: 2.0, borderColor: "#B7791F" }}>
+              <Text style={{ fontFamily: font.body, fontSize: 16, color: "#1B2328" }}>11:00 PM</Text>
               <SvgXml xml={SVG[1]} width={18} height={18} />
+            </View>
+          </View>
+        </View>
+        <View style={{ flexDirection: "column", gap: 8, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#F6E3C6", borderRadius: 14 }}>
+          <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#7A4E0E" }}>Maya is unavailable 7:00 – 10:00 PM</Text>
+          <Text style={{ fontFamily: font.body, fontSize: 13, color: "#5C4310" }}>Her time off. You can still ask her.</Text>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, flexShrink: 1 }}>{/* -> P6d-BookDrawer.dc.html */}
+              <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#1B2328" }}>Book 6:00 – 7:00 PM</Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, flexShrink: 1 }}>{/* -> P6d-BookDrawer.dc.html */}
+              <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#1B2328" }}>Ask anyway</Text>
             </View>
           </View>
         </View>

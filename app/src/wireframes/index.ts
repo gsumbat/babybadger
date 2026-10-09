@@ -122,6 +122,8 @@ import WF_P6b from './P6b';
 import WF_P6bh from './P6bh';
 import WF_P6c from './P6c';
 import WF_P6d from './P6d';
+import WF_P6e from './P6e';
+import WF_P6g from './P6g';
 import WF_P7 from './P7';
 import WF_P74 from './P74';
 import WF_P74b from './P74b';
@@ -211,6 +213,7 @@ import WF_S3 from './S3';
 import WF_S33 from './S33';
 import WF_S33b from './S33b';
 import WF_S33c from './S33c';
+import WF_S33s from './S33s';
 import WF_S34 from './S34';
 import WF_S34b from './S34b';
 import WF_S37 from './S37';
@@ -378,6 +381,8 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P6bh: WF_P6bh,
   P6c: WF_P6c,
   P6d: WF_P6d,
+  P6e: WF_P6e,
+  P6g: WF_P6g,
   P7: WF_P7,
   P74: WF_P74,
   P74b: WF_P74b,
@@ -467,6 +472,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   S33: WF_S33,
   S33b: WF_S33b,
   S33c: WF_S33c,
+  S33s: WF_S33s,
   S34: WF_S34,
   S34b: WF_S34b,
   S37: WF_S37,
