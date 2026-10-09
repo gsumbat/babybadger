@@ -87,6 +87,11 @@ export default function ParentShift() {
   // Approve hours, Replay route, house-rules check.
   if (shift.status === 'completed') {
     const photos = logs.filter((l) => l.photo_path);
+    // The log rows (incidents have their own cards): all of them for the count, the chosen type for the timeline.
+    const notIncident = (r: { kind: string }) => r.kind !== 'incident';
+    const allRows = shiftLogRows(bundle.logs, bundle.tasks, kids, 'all', kidId).filter(notIncident);
+    const shownRows = logFilter === 'all' ? allRows : shiftLogRows(bundle.logs, bundle.tasks, kids, logFilter, kidId).filter(notIncident);
+    const anyLog = bundle.logs.some((l) => l.kind !== 'incident');
     return (
       <Screen
         header={
@@ -163,11 +168,12 @@ export default function ParentShift() {
         <View style={st.card}>
           <View style={st.cardHead}>
             <Text style={st.cardTitle}>Logs</Text>
-            {logs.some((l) => l.kind !== 'incident') ? <Text style={st.count}>{logs.filter((l) => l.kind !== 'incident').length}</Text> : null}
+            {allRows.length ? <Text style={st.count}>{allRows.length}</Text> : null}
           </View>
-          {logs.length ? <LogTypeChips filter={logFilter} onChange={setLogFilter} inset={16} /> : null}
+          {/* The type chips show whenever the shift has any log, so they don't come and go as the kid changes. */}
+          {anyLog ? <LogTypeChips filter={logFilter} onChange={setLogFilter} inset={16} /> : null}
           <View style={{ marginTop: 2 }}>
-            <LogEntries rows={shiftLogRows(bundle.logs, bundle.tasks, kids, logFilter, kidId).filter((r) => r.kind !== 'incident')} filter={logFilter} loved={loved.mine} onLove={loved.toggle} live={false} />
+            <LogEntries rows={shownRows} filter={logFilter} loved={loved.mine} onLove={loved.toggle} live={false} />
           </View>
         </View>
         <View style={st.card}>
