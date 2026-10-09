@@ -44,7 +44,7 @@ export default function WF_S7b() {
             <Text style={{ fontFamily: font.displayBold, fontSize: 16, color: "#47698A" }}>Invoices</Text>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 4 }}>TIMESHEET</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>TIMESHEET</Text>
         <View style={{ flexDirection: "column", paddingTop: 4, paddingRight: 16, paddingBottom: 4, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", paddingTop: 12, paddingRight: 0, paddingBottom: 12, paddingLeft: 0 }}>
             <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960", flexShrink: 1 }}>No finished shifts yet.</Text>

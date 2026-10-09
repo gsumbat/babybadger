@@ -81,7 +81,7 @@ export default function WF_P4e() {
             <SvgXml xml={SVG[3]} width={18} height={18} />
           </View>
         </View>
-        <View style={{ flexDirection: "column", gap: 8, marginTop: 2 }}>
+        <View style={{ flexDirection: "column", gap: 8, marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>WHAT DO YOU NEED?</Text>
           <View style={{ flexDirection: "column", gap: 8 }}>
             <View style={{ flexDirection: "row", gap: 8 }}>

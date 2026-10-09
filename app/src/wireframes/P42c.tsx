@@ -48,7 +48,7 @@ export default function WF_P42c() {
             <Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#1B2328" }}>Spanish</Text>
           </View>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 2 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>FREE THE WHOLE TIME · 2</Text>
         </View>
         <View style={{ paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, flexDirection: "column", ...cardShadow }}>
@@ -81,7 +81,7 @@ export default function WF_P42c() {
             </View>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>PARTLY FREE · 1</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>PARTLY FREE · 1</Text>
         <View style={{ paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, flexDirection: "column", ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 62 }}>{/* -> P11-SitterProfile.dc.html */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, flexShrink: 0, backgroundColor: "#8A6A4E", borderRadius: 20 }}>
@@ -98,7 +98,7 @@ export default function WF_P42c() {
             </View>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>NOT FREE · 2</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>NOT FREE · 2</Text>
         <View style={{ paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, flexDirection: "column", ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 62, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4", opacity: 0.55 }}>{/* -> P11-SitterProfile.dc.html */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, flexShrink: 0, backgroundColor: "#6F6194", borderRadius: 20 }}>

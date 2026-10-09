@@ -87,7 +87,7 @@ export default function WF_P56h() {
             </View>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 4 }}>OTHER PLACES · 3</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>OTHER PLACES · 3</Text>
         <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18, marginTop: -4 }}>You get an alert when the sitter and kids arrive or leave.</Text>
         <View style={{ paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, flexDirection: "column", ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 12, paddingRight: 0, paddingBottom: 12, paddingLeft: 0, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>

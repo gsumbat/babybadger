@@ -39,7 +39,7 @@ export default function WF_P23() {
             <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>✓ Leo</Text>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>WHAT SHE CAN DO</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>WHAT SHE CAN DO</Text>
         <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 58, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "column", flexShrink: 1 }}>
@@ -72,7 +72,7 @@ export default function WF_P23() {
             </View>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>PAY</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>PAY</Text>
         <View style={{ flexDirection: "column", gap: 10 }}>
           <View style={{ flexDirection: "row", gap: 10 }}>
             <View style={{ flexDirection: "column", gap: 6, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>

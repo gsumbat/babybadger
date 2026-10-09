@@ -44,7 +44,7 @@ export default function WF_P9() {
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#A1321F" }}>This is expected, dismiss</Text>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 6 }}>EARLIER TODAY</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>EARLIER TODAY</Text>
         <View style={{ flexDirection: "column", backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12, paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#DCEEE3", borderRadius: 18 }}>

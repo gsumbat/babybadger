@@ -37,7 +37,7 @@ export default function WF_S16() {
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>+ Add language</Text>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>LEVEL</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>LEVEL</Text>
         <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "column", gap: 8, paddingTop: 12, paddingRight: 0, paddingBottom: 12, paddingLeft: 0, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>

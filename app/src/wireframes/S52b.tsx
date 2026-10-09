@@ -23,7 +23,7 @@ export default function WF_S52b() {
       </View>
       <View style={{ flexDirection: "column", gap: 12, flexGrow: 1, paddingTop: 4, paddingRight: 20, paddingBottom: 12, paddingLeft: 20 }}>
         <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", lineHeight: 22 }}>Families you sit for, invited from your phone. When one joins, you review their invite.</Text>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>SENT</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>SENT</Text>
         <View style={{ flexDirection: "column", gap: 8, paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
             <Text style={{ fontFamily: font.bodyBold, fontSize: 16, color: "#1B2328", flexGrow: 1, flexShrink: 1 }}>The Kim family</Text>

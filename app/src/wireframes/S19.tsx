@@ -57,7 +57,7 @@ export default function WF_S19() {
           <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 21 }}>"I'm a pre-K teaching assistant who loves art projects and getting kids outside. Calm at bedtime, firm on screen time."</Text>
         </View>
         <View style={{ paddingTop: 0, paddingRight: 4, paddingBottom: 0, paddingLeft: 4 }}><Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Your cards stay private. A family sees one only after you share it with them.</Text></View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>NEVER SHOWN TO FAMILIES</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>NEVER SHOWN TO FAMILIES</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
             <View style={{ width: 7, height: 7, backgroundColor: "#8A979D", borderRadius: 4, flexShrink: 1, flexDirection: "column" }}>

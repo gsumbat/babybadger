@@ -70,7 +70,7 @@ export default function WF_S20() {
             </View>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>YOUR ANSWER</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>YOUR ANSWER</Text>
         <View style={{ flexDirection: "column", gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, borderWidth: 2.0, borderColor: "#47698A", ...cardShadow }}>{/* -> S3-Today.dc.html */}
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>

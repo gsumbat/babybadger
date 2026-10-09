@@ -62,7 +62,7 @@ export default function WF_S2() {
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328", flexShrink: 1 }}>[RETENTION PERIOD]</Text>
           </View>
         </View>
-        <View style={{ flexDirection: "column", gap: 6 }}>
+        <View style={{ flexDirection: "column", gap: 6, marginTop: 14 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
             <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>READ BEFORE YOU SIGN</Text>
             <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960", flexShrink: 1 }}>All 3 required</Text>

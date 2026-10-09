@@ -36,7 +36,7 @@ export default function WF_S42() {
       </View>
       <View style={{ flexDirection: "column", gap: 8, minHeight: 0, flexGrow: 1, paddingTop: 2, paddingRight: 20, paddingBottom: 8, paddingLeft: 20 }}>
         <View style={{ paddingTop: 10, paddingRight: 14, paddingBottom: 10, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 14 }}><Text style={{ fontFamily: font.body, fontSize: 13, color: "#1B2328", lineHeight: 18 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#34526E", lineHeight: 18 }}>7 must-dos, 3 wishes.</Text> Logs take a tap in the app; you’ll get reminders during the shift.</Text></View>
-        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 2 }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>UPDATES AND LOGS</Text>
         </View>
         <View style={{ paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, flexDirection: "column", ...cardShadow }}>
@@ -46,7 +46,7 @@ export default function WF_S42() {
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328", lineHeight: 18 }}>Log meals and snacks</Text>
               <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 16 }}>Tap Food during the shift</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 11, color: "#FFFFFF" }}>Must</Text>
             </View>
           </View>
@@ -56,7 +56,7 @@ export default function WF_S42() {
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328", lineHeight: 18 }}>Log naps and sleep</Text>
               <Text style={{ fontFamily: font.body, fontSize: 12, color: "#4B5960", lineHeight: 16 }}>Start and end time</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 11, color: "#FFFFFF" }}>Must</Text>
             </View>
           </View>
@@ -65,7 +65,7 @@ export default function WF_S42() {
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328", lineHeight: 18 }}>Log activities</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 11, color: "#4B5960" }}>Prefer</Text>
             </View>
           </View>
@@ -74,12 +74,12 @@ export default function WF_S42() {
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328", lineHeight: 18 }}>Photo update every 2 hours</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 11, color: "#4B5960" }}>Prefer</Text>
             </View>
           </View>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 2 }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>PHONE AND SCREENS</Text>
         </View>
         <View style={{ paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, flexDirection: "column", ...cardShadow }}>
@@ -88,7 +88,7 @@ export default function WF_S42() {
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328", lineHeight: 18 }}>Your phone: emergencies and our messages</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 11, color: "#FFFFFF" }}>Must</Text>
             </View>
           </View>
@@ -97,7 +97,7 @@ export default function WF_S42() {
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328", lineHeight: 18 }}>No social media, never post the kids</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 11, color: "#FFFFFF" }}>Must</Text>
             </View>
           </View>
@@ -106,12 +106,12 @@ export default function WF_S42() {
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328", lineHeight: 18 }}>Kids’ screen time: 30 min a day</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 11, color: "#FFFFFF" }}>Must</Text>
             </View>
           </View>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 2 }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>SAFETY AND HOME</Text>
         </View>
         <View style={{ paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, flexDirection: "column", ...cardShadow }}>
@@ -120,7 +120,7 @@ export default function WF_S42() {
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328", lineHeight: 18 }}>No visitors without asking</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 11, color: "#FFFFFF" }}>Must</Text>
             </View>
           </View>
@@ -129,7 +129,7 @@ export default function WF_S42() {
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328", lineHeight: 18 }}>Ask before leaving the house</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#47698A", borderRadius: 999 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 11, color: "#FFFFFF" }}>Must</Text>
             </View>
           </View>
@@ -138,7 +138,7 @@ export default function WF_S42() {
             <View style={{ flexDirection: "column", minWidth: 0, flexGrow: 1, flexShrink: 1 }}>
               <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328", lineHeight: 18 }}>Tidy toys and dishes before you go</Text>
             </View>
-            <View style={{ flexDirection: "row", alignSelf: "flex-start", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", height: 24, flexShrink: 0, paddingTop: 0, paddingRight: 9, paddingBottom: 0, paddingLeft: 9, backgroundColor: "#E8ECF1", borderRadius: 999 }}>
               <Text style={{ fontFamily: font.bodyBold, fontSize: 11, color: "#4B5960" }}>Prefer</Text>
             </View>
           </View>

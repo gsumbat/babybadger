@@ -47,7 +47,7 @@ export default function WF_P31() {
           <View style={{}}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>Why it matters (sitter sees this)</Text></View>
           <TextInput placeholder="" defaultValue="We have Biscuit, a big friendly lab. He needs a walk at 5." placeholderTextColor="#6B7980" style={{ paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, borderRadius: 8, borderWidth: 1.0, borderColor: "#C3CCD5", fontFamily: font.body, fontSize: 15, color: "#1B2328", lineHeight: 21 }} />
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>HOW SHE SHOWS IT</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>HOW SHE SHOWS IT</Text>
         <View style={{ flexDirection: "column", gap: 8 }}>
           <View style={{ flexDirection: "column", gap: 2, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 14, borderWidth: 2.0, borderColor: "#47698A" }}>
             <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#1B2328" }}>She confirms Yes</Text>

@@ -28,7 +28,7 @@ export default function WF_S18() {
           <Text style={{ fontFamily: font.display, fontSize: 48, color: "#7A4E0E", marginVertical: -12.45, textAlign: "center" }}>21</Text>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#7A4E0E", textAlign: "center" }}>days until it expires · Oct 22</Text>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>WHAT HAPPENS</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>WHAT HAPPENS</Text>
         <View style={{ flexDirection: "column", gap: 12, paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 12 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 26, flexShrink: 0, paddingTop: 0, paddingRight: 10, paddingBottom: 0, paddingLeft: 10, backgroundColor: "#F6E3C6", borderRadius: 999 }}>

@@ -46,7 +46,7 @@ export default function WF_P54f() {
           </View>
           <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>We check your pool first, then show new sitters nearby.</Text>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>YOUR POOL · 1</Text>
           <View style={{ flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#47698A", textDecorationLine: "underline" }}>See availability</Text></View>
         </View>

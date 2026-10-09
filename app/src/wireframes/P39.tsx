@@ -39,9 +39,9 @@ export default function WF_P39() {
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#F3E1E3", borderRadius: 14 }}>
           <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexGrow: 1, flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#1B2328", lineHeight: 20 }}>Switch to yearly</Text> and save 20%. Unused days count toward it.</Text>
-          <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "rgb(20, 90, 107)", flexShrink: 1 }}>Switch</Text>
+          <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#47698A", flexShrink: 1 }}>Switch</Text>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>WHO’S COVERED</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>WHO’S COVERED</Text>
         <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 56, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 36, height: 36, flexShrink: 0, backgroundColor: "#1B2328", borderRadius: 18 }}>

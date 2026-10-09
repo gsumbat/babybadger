@@ -79,7 +79,7 @@ export default function WF_P76() {
             </View>
           </View>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 2 }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>HOW STRICT</Text>
         </View>
         <View style={{ flexDirection: "column", gap: 4, paddingTop: 4, paddingRight: 4, paddingBottom: 4, paddingLeft: 4, backgroundColor: "#E8ECF1", borderRadius: 999 }}>

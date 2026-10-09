@@ -33,7 +33,7 @@ export default function WF_P79d() {
       </View>
       <View style={{ flexDirection: "column", gap: 10, flexGrow: 1, paddingTop: 4, paddingRight: 20, paddingBottom: 16, paddingLeft: 20 }}>
         <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Maya is missing 1: Background check. Her Infant CPR expires Oct 22.</Text>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 4 }}>BY SITTER</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>BY SITTER</Text>
         <Text style={{ fontFamily: font.body, fontSize: 14, color: "#4B5960", lineHeight: 20 }}>Ask a sitter to share what she has. It counts once you say it looks good.</Text>
         <View style={{ flexDirection: "column", paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10, paddingBottom: 4 }}>{/* -> P11-SitterProfile.dc.html */}

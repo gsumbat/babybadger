@@ -46,7 +46,7 @@ export default function WF_P20v() {
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", flexShrink: 1 }}>Weekdays</Text>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>HOW</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>HOW</Text>
         <View style={{ paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}><Text style={{ fontFamily: font.body, fontSize: 16, color: "#1B2328" }}><Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", lineHeight: 22 }}>Fruit and crackers.{"\n"}Cut grapes in half for Leo. Water, not juice.{"\n"}One cookie after, if they ate the fruit.</Text></Text></View>
         <View style={{ flexDirection: "row", gap: 12, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
           <SvgXml xml={SVG[2]} width={22} height={22} />

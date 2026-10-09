@@ -26,7 +26,7 @@ export default function WF_P19v() {
         <View style={{ flexDirection: "column", gap: 4 }}>
           <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", lineHeight: 22 }}>What sitters see on every shift.</Text>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>FOOD TO AVOID</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>FOOD TO AVOID</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#F6DCD6", borderRadius: 999, borderWidth: 1.5, borderColor: "#C2412D", flexShrink: 1 }}>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#A1321F" }}>Whole nuts</Text>

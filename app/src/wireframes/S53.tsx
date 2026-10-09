@@ -28,7 +28,7 @@ export default function WF_S53() {
       </View>
       <View style={{ flexDirection: "column", gap: 12, flexGrow: 1, paddingTop: 4, paddingRight: 20, paddingBottom: 12, paddingLeft: 20 }}>
         <Text style={{ fontFamily: font.body, fontSize: 15, color: "#4B5960", lineHeight: 22 }}>Families you sit for can ask to see a card or a report. Only the family that asked sees what you share.</Text>
-        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>THE LEE FAMILY</Text>
           <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", flexShrink: 1 }}>Asked by Jen · Oct 6</Text>
         </View>
@@ -94,7 +94,7 @@ export default function WF_S53() {
             </View>
           </View>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 4 }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>THE KIM FAMILY</Text>
           <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", flexShrink: 1 }}>Asked by Dana · Sep 30</Text>
         </View>

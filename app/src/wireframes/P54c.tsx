@@ -40,7 +40,7 @@ export default function WF_P54c() {
           </View>
           <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960" }}>We check who in your pool is free.</Text>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>YOUR POOL · 1</Text>
           <View style={{ flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#47698A", textDecorationLine: "underline" }}>See availability</Text></View>
         </View>

@@ -154,7 +154,7 @@ export default function WF_P7a() {
             </View>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>PREFERRED LANGUAGE</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>PREFERRED LANGUAGE</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 999, borderWidth: 1.0, borderColor: "#E6EAEF", flexShrink: 1 }}>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>English</Text>
@@ -166,7 +166,7 @@ export default function WF_P7a() {
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#1B2328" }}>+ Add language</Text>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>IF A SITTER IS MISSING ONE</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>IF A SITTER IS MISSING ONE</Text>
         <View style={{ flexDirection: "column", gap: 4, paddingTop: 4, paddingRight: 4, paddingBottom: 4, paddingLeft: 4, backgroundColor: "#E8ECF1", borderRadius: 12 }}>
           <View style={{ flexDirection: "row", gap: 4 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", height: 34, backgroundColor: "#FFFFFF", borderRadius: 9, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>

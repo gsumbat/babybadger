@@ -115,7 +115,7 @@ export default function WF_P4n() {
         </View>
         <View style={{}}><Text style={{ fontFamily: font.bodySemi, fontSize: 13, color: "#47698A", textAlign: "center", textDecorationLine: "underline" }}>Prototype: she clocks in ›</Text></View>
       </View>
-      <View style={{ flexDirection: "column", gap: 8, marginTop: "auto", paddingTop: 0, paddingRight: 20, paddingBottom: 14, paddingLeft: 20 }}>
+      <View style={{ flexDirection: "column", gap: 8, marginTop: 14, paddingTop: 0, paddingRight: 20, paddingBottom: 14, paddingLeft: 20 }}>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>WHAT DO YOU NEED?</Text>
         <View style={{ flexDirection: "column", gap: 8 }}>
           <View style={{ flexDirection: "row", gap: 8 }}>

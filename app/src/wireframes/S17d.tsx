@@ -32,7 +32,7 @@ export default function WF_S17d() {
           <SvgXml xml={SVG[1]} width={22} height={22} />
           <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20, flexGrow: 1, flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#7A4E0E", lineHeight: 20 }}>The Lee family asked for one.</Text> Any check from the last 12 months.</Text>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>UPLOAD A REPORT I HAVE</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>UPLOAD A REPORT I HAVE</Text>
         <View style={{ flexDirection: "column", gap: 12, paddingTop: 16, paddingRight: 16, paddingBottom: 16, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 12, paddingRight: 12, paddingBottom: 12, paddingLeft: 12, borderRadius: 14, borderWidth: 2.0, borderColor: "#C9D3DD", borderStyle: "dashed" }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 56, height: 40, flexShrink: 0, borderRadius: 6, borderWidth: 1.0, borderColor: "#E6EAEF" }}>
@@ -68,7 +68,7 @@ export default function WF_S17d() {
             </View>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>RUN ONE IN THE APP</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>RUN ONE IN THE APP</Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingTop: 14, paddingRight: 16, paddingBottom: 14, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, opacity: 0.55, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 40, height: 40, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
             <SvgXml xml={SVG[6]} width={22} height={22} />

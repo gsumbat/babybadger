@@ -57,7 +57,7 @@ export default function WF_S13() {
           </View>
           <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>When BabyBadger opens to new families near you, we can show your profile. Off until you turn it on. Nothing is shared today.</Text>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>CREDENTIALS</Text>
           <View style={{ flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A", textDecorationLine: "underline" }}>Manage</Text></View>
         </View>
@@ -105,7 +105,7 @@ export default function WF_S13() {
             </View>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>ABOUT</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>ABOUT</Text>
         <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", minHeight: 50, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Ages</Text>

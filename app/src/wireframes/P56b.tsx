@@ -34,7 +34,7 @@ export default function WF_P56b() {
             <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#47698A" }}>Add a home address</Text>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 4 }}>OTHER PLACES · 0</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>OTHER PLACES · 0</Text>
         <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18, marginTop: -4 }}>You get an alert when the sitter and kids arrive or leave.</Text>
         <View style={{ paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, flexDirection: "column", ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 52 }}>{/* -> P58-PlaceAdd.dc.html */}

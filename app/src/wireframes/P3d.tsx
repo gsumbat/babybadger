@@ -33,7 +33,7 @@ export default function WF_P3d() {
             <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>She sees only what you choose, after she accepts and signs.</Text>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>WHO SHE’LL LOOK AFTER</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>WHO SHE’LL LOOK AFTER</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8, height: 44, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 2.0, borderColor: "#47698A", flexShrink: 1 }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 34, height: 34, flexShrink: 0, backgroundColor: "#B86A82", borderRadius: 17 }}>
@@ -48,7 +48,7 @@ export default function WF_P3d() {
             <Text style={{ fontFamily: font.bodySemi, fontSize: 15, color: "#1B2328" }}>✓ Leo</Text>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>WHAT SHE CAN DO</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>WHAT SHE CAN DO</Text>
         <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 16, paddingBottom: 0, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, minHeight: 58, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "column", flexShrink: 1 }}>
@@ -81,7 +81,7 @@ export default function WF_P3d() {
             </View>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>PAY</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>PAY</Text>
         <View style={{ flexDirection: "column", gap: 10 }}>
           <View style={{ flexDirection: "row", gap: 10 }}>
             <View style={{ flexDirection: "column", gap: 6, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>

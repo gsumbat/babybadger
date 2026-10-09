@@ -28,7 +28,7 @@ export default function WF_S53b() {
           <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#4B5960" }}>Jen asked</Text>
           <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", lineHeight: 20 }}>“For Mia, she’s 8 months old.”</Text>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 2 }}>YOUR CARDS</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>YOUR CARDS</Text>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 64, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 14, borderWidth: 2.0, borderColor: "#47698A" }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 24, height: 24, flexShrink: 0, borderRadius: 12, borderWidth: 2.0, borderColor: "#47698A" }}>
             <View style={{ width: 12, height: 12, backgroundColor: "#47698A", borderRadius: 6, flexShrink: 1, flexDirection: "column" }}>

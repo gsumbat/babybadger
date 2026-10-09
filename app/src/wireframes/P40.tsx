@@ -42,7 +42,7 @@ export default function WF_P40() {
             </View>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>IF YOUR PLAN PAUSES</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>IF YOUR PLAN PAUSES</Text>
         <View style={{ flexDirection: "column", paddingTop: 8, paddingRight: 16, paddingBottom: 8, paddingLeft: 16, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ paddingTop: 4 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#1B6B3D" }}>Still works, always</Text></View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10, minHeight: 34 }}>

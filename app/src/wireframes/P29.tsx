@@ -40,7 +40,7 @@ export default function WF_P29() {
           <Text style={{ fontFamily: font.display, fontSize: 26, color: "#1B2328", lineHeight: 32 }}>Must have or nice to have?</Text>
         </View>
         <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", lineHeight: 18 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Must</Text> is checked before booking. <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", lineHeight: 18 }}>Nice</Text> helps you compare.</Text>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>SAFETY</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>SAFETY</Text>
         <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10, minHeight: 54, paddingTop: 3, paddingRight: 0, paddingBottom: 3, paddingLeft: 0, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 32, height: 32, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>
@@ -131,7 +131,7 @@ export default function WF_P29() {
             </View>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>SKILLS AND LIFESTYLE</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>SKILLS AND LIFESTYLE</Text>
         <View style={{ flexDirection: "column", paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10, minHeight: 54, paddingTop: 3, paddingRight: 0, paddingBottom: 3, paddingLeft: 0, borderBottomWidth: 1.0, borderBottomColor: "#EEF1F4" }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 32, height: 32, flexShrink: 0, backgroundColor: "#DCE7F1", borderRadius: 14 }}>

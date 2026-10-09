@@ -46,7 +46,7 @@ export default function WF_S3b() {
           </View>
           <SvgXml xml={SVG[0]} width={18} height={18} />
         </View>
-        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>REQUESTS</Text>
           <View style={{ flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#47698A", textDecorationLine: "underline" }}>Calendar</Text></View>
         </View>
@@ -95,7 +95,7 @@ export default function WF_S3b() {
             </View>
           </View>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>TOOLS</Text>
         </View>
         <View style={{ flexDirection: "column", gap: 8 }}>

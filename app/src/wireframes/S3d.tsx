@@ -55,7 +55,7 @@ export default function WF_S3d() {
           </View>
           <SvgXml xml={SVG[2]} width={20} height={20} />
         </View>
-        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>TOOLS</Text>
         </View>
         <View style={{ flexDirection: "column", gap: 8 }}>

@@ -61,7 +61,7 @@ export default function WF_S3p() {
             <Text style={{ fontFamily: font.body, fontSize: 13, color: "#4B5960", flexShrink: 1 }}>7:30 – 10 PM</Text>
           </View>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>NEEDS YOU</Text>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", flexShrink: 1 }}>3</Text>
         </View>
@@ -113,7 +113,7 @@ export default function WF_S3p() {
             </View>
           </View>
         </View>
-        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between" }}>
+        <View style={{ flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", marginTop: 14 }}>
           <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>TOOLS</Text>
         </View>
         <View style={{ flexDirection: "column", gap: 8 }}>

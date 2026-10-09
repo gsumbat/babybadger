@@ -33,7 +33,7 @@ export default function WF_S24() {
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A" }}>✓ Leo</Text>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>WHAT KIND</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>WHAT KIND</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", height: 40, paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A", flexShrink: 1 }}>
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#47698A" }}>✓ Fall or bump</Text>
