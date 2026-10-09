@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Avatar, Banner, Button, Chip, DrawerHeader, ErrorText, Label, Screen, T } from '@/components/ui';
 import { dayKey } from '@/lib/calendar-logic';
-import { shiftTaskLines } from '@/lib/care-plan';
+import { shiftTaskGroups, shiftTaskLines } from '@/lib/care-plan';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { familyRulesState } from '@/lib/house-rules';
@@ -14,6 +14,7 @@ import { useRequirePlan } from '@/lib/billing';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { color, font } from '@/theme';
+import { KidDot } from '@/components/bits';
 import { Text } from '@/components/Text';
 import { TimeField } from '@/components/TimeField';
 
@@ -73,6 +74,8 @@ export default function NewShift() {
   const valid = !!chosenSitter && !notAgreed && !!startAt && !!endAt;
   // The kids' days (P20k): care plan items that fall inside the shift become its tasks.
   const tasks = data && startAt && endAt ? shiftTaskLines(data.care, startAt, endAt, shiftKidIds, (id) => data.kids.find((k) => k.id === id)?.name) : [];
+  // The same tasks for the screen, one group per kid (her badge and name), then the family's ("Everyone").
+  const groups = data && startAt && endAt ? shiftTaskGroups(data.care, startAt, endAt, shiftKidIds) : [];
   // Where (nP14): only when the kids live in more than one home. Until the parent picks, the home whose days
   // include the shift's day (and its kids), else the main home. place_id null means the main home, so it's only
   // sent for another home (keeps booking working before migration 16 runs).
@@ -193,13 +196,25 @@ export default function NewShift() {
         </>
       )}
       <Label>From their days</Label>
-      {tasks.length ? (
-        <View style={st.tasks}>
-          {tasks.map((t, i) => (
-            <Text key={i} style={st.task}>
-              {t}
-            </Text>
-          ))}
+      {groups.length ? (
+        <View style={{ gap: 10 }}>
+          {groups.map((g) => {
+            const kid = data?.kids.find((k) => k.id === g.kidId);
+            return (
+              <View key={g.kidId ?? 'all'} style={st.group}>
+                <View style={st.groupHead}>
+                  {kid ? <KidDot kid={kid} size={26} /> : null}
+                  <Text style={st.groupName}>{kid ? kid.name : 'Everyone'}</Text>
+                </View>
+                {g.rows.map((r, i) => (
+                  <View key={i} style={[st.taskRow, st.taskLine]}>
+                    <Text style={st.taskTime}>{r.time}</Text>
+                    <Text style={st.task}>{r.title}</Text>
+                  </View>
+                ))}
+              </View>
+            );
+          })}
         </View>
       ) : (
         <T variant="small">Nothing from the kids’ days falls in this time. You can add tasks on the shift after booking.</T>
@@ -215,8 +230,14 @@ const st = StyleSheet.create({
   // P6 "See who's free": a tinted pill next to the sitters, opens the sitter pool (P42).
   free: { height: 44, paddingHorizontal: 14, borderRadius: 999, justifyContent: 'center', backgroundColor: color.primaryTint, borderWidth: 1, borderColor: color.line },
   freeText: { fontFamily: font.bodySemi, fontSize: 15, color: color.primary },
-  tasks: { gap: 6, paddingVertical: 12, paddingHorizontal: 14, backgroundColor: color.canvas, borderRadius: 14 },
-  task: { fontFamily: font.body, fontSize: 15, color: color.ink },
+  // "From their days": one card per kid (badge + name), rows 48 tall with a light line between them.
+  group: { paddingHorizontal: 14, backgroundColor: color.canvas, borderRadius: 16 },
+  groupHead: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingTop: 12, paddingBottom: 8 },
+  groupName: { fontFamily: font.bodyBold, fontSize: 15, color: color.ink },
+  taskRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48 },
+  taskLine: { borderTopWidth: 1, borderTopColor: color.divider },
+  taskTime: { width: 44, fontFamily: font.bodySemi, fontSize: 14, color: color.ink2 },
+  task: { flex: 1, fontFamily: font.body, fontSize: 15, color: color.ink },
   personText: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
   day: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 14, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: color.line, gap: 2 },
   dayOn: { backgroundColor: color.primary, borderColor: color.primary },

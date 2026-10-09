@@ -338,6 +338,14 @@ export function shiftTaskLines(items: CareItem[], start: Date, end: Date, kidIds
   });
 }
 
+/** P6d "From their days": the same items as shiftTaskLines, grouped by kid (in the kids' order), then the
+ * whole-family ones (kidId null), each row "4:30" + the item line. */
+export function shiftTaskGroups(items: CareItem[], start: Date, end: Date, kidIds: string[]): { kidId: string | null; rows: { time: string; title: string }[] }[] {
+  const rows = itemsForShift(items, start, end, kidIds).map(({ item, at }) => ({ kidId: item.kid_id, time: `${at.getHours() % 12 || 12}:${String(at.getMinutes()).padStart(2, '0')}`, title: itemLine(item) }));
+  const order = [...(kidIds.length ? kidIds : [...new Set(rows.map((r) => r.kidId).filter((k): k is string => !!k))]), null];
+  return order.map((kidId) => ({ kidId, rows: rows.filter((r) => r.kidId === kidId).map(({ time, title }) => ({ time, title })) })).filter((g) => g.rows.length);
+}
+
 // ---------------------------------------------------------------- P20 "Suggested for age N"
 export type Suggestion = { type: CareType; title: string; every_minutes?: number };
 

@@ -155,7 +155,7 @@ export default function WF_P6d() {
             </View>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>KIDS</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>KIDS</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A", flexShrink: 1 }}>
             <SvgXml xml={SVG[2]} width={14} height={14} />
@@ -166,11 +166,37 @@ export default function WF_P6d() {
             <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#34526E" }}>Leo</Text>
           </View>
         </View>
-        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>FROM THEIR DAYS</Text>
-        <View style={{ flexDirection: "column", gap: 6, paddingTop: 12, paddingRight: 14, paddingBottom: 12, paddingLeft: 14, backgroundColor: "#F3F5F8", borderRadius: 14 }}>
-          <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328" }}>3:15 PM · Pick up from school</Text>
-          <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328" }}>4:30 PM · Soccer practice · Ava</Text>
-          <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328" }}>6:00 PM · Dinner</Text>
+        <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>FROM THEIR DAYS</Text>
+        <View style={{ flexDirection: "column", gap: 10 }}>
+          <View style={{ paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#F3F5F8", borderRadius: 16, flexDirection: "column" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 12, paddingRight: 0, paddingBottom: 8, paddingLeft: 0 }}>
+              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 26, height: 26, backgroundColor: "#B86A82", borderRadius: 13, flexShrink: 1 }}>
+                <Text style={{ fontFamily: font.displayBold, fontSize: 12, color: "#FFFFFF" }}>A</Text>
+              </View>
+              <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Ava</Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48, borderTopWidth: 1.0, borderTopColor: "#EEF1F4" }}>
+              <View style={{ width: 44, flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#4B5960" }}>4:30</Text></View>
+              <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Soccer practice</Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48, borderTopWidth: 1.0, borderTopColor: "#EEF1F4" }}>
+              <View style={{ width: 44, flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#4B5960" }}>5:30</Text></View>
+              <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Homework · reading log</Text>
+            </View>
+          </View>
+          <View style={{ paddingTop: 0, paddingRight: 14, paddingBottom: 0, paddingLeft: 14, backgroundColor: "#F3F5F8", borderRadius: 16, flexDirection: "column" }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingTop: 12, paddingRight: 0, paddingBottom: 8, paddingLeft: 0 }}>
+              <Text style={{ fontFamily: font.bodyBold, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Everyone</Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48, borderTopWidth: 1.0, borderTopColor: "#EEF1F4" }}>
+              <View style={{ width: 44, flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#4B5960" }}>3:15</Text></View>
+              <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Pick up from school</Text>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 12, minHeight: 48, borderTopWidth: 1.0, borderTopColor: "#EEF1F4" }}>
+              <View style={{ width: 44, flexShrink: 1 }}><Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#4B5960" }}>6:00</Text></View>
+              <Text style={{ fontFamily: font.body, fontSize: 15, color: "#1B2328", flexShrink: 1 }}>Dinner</Text>
+            </View>
+          </View>
         </View>
         <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", height: 54, marginTop: 2, backgroundColor: "#47698A", borderRadius: 999 }}>{/* -> P5b-BookedShift.dc.html */}
           <Text style={{ fontFamily: font.displayBold, fontSize: 17, color: "#FFFFFF" }}>Book shift</Text>

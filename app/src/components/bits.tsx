@@ -42,9 +42,14 @@ export function kidShade(c?: string) {
   return (c && DEEP[c.toUpperCase()]) || c || '#B86A82';
 }
 
-export function KidDot({ kid, size = 36 }: { kid: Pick<Kid, 'name' | 'color'>; size?: number }) {
+/** A girl's badge is always pink; otherwise the kid's own color. */
+export function kidBadge(kid: Pick<Kid, 'color'> & { gender?: Kid['gender'] }) {
+  return kid.gender === 'girl' ? '#B86A82' : kidShade(kid.color);
+}
+
+export function KidDot({ kid, size = 36 }: { kid: Pick<Kid, 'name' | 'color'> & { gender?: Kid['gender'] }; size?: number }) {
   return (
-    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: kidShade(kid.color), alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: kidBadge(kid), alignItems: 'center', justifyContent: 'center' }}>
       <Text style={{ fontFamily: font.displayBold, fontSize: Math.round(size / 2.25), color: '#FFFFFF' }}>{kid.name[0]?.toUpperCase()}</Text>
     </View>
   );

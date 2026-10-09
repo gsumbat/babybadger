@@ -20,6 +20,7 @@ import {
   repeatLabel,
   routineSummary,
   scheduleLabel,
+  shiftTaskGroups,
   shiftTaskLines,
   shortTime,
   sortItems,
@@ -126,6 +127,12 @@ describe('booking', () => {
     const wake = item({ type: 'other', title: 'Wake up', starts: '07:00:00' });
     const r = itemsForShift([late, wake], new Date(2026, 9, 8, 18, 0), new Date(2026, 9, 9, 8, 0));
     expect(r.map((x) => x.at.getDate())).toEqual([8, 9]);
+  });
+  it('groups the task rows by kid, family ones last', () => {
+    expect(shiftTaskGroups(all, start, end, [])).toEqual([
+      { kidId: 'mia', rows: [{ time: '3:30', title: 'Nap' }] },
+      { kidId: null, rows: [{ time: '3:15', title: 'Pick up Ava' }, { time: '4:10', title: 'Leave for soccer' }] },
+    ]);
   });
   it('writes task lines', () => {
     expect(shiftTaskLines(all, start, end, [], (id) => (id === 'mia' ? 'Mia' : undefined))).toEqual(['3:15 Pick up Ava', '3:30 Nap · Mia', '4:10 Leave for soccer']);
