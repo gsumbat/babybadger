@@ -7,7 +7,7 @@ import { Icon, type IconName } from '@/components/ui';
 import { api, useQuery } from '@/lib/data';
 import { firstName } from '@/lib/format';
 import { parentRowSub, requestRowTitle, requestWindow, requestsApi, type PillKind } from '@/lib/pool-requests';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 
 // Pieces shared by the Ask your pool screens (P45 Ask, P46 Request out, P47 Booked, S33 / S20 Shift request, S34
 // Filled). Values from those wireframes.
@@ -94,7 +94,7 @@ export function ParentRequestsNeedYou({ familyId }: { familyId: string }) {
   if (!data?.length) return null;
   return (
     <>
-      <Text style={[st.needLabel, { marginTop: 14 }]}>NEEDS YOU</Text>
+      <Text style={[st.needLabel, { marginTop: SECTION_GAP }]}>NEEDS YOU</Text>
       <View style={st.needCard}>
         {data.map(({ request, sub }, i) => (
           <RequestRow key={request.id} title={requestRowTitle(requestWindow(request))} sub={sub} last={i === data.length - 1} onPress={() => router.push({ pathname: '/parent/request/[id]', params: { id: request.id } })} />

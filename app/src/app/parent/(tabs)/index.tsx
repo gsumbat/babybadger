@@ -24,7 +24,7 @@ import { type ShiftTiming, usePendingExtension } from '@/lib/shift-timing';
 import { lateText } from '@/lib/shift-timing-logic';
 import { kv } from '@/lib/storage';
 import type { Kid, Shift } from '@/lib/types';
-import { cardShadow, color, font } from '@/theme';
+import { cardShadow, color, font, SECTION_GAP } from '@/theme';
 import { Text } from '@/components/Text';
 import { IncidentCard } from '@/components/IncidentCard';
 import { incidentCard } from '@/lib/alerts-logic';
@@ -708,9 +708,6 @@ function Kids({ kids, add = true }: { kids: Kid[]; add?: boolean }) {
     </>
   );
 }
-
-// Extra space above each section label (on top of the screen's 10 gap), so sections read as separate blocks.
-const SECTION_GAP = 14;
 
 // Values from wireframes P4-P4d.
 const st = StyleSheet.create({

@@ -41,6 +41,10 @@ export const font = {
 
 export const radius = { card: 24, field: 12, pill: 999, tile: 18 } as const;
 export const space = { xs: 4, s: 8, m: 12, l: 16, xl: 20, xxl: 28 } as const;
+/** Extra space above a section label that starts a new block (KIDS, NEEDS YOU, SITTER…), on top of the Screen's gap,
+ * so sections read as separate blocks. Same on every screen (Home set it). Not for labels inside a card or the first
+ * thing on a screen. */
+export const SECTION_GAP = 14;
 
 export const cardShadow = {
   shadowColor: color.edge,
