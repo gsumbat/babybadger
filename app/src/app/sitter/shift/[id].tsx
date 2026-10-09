@@ -8,11 +8,12 @@ import { kidBadge, SafetyBox, TaskRows } from '@/components/bits';
 import { ExtendRequestCard, RunningLateSheet } from '@/components/timing';
 import { LogTimeline } from '@/components/LogTimeline';
 import { Banner, Button, Card, ChoicePill, ErrorText, Field, Icon, type IconName, Loading, Screen } from '@/components/ui';
+import { bottleLog, bottleTaskKid, bottleTaskTitle, isBottleTask } from '@/lib/bottle';
 import { api, type ShiftBundle, useQuery, useShiftLive } from '@/lib/data';
 import { type ReachableContact, reachableContacts } from '@/lib/family-page-logic';
 import { firstName, timeOf } from '@/lib/format';
 import { type HouseRule, rulesApi, rulesLabel, shiftRuleRows, sitterRulesState } from '@/lib/house-rules';
-import { ageInMonths, ageLabel } from '@/lib/kid-profile';
+import { ageInMonths, ageLabel, pronouns } from '@/lib/kid-profile';
 import { lovedLogs, openPhotoRequest, shortClock, useShiftReactions } from '@/lib/shift-log';
 import { type SharingMode, startSharing, stopSharing } from '@/lib/location-sharing';
 import { useSession } from '@/lib/session';
@@ -295,6 +296,33 @@ export default function SitterShift() {
           </View>
           {tasks.map((t) => {
             const isDone = !!t.done_at;
+            // S4m: a planned bottle reads "Bottle · 4 oz formula" / "12:00 PM · confirm what she drank" with Confirm (the
+            // bottle log, prefilled); done: "9:00 AM · drank all · logged 9:05". The checkbox still ticks it plainly.
+            if (isBottleTask(t.title)) {
+              const kidId = bottleTaskKid(t.title, kids);
+              const confirmed = isDone ? logs.find((l) => l.data?.task_id === t.id) : undefined;
+              const drank = confirmed ? bottleLog(confirmed)?.drank : '';
+              const sub = isDone
+                ? [t.due_at ? timeOf(t.due_at) : '', drank ? `drank ${drank}` : '', `logged ${shortClock(t.done_at!)}`].filter(Boolean).join(' · ')
+                : [t.due_at ? timeOf(t.due_at) : '', `confirm what ${pronouns(kids.find((x) => x.id === kidId)?.gender).subj} drank`].filter(Boolean).join(' · ');
+              return (
+                <Pressable key={t.id} accessibilityRole="checkbox" accessibilityState={{ checked: isDone }} onPress={() => toggle(t.id, !isDone)} style={st.taskRow}>
+                  <View style={[st.box, isDone && st.boxOn]}>{isDone ? <SvgXml xml={CHECK} width={16} height={16} style={{ flexShrink: 0 }} /> : null}</View>
+                  <View style={{ flexGrow: 1, flexShrink: 1 }}>
+                    <Text style={isDone ? st.taskDone : st.taskTitle}>{t.due_at ? bottleTaskTitle(t.title) : t.title}</Text>
+                    <Text style={st.taskSub}>{sub}</Text>
+                  </View>
+                  {isDone ? null : (
+                    <Pressable
+                      accessibilityRole="button"
+                      onPress={() => router.push({ pathname: '/sitter/log/[shiftId]', params: { shiftId: shift.id, kind: 'food', bottle: '1', taskId: t.id, ...(kidId ? { kidId } : {}) } })}
+                      style={({ pressed }) => [st.confirm, pressed && { opacity: 0.85 }]}>
+                      <Text style={st.confirmText}>Confirm</Text>
+                    </Pressable>
+                  )}
+                </Pressable>
+              );
+            }
             return (
               <Pressable key={t.id} accessibilityRole="checkbox" accessibilityState={{ checked: isDone }} onPress={() => toggle(t.id, !isDone)} style={st.taskRow}>
                 <View style={[st.box, isDone && st.boxOn]}>{isDone ? <SvgXml xml={CHECK} width={16} height={16} style={{ flexShrink: 0 }} /> : null}</View>
@@ -571,6 +599,9 @@ const st = StyleSheet.create({
   taskTitle: { fontFamily: font.bodyMedium, fontSize: 15, color: color.ink },
   taskDone: { fontFamily: font.body, fontSize: 15, color: color.quiet, textDecorationLine: 'line-through' },
   taskSub: { fontFamily: font.body, fontSize: 13, color: color.quiet },
+  // S4m Confirm pill (planned bottle)
+  confirm: { height: 40, paddingHorizontal: 16, borderRadius: 999, backgroundColor: color.primary, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+  confirmText: { fontFamily: font.bodyBold, fontSize: 14, color: '#FFFFFF' },
   trip: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14, backgroundColor: color.primaryTint, borderRadius: 12 },
   tripText: { fontFamily: font.body, fontSize: 14, color: color.ink, flexGrow: 1, flexShrink: 1 },
   tripBold: { fontFamily: font.bodyBold, color: color.primaryStrong },

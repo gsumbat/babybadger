@@ -7,10 +7,12 @@ import { PhotoThumb } from '@/components/LogTimeline';
 import { LogEntries } from '@/components/logFeed';
 import { Text } from '@/components/Text';
 import { Button, Chip, ErrorText, Icon, Label, Loading, Screen } from '@/components/ui';
+import { plannedEvery } from '@/lib/bottle';
+import { repeatLabel } from '@/lib/care-plan';
 import { api, useQuery } from '@/lib/data';
 import { kidInsights } from '@/lib/kid-insights';
 import { pronouns } from '@/lib/kid-profile';
-import { dayBuckets, DEFAULT_RANGE, formatMinutes, groupByDay, isReportRange, kidPatterns, perDay, RANGE_WORD, REPORT_RANGES, rangeDayCount, rangeSince, spanLabel, summaryLines, type KidPatterns, type ReportRange } from '@/lib/kid-report';
+import { amountLabel, bottleIn, bottleTimes, bottleTotal, dayBuckets, DEFAULT_RANGE, formatMinutes, groupByDay, isReportRange, kidPatterns, mainMilk, perDay, RANGE_WORD, REPORT_RANGES, rangeDayCount, rangeSince, shortMinutes, spanLabel, summaryLines, type KidPatterns, type ReportRange } from '@/lib/kid-report';
 import { reportTitle, shiftLogRows } from '@/lib/shift-log-logic';
 import type { LogEntry } from '@/lib/types';
 import { cardShadow, color, font } from '@/theme';
@@ -28,8 +30,9 @@ export default function KidReport() {
     const now = new Date();
     const since = rangeSince(range, now);
     const kid = await api.kid(kidId);
-    const [kids, logs] = await Promise.all([api.kids(kid.family_id), api.kidLogsSince(kidId, since.toISOString())]);
-    return { kid, kids, logs, since, now, range };
+    // Her care plan for P5m's "Plan: every 3 hrs" (an empty plan when it can't be read).
+    const [kids, logs, care] = await Promise.all([api.kids(kid.family_id), api.kidLogsSince(kidId, since.toISOString()), api.kidCareItems(kidId).catch(() => [])]);
+    return { kid, kids, logs, care, since, now, range };
   }, [kidId, range]);
   // The summary belongs to the range it was made for; another chip shows the doctor card again.
   const [summary, setSummary] = useState<{ range: ReportRange; text: string } | null>(null);
@@ -39,9 +42,10 @@ export default function KidReport() {
   const [allPhotos, setAllPhotos] = useState(false);
 
   if (!data) return error ? <Screen title="" back><ErrorText>{error}</ErrorText></Screen> : <Loading />;
-  const { kid, kids, logs, since, now } = data;
+  const { kid, kids, logs, care, since, now } = data;
   const fresh = data.range === range;
   const p = kidPatterns(logs);
+  const bottleUnit = bottleTotal(p.feeding)?.unit;
   const photos = logs.filter((l) => l.kind === 'photo' && l.photo_path);
   const shiftCount = new Set(logs.map((l) => l.shift_id)).size;
   const shown = summary && summary.range === range ? summary.text : null;
@@ -140,8 +144,9 @@ export default function KidReport() {
           )}
 
           <Label>Patterns</Label>
-          <Patterns p={p} perDayOn={range !== 'today'} />
+          <Patterns p={p} perDayOn={range !== 'today'} times={bottleTimes(logs)} every={plannedEvery(care, kidId)} now={now} />
           {range !== 'today' && p.feeding.total ? <Bars title="Meals and snacks" logs={logs} kinds={['food']} since={since} now={now} /> : null}
+          {range !== 'today' && bottleUnit ? <Bars title="Bottles" unit={bottleUnit} logs={logs} kinds={['food']} since={since} now={now} value={(l) => bottleIn(l, bottleUnit)} /> : null}
           {range !== 'today' && p.diapers.total ? <Bars title="Diapers" logs={logs} kinds={['diaper']} since={since} now={now} /> : null}
 
           {photos.length ? (
@@ -190,15 +195,39 @@ function Tile({ value, label, sub, detail, bad }: TileProps) {
   );
 }
 
+/** P5m bottle tiles. With amounts: "26 oz" / "Bottles a day" / "7 bottles · formula" / "Drank all at 6 of 7"; without
+ * (older logs with no amount): the count. */
+function bottleTile(f: KidPatterns['feeding'], perDayOn: boolean, days: number): TileProps {
+  const total = bottleTotal(f);
+  const count = `${f.bottles} bottle${f.bottles === 1 ? '' : 's'}`;
+  const answered = f.drank.none + f.drank.some + f.drank.most + f.drank.all;
+  const detail = answered ? `Drank all at ${f.drank.all} of ${answered}` : undefined;
+  const milk = mainMilk(f.milk);
+  if (!total) return { value: String(f.bottles), label: f.bottles === 1 ? 'Bottle' : 'Bottles', sub: perDayOn && days ? `${perDay(f.bottles, days)} a day` : milk || undefined, detail };
+  const daily = perDayOn && days;
+  return { value: amountLabel(daily ? total.amount / days : total.amount, total.unit), label: daily ? 'Bottles a day' : 'Bottles in all', sub: [count, milk].filter(Boolean).join(' · '), detail };
+}
+
+/** "Last at 3:05 PM" (today), "Last Wed at 3:05 PM". */
+function lastAt(iso: string, now: Date): string {
+  const d = new Date(iso);
+  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return d.toDateString() === now.toDateString() ? `Last at ${time}` : `Last ${d.toLocaleDateString('en-US', { weekday: 'short' })} at ${time}`;
+}
+
+type BottleTimes = ReturnType<typeof bottleTimes>;
+
 /** PATTERNS: 2 tiles a row, only the ones with data (incidents always, red when any). */
-function Patterns({ p, perDayOn }: { p: KidPatterns; perDayOn: boolean }) {
+function Patterns({ p, perDayOn, times, every, now }: { p: KidPatterns; perDayOn: boolean; times: BottleTimes; every: number | null; now: Date }) {
   const day = (n: number) => (perDayOn && p.days ? `${perDay(n, p.days)} a day` : undefined);
   const { feeding: f, sleep: s, diapers: d } = p;
   const eaten = f.meals + f.snacks;
-  const amounts = [f.oz ? `${Math.round(f.oz * 10) / 10} oz` : '', f.ml ? `${Math.round(f.ml)} ml` : ''].filter(Boolean).join(' + ');
+  const plan = every ? `Plan: ${repeatLabel(every).toLowerCase()}` : undefined;
   const tiles: TileProps[] = [
     ...(eaten ? [{ value: String(eaten), label: 'Meals and snacks', sub: day(eaten), detail: `${f.meals} meal${f.meals === 1 ? '' : 's'} · ${f.snacks} snack${f.snacks === 1 ? '' : 's'}` }] : []),
-    ...(f.bottles ? [{ value: String(f.bottles), label: 'Bottles', sub: day(f.bottles), detail: amounts ? `${amounts} total` : undefined }] : []),
+    ...(f.bottles ? [bottleTile(f, perDayOn, p.days)] : []),
+    // "3 h 10 m / Between bottles / Last at 3:05 PM / Plan: every 3 hrs" (gaps on the same day only).
+    ...(times.avgMin != null ? [{ value: shortMinutes(times.avgMin), label: 'Between bottles', sub: times.last ? lastAt(times.last, now) : undefined, detail: plan }] : []),
     ...(s.naps
       ? [{ value: String(s.naps), label: s.naps === 1 ? 'Nap' : 'Naps', sub: s.timed ? `${formatMinutes(s.totalMin / s.timed)} on average` : day(s.naps), detail: s.timed ? `${formatMinutes(s.totalMin)} asleep in all` : undefined }]
       : []),
@@ -222,9 +251,10 @@ function Patterns({ p, perDayOn }: { p: KidPatterns; perDayOn: boolean }) {
   );
 }
 
-/** "Meals and snacks by day" (P5h): plain bars, a day each, or a week each past 45 days. */
-function Bars({ title, logs, kinds, since, now }: { title: string; logs: LogEntry[]; kinds: LogEntry['kind'][]; since: Date; now: Date }) {
-  const buckets = dayBuckets(logs, kinds, since, now);
+/** "Meals and snacks by day" (P5h): plain bars, a day each, or a week each past 45 days. With a unit and `value`
+ * the bars add up amounts: "Bottles by day (oz)" (P5m). */
+function Bars({ title, unit, logs, kinds, since, now, value }: { title: string; unit?: string; logs: LogEntry[]; kinds: LogEntry['kind'][]; since: Date; now: Date; value?: (l: LogEntry) => number }) {
+  const buckets = dayBuckets(logs, kinds, since, now, value).map((b) => ({ ...b, count: Math.round(b.count) }));
   const weekly = rangeDayCount(since, now) > 45;
   const max = Math.max(1, ...buckets.map((b) => b.count));
   const md = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -232,6 +262,7 @@ function Bars({ title, logs, kinds, since, now }: { title: string; logs: LogEntr
     <View style={st.card}>
       <Text style={st.cardTitle}>
         {title} by {weekly ? 'week' : 'day'}
+        {unit ? ` (${unit})` : ''}
       </Text>
       <View style={st.bars}>
         {buckets.map((b, i) => (

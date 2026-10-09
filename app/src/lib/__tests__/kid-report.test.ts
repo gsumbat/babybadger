@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 
-import { bottleAmount, dayBuckets, dayHeading, formatMinutes, groupByDay, isReportRange, kidPatterns, napMinutes, perDay, rangeDayCount, rangeSince, spanLabel, summaryLines } from '../kid-report';
+import { amountLabel, bottleAmount, bottleIn, bottleTimes, bottleTotal, dayBuckets, dayHeading, formatMinutes, groupByDay, isReportRange, kidPatterns, mainMilk, napMinutes, perDay, rangeDayCount, rangeSince, shortMinutes, spanLabel, summaryLines } from '../kid-report';
 import type { LogEntry } from '../types';
 
 const now = new Date(2026, 9, 9, 15, 0); // Fri Oct 9, 2026, 3 PM
@@ -71,7 +71,7 @@ describe('patterns', () => {
   ];
   const p = kidPatterns(logs);
   it('counts feeding, bottles and their amounts', () => {
-    expect(p.feeding).toEqual({ total: 4, meals: 1, snacks: 1, bottles: 2, oz: 9.5, ml: 0 });
+    expect(p.feeding).toEqual({ total: 4, meals: 1, snacks: 1, bottles: 2, oz: 9.5, ml: 0, ozBottles: 2, mlBottles: 0, drank: { none: 0, some: 0, most: 0, all: 0 }, milk: {} });
     expect(bottleAmount('120 ml')).toEqual({ amount: 120, unit: 'ml' });
     expect(bottleAmount('4,5 oz')).toEqual({ amount: 4.5, unit: 'oz' });
     expect(bottleAmount('all')).toBeNull();
@@ -94,6 +94,49 @@ describe('patterns', () => {
     expect(perDay(4, 2)).toBe('2');
     expect(perDay(1, 3)).toBe('0.3');
     expect(perDay(3, 0)).toBe('');
+  });
+});
+
+describe('bottles (S5b fields)', () => {
+  const b = (when: string, amount: string, unit: string, drank: string, milk = 'formula') => log('food', when, { meal: 'bottle', milk, bottle_amount: amount, bottle_unit: unit, amount: drank, what: `${amount} ${unit} ${milk}` });
+  it('reads the new fields first, and the drank answers and milk', () => {
+    const p = kidPatterns([b(at(9, 9), '4', 'oz', 'all'), b(at(9, 12), '4.5', 'oz', 'some'), b(at(9, 15), '120', 'ml', 'all', 'breast milk'), log('food', at(8, 10), { meal: 'bottle', amount: '5 oz' })]);
+    expect(p.feeding.bottles).toBe(4);
+    expect(p.feeding.oz).toBe(13.5);
+    expect(p.feeding.ml).toBe(120);
+    expect([p.feeding.ozBottles, p.feeding.mlBottles]).toEqual([3, 1]);
+    expect(p.feeding.drank).toEqual({ none: 0, some: 1, most: 0, all: 2 });
+    expect(p.feeding.milk).toEqual({ formula: 2, 'breast milk': 1 });
+    expect(mainMilk(p.feeding.milk)).toBe('formula');
+  });
+  it('totals in the majority unit, converting the rest', () => {
+    const oz = bottleTotal({ oz: 8, ml: 118.28, ozBottles: 2, mlBottles: 1 })!;
+    expect(oz.unit).toBe('oz');
+    expect(oz.amount).toBeCloseTo(12, 5);
+    const ml = bottleTotal({ oz: 4, ml: 240, ozBottles: 1, mlBottles: 2 })!;
+    expect(ml.unit).toBe('ml');
+    expect(ml.amount).toBeCloseTo(358.28, 2);
+    expect(bottleTotal({ oz: 0, ml: 0, ozBottles: 0, mlBottles: 0 })).toBeNull();
+    expect(amountLabel(26.04, 'oz')).toBe('26 oz');
+    expect(amountLabel(358.28, 'ml')).toBe('358 ml');
+    expect(bottleIn(b(at(9, 9), '120', 'ml', 'all'), 'oz')).toBeCloseTo(4.058, 2);
+    expect(bottleIn(log('food', at(9, 9), { meal: 'lunch', what: 'Pasta' }), 'oz')).toBe(0);
+  });
+  it('averages the time between bottles on the same day only', () => {
+    // Oct 8: 9:00, 12:00, 15:20 (gaps 180 + 200); Oct 9: 8:00, 11:00 (180); the night between days isn't a gap.
+    const t = bottleTimes([b(at(9, 11), '4', 'oz', 'all'), b(at(8, 9), '4', 'oz', 'all'), b(at(8, 12), '4', 'oz', 'all'), b(at(8, 15, 20), '4', 'oz', 'all'), b(at(9, 8), '4', 'oz', 'all'), log('food', at(9, 10), { meal: 'snack', what: 'Apple' })]);
+    expect(t.gaps).toBe(3);
+    expect(t.avgMin).toBeCloseTo(186.67, 1);
+    expect(t.last).toBe(at(9, 11));
+    expect(bottleTimes([b(at(9, 9), '4', 'oz', 'all')])).toEqual({ avgMin: null, gaps: 0, last: at(9, 9) });
+    expect(shortMinutes(190)).toBe('3 h 10 m');
+    expect(shortMinutes(45)).toBe('45 m');
+    expect(shortMinutes(120)).toBe('2 h');
+  });
+  it('sums bottle amounts per day for the bars', () => {
+    const logs = [b(at(9, 9), '4', 'oz', 'all'), b(at(9, 12), '5', 'oz', 'all'), b(at(8, 9), '6', 'oz', 'all')];
+    const bars = dayBuckets(logs, ['food'], rangeSince('week', now), now, (l) => bottleIn(l, 'oz'));
+    expect(bars.map((x) => x.count)).toEqual([0, 0, 0, 0, 0, 6, 9]);
   });
 });
 

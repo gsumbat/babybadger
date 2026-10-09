@@ -80,9 +80,10 @@ export function kidWeek<S extends { starts_at: string; status: string }>(shifts:
   return { count, last };
 }
 
-/** Pronouns from the optional gender: "her"/"his"/"their" (possessive) and "her"/"him"/"them" (object). */
+/** Pronouns from the optional gender: "her"/"his"/"their" (possessive), "her"/"him"/"them" (object) and
+ * "she"/"he"/"they" (subject). */
 export function pronouns(gender?: 'girl' | 'boy' | null) {
-  if (gender === 'girl') return { poss: 'her', obj: 'her' };
-  if (gender === 'boy') return { poss: 'his', obj: 'him' };
-  return { poss: 'their', obj: 'them' };
+  if (gender === 'girl') return { poss: 'her', obj: 'her', subj: 'she' };
+  if (gender === 'boy') return { poss: 'his', obj: 'him', subj: 'he' };
+  return { poss: 'their', obj: 'them', subj: 'they' };
 }

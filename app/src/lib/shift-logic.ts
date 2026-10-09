@@ -1,4 +1,5 @@
 // Pure rules shared by the screens. Mirrors the checks in the clock_in SQL function so the UI and the database agree.
+import { bottleDetail, bottleLog } from './bottle';
 import type { LocationPoint, LogEntry, Shift } from './types';
 
 export const CLOCK_IN_OPENS_MIN = 15;
@@ -125,8 +126,12 @@ export function diaperLabel(v: string | undefined): string {
 export function describeLog(log: Pick<LogEntry, 'kind' | 'data'>): { title: string; detail: string } {
   const d = log.data ?? {};
   switch (log.kind) {
-    case 'food':
+    case 'food': {
+      // S5b bottle: "Bottle" / "4 oz formula · drank all".
+      const b = bottleLog(log);
+      if (b) return { title: 'Bottle', detail: bottleDetail(b) };
       return { title: cap(d.meal || 'Food'), detail: [d.what, d.amount && `ate ${d.amount}`].filter(Boolean).join(' · ') };
+    }
     case 'nap':
       return { title: d.ended_at ? 'Nap' : 'Nap started', detail: [d.started_at && d.ended_at ? `${d.started_at} – ${d.ended_at}` : d.started_at, d.how].filter(Boolean).join(' · ') };
     case 'activity':

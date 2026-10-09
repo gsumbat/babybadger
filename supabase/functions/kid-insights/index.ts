@@ -18,12 +18,13 @@ const cors = {
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
 
 const SYSTEM = `You help a parent prepare for a pediatrician visit from their babysitters' logs about one child.
-Summarize, for the period given: feeding (meals, snacks, bottles and amounts), sleep (naps, lengths, how they went), diapers and potty, activities, incidents, and anything unusual or changing over the period.
+Summarize, for the period given: feeding (meals, snacks, bottles: amounts, milk, how much was drunk and the time between bottles, compared with the planned bottles when given), sleep (naps, lengths, how they went), diapers and potty, activities, incidents, and anything unusual or changing over the period.
 Then list 3 to 6 questions the parent may want to ask the pediatrician.
 Write in plain, warm, short language for a parent. Do not diagnose and do not give medical advice. Do not invent facts that are not in the logs. If the logs are thin or cover few days, say so.
 Format: markdown with "## " headings and "- " bullets only. No tables, no bold, no preamble.`;
 
 type Log = { kind: string; data: Record<string, string> | null; kid_ids: string[] | null; urgent: boolean; happened_at: string; shift_id: string };
+type CareItem = { title: string; starts: string | null; ends: string | null; every_minutes?: number | null; details?: { amount?: number; amount_oz?: number; unit?: string; milk?: string } | null };
 type Kid = { name: string; birthdate: string | null; avoid_foods?: string; allergies?: string; health_notes?: string; family_id: string };
 
 const KEEP: Record<string, string[]> = {
@@ -37,10 +38,16 @@ const KEEP: Record<string, string[]> = {
 };
 const DIAPER: Record<string, string> = { wet: 'wet (#1)', dirty: 'dirty (#2)', both: 'wet and dirty', dry: 'dry' };
 
-/** One line per log: "2026-10-05 13:10 nap: started_at=1:00 PM; ended_at=2:30 PM; how=easily". */
+/** One line per log: "2026-10-05 13:10 nap: started_at=1:00 PM; ended_at=2:30 PM; how=easily". A bottle (food, meal
+ * 'bottle', the app's S5b) reads "food: meal=bottle; bottle=4 oz formula; drank=all". */
 function line(l: Log, tz: string): string {
   const when = new Date(l.happened_at).toLocaleString('sv-SE', { timeZone: tz, hour12: false }).slice(0, 16);
   const d = l.data ?? {};
+  if (l.kind === 'food' && d.meal === 'bottle' && (d.bottle_amount || d.milk)) {
+    const bottle = [d.bottle_amount ? `${d.bottle_amount} ${d.bottle_unit === 'ml' ? 'ml' : 'oz'}` : '', d.milk ?? ''].filter(Boolean).join(' ');
+    const parts = ['meal=bottle', bottle ? `bottle=${bottle}` : '', d.amount ? `drank=${d.amount}` : ''].filter(Boolean);
+    return `${when} food${l.urgent ? ' (urgent)' : ''}: ${parts.join('; ')}`;
+  }
   const fields = (KEEP[l.kind] ?? Object.keys(d))
     .filter((k) => d[k])
     .map((k) => `${k}=${k === 'diaper' ? (DIAPER[d[k]] ?? d[k]) : String(d[k]).replace(/\s+/g, ' ').slice(0, 200)}`);
@@ -102,6 +109,16 @@ Deno.serve(async (req) => {
     }
     if (!logs.length) return json({ error: `Nothing logged for ${kid.name} in this time.` }, 422);
 
+    // The parent's planned bottles (care plan P20a) to compare with what was logged. Best effort: none when unreadable.
+    const { data: care } = await db.from('care_items').select('*').eq('kid_id', kidId).eq('type', 'bottle');
+    const planned = ((care ?? []) as CareItem[]).map((c) => {
+      const d = c.details ?? {};
+      const amount = d.amount ?? d.amount_oz;
+      const what = [amount ? `${amount} ${d.unit === 'ml' ? 'ml' : 'oz'}` : '', d.milk ?? ''].filter(Boolean).join(' ') || 'a bottle';
+      const every = c.every_minutes ? `every ${c.every_minutes % 60 ? `${c.every_minutes} min` : `${c.every_minutes / 60} h`}` : '';
+      return [what, every, c.starts ? `from ${c.starts.slice(0, 5)}` : '', c.ends ? `until ${c.ends.slice(0, 5)}` : ''].filter(Boolean).join(' ');
+    });
+
     // The newest MAX_ENTRIES, then oldest first so changes over time read in order. Photos carry only a caption.
     const kept = logs.slice(0, MAX_ENTRIES).reverse();
     const shifts = new Set(kept.map((l) => l.shift_id)).size;
@@ -110,6 +127,7 @@ Deno.serve(async (req) => {
       kid.allergies ? `Allergies: ${kid.allergies}.` : '',
       kid.avoid_foods ? `Foods to avoid: ${kid.avoid_foods}.` : '',
       kid.health_notes ? `Health notes from the parent: ${kid.health_notes}.` : '',
+      planned.length ? `Planned bottles (the parent's care plan): ${planned.join('; ')}.` : '',
     ].filter(Boolean).join('\n');
     const period = `Period: ${since.slice(0, 10)} to ${(until ?? new Date().toISOString()).slice(0, 10)}, ${shifts} sitter shift${shifts === 1 ? '' : 's'}, ${kept.length} log entries${logs.length > kept.length ? ` (the newest ${kept.length} of ${logs.length})` : ''}.`;
     const digest = kept.map((l) => line(l, zone)).join('\n');
