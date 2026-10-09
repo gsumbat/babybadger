@@ -9,9 +9,7 @@ const CHECK = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7" fill="non
 
 const SVG = [
   "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #4B5960; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M6 9l6 6 6-6\"></path></svg>",
-  "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #4B5960; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M6 9l6 6 6-6\"></path></svg>",
-  "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #34526E; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"></path></svg>",
-  "<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #34526E; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M5 12.5l4.5 4.5L19 7.5\"></path></svg>"
+  "<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" style=\"fill: none; stroke: #4B5960; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round\"><path d=\"M6 9l6 6 6-6\"></path></svg>"
 ];
 
 /** Book a shift · drawer */
@@ -157,13 +155,17 @@ export default function WF_P6d() {
         </View>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>KIDS</Text>
         <View style={{ flexDirection: "row", gap: 8 }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A", flexShrink: 1 }}>
-            <SvgXml xml={SVG[2]} width={14} height={14} />
-            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#34526E" }}>Ava</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 6, backgroundColor: "#FBEAEE", borderRadius: 999, borderWidth: 1.5, borderColor: "#D9919F", flexShrink: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, backgroundColor: "#E8B9BE", borderRadius: 10, flexShrink: 1 }}>
+              <Text style={{ fontFamily: font.displayBold, fontSize: 9, color: "#8A3F5A" }}>A</Text>
+            </View>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#8A3F5A" }}>Ava</Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 12, backgroundColor: "#DCE7F1", borderRadius: 999, borderWidth: 1.5, borderColor: "#47698A", flexShrink: 1 }}>
-            <SvgXml xml={SVG[3]} width={14} height={14} />
-            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#34526E" }}>Leo</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6, height: 36, paddingTop: 0, paddingRight: 12, paddingBottom: 0, paddingLeft: 6, backgroundColor: "#E3ECFA", borderRadius: 999, borderWidth: 1.5, borderColor: "#2F6FD6", flexShrink: 1 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", width: 20, height: 20, backgroundColor: "#2F6FD6", borderRadius: 10, flexShrink: 1 }}>
+              <Text style={{ fontFamily: font.displayBold, fontSize: 9, color: "#FFFFFF" }}>L</Text>
+            </View>
+            <Text style={{ fontFamily: font.bodySemi, fontSize: 14, color: "#2F6FD6" }}>Leo</Text>
           </View>
         </View>
         <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, marginTop: 14 }}>FROM THEIR DAYS</Text>

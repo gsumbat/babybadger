@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
-import { KidDot } from '@/components/bits';
+import { KidDot, kidChipTone } from '@/components/bits';
 import { LOG_ICON, PhotoThumb } from '@/components/LogTimeline';
 import { Text } from '@/components/Text';
 import { Button, Chip, ErrorText, Icon, Loading, Screen } from '@/components/ui';
@@ -119,7 +119,7 @@ export default function ShiftLog() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20, marginTop: -2, flexGrow: 0 }} contentContainerStyle={st.kidChips}>
           <Chip label="All" on={!kidId} onPress={() => pick(null)} />
           {kids.map((k) => (
-            <Chip key={k.id} label={k.name} on={k.id === kidId} onPress={() => pick(k.id)} lead={<KidDot kid={k} size={20} />} />
+            <Chip key={k.id} label={k.name} on={k.id === kidId} tone={kidChipTone(k)} onPress={() => pick(k.id)} lead={<KidDot kid={k} size={20} />} />
           ))}
         </ScrollView>
       ) : null}

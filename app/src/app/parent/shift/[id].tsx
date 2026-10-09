@@ -2,7 +2,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
-import { KidDot, SafetyBox, TaskRows } from '@/components/bits';
+import { KidDot, SafetyBox, TaskRows, kidChipTone } from '@/components/bits';
 import { LiveMap } from '@/components/LiveMap';
 import { LogTimeline, PhotoThumb } from '@/components/LogTimeline';
 import { EditableTasksCard } from '@/components/shiftTasks';
@@ -104,7 +104,7 @@ export default function ParentShift() {
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={st.chips} contentContainerStyle={st.chipRow}>
                 <Chip label="All" on={!kidId} onPress={() => pick(null)} />
                 {kids.map((k) => (
-                  <Chip key={k.id} label={k.name} on={k.id === kidId} onPress={() => pick(k.id)} lead={<KidDot kid={k} size={20} />} />
+                  <Chip key={k.id} label={k.name} on={k.id === kidId} tone={kidChipTone(k)} onPress={() => pick(k.id)} lead={<KidDot kid={k} size={20} />} />
                 ))}
               </ScrollView>
             ) : null}

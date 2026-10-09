@@ -49,6 +49,12 @@ export function kidBadge(kid: { color?: string | null; gender?: Kid['gender'] })
   return c === KID_COLORS[0] ? { bg: KID_COLORS[0], ink: '#8A3F5A' } : { bg: kidShade(c), ink: '#FFFFFF' };
 }
 
+/** A selected kid chip in the kid's badge colors: light pink chip for the pink badge, else a pale tint of the color. */
+export function kidChipTone(kid: { color?: string | null; gender?: Kid['gender'] }): { bg: string; border: string; ink: string } {
+  const b = kidBadge(kid);
+  return b.bg === KID_COLORS[0] ? { bg: '#FBEAEE', border: '#D9919F', ink: '#8A3F5A' } : { bg: `${b.bg}1F`, border: b.bg, ink: b.bg };
+}
+
 export function KidDot({ kid, size = 36 }: { kid: Pick<Kid, 'name' | 'color'> & { gender?: Kid['gender'] }; size?: number }) {
   const b = kidBadge(kid);
   return (

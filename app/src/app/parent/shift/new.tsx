@@ -14,7 +14,7 @@ import { useRequirePlan } from '@/lib/billing';
 import { useSession } from '@/lib/session';
 import { errorText, supabase } from '@/lib/supabase';
 import { color, font } from '@/theme';
-import { KidDot } from '@/components/bits';
+import { KidDot, kidChipTone } from '@/components/bits';
 import { Text } from '@/components/Text';
 import { TimeField } from '@/components/TimeField';
 
@@ -180,7 +180,7 @@ export default function NewShift() {
           <Label>Kids</Label>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {allowedKids.map((k) => (
-              <Chip key={k.id} label={k.name} on={shiftKidIds.includes(k.id)} onPress={() => setKidIds(shiftKidIds.includes(k.id) ? shiftKidIds.filter((x) => x !== k.id) : [...shiftKidIds, k.id])} />
+              <Chip key={k.id} label={k.name} on={shiftKidIds.includes(k.id)} tone={kidChipTone(k)} lead={<KidDot kid={k} size={20} />} onPress={() => setKidIds(shiftKidIds.includes(k.id) ? shiftKidIds.filter((x) => x !== k.id) : [...shiftKidIds, k.id])} />
             ))}
           </View>
         </>

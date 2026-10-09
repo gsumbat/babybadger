@@ -229,11 +229,13 @@ export function Field({ label, hint, ...props }: TextInputProps & { label: strin
 }
 
 /** A choice chip. `lead` (a kid dot on P7) shows instead of the check, selected or not. */
-export function Chip({ label, on, onPress, lead }: { label: string; on?: boolean; onPress?: () => void; lead?: ReactNode }) {
+/** `tone` colors a selected chip, e.g. a kid's own badge colors (kidChipTone): pink for Ava, blue for Leo. */
+export function Chip({ label, on, onPress, lead, tone }: { label: string; on?: boolean; onPress?: () => void; lead?: ReactNode; tone?: { bg: string; border: string; ink: string } }) {
+  const ink = on ? (tone?.ink ?? color.primaryStrong) : color.ink;
   return (
-    <Pressable accessibilityRole="button" accessibilityState={{ selected: !!on }} onPress={onPress} style={[s.chip, on ? s.chipOn : s.chipOff]}>
-      {lead ?? (on ? <Icon name="check" size={14} tint={color.primaryStrong} /> : null)}
-      <Text style={[s.chipText, { color: on ? color.primaryStrong : color.ink }]}>{label}</Text>
+    <Pressable accessibilityRole="button" accessibilityState={{ selected: !!on }} onPress={onPress} style={[s.chip, on ? s.chipOn : s.chipOff, on && tone && { backgroundColor: tone.bg, borderColor: tone.border }]}>
+      {lead ?? (on ? <Icon name="check" size={14} tint={ink} /> : null)}
+      <Text style={[s.chipText, { color: ink }]}>{label}</Text>
     </Pressable>
   );
 }
