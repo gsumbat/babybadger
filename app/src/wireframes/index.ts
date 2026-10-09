@@ -116,6 +116,7 @@ import WF_P5h from './P5h';
 import WF_P5i from './P5i';
 import WF_P5j from './P5j';
 import WF_P5k from './P5k';
+import WF_P5m from './P5m';
 import WF_P6a from './P6a';
 import WF_P6b from './P6b';
 import WF_P6bh from './P6bh';
@@ -232,6 +233,7 @@ import WF_S45 from './S45';
 import WF_S48 from './S48';
 import WF_S4b from './S4b';
 import WF_S4c from './S4c';
+import WF_S4m from './S4m';
 import WF_S4p from './S4p';
 import WF_S4t from './S4t';
 import WF_S5 from './S5';
@@ -243,6 +245,7 @@ import WF_S53 from './S53';
 import WF_S53b from './S53b';
 import WF_S53c from './S53c';
 import WF_S53d from './S53d';
+import WF_S5b from './S5b';
 import WF_S6 from './S6';
 import WF_S6a from './S6a';
 import WF_S6c from './S6c';
@@ -369,6 +372,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   P5i: WF_P5i,
   P5j: WF_P5j,
   P5k: WF_P5k,
+  P5m: WF_P5m,
   P6a: WF_P6a,
   P6b: WF_P6b,
   P6bh: WF_P6bh,
@@ -485,6 +489,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   S48: WF_S48,
   S4b: WF_S4b,
   S4c: WF_S4c,
+  S4m: WF_S4m,
   S4p: WF_S4p,
   S4t: WF_S4t,
   S5: WF_S5,
@@ -496,6 +501,7 @@ export const WIREFRAMES: Record<string, ComponentType> = {
   S53b: WF_S53b,
   S53c: WF_S53c,
   S53d: WF_S53d,
+  S5b: WF_S5b,
   S6: WF_S6,
   S6a: WF_S6a,
   S6c: WF_S6c,
