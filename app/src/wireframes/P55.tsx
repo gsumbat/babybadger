@@ -73,7 +73,10 @@ export default function WF_P55() {
           </View>
         </View>
         <View style={{ flexDirection: "column", gap: 8, paddingTop: 14, paddingRight: 14, paddingBottom: 14, paddingLeft: 14, backgroundColor: "#FFFFFF", borderRadius: 24, ...cardShadow }}>
-          <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6 }}>THIS WEEK</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+            <Text style={{ fontFamily: font.bodyBold, fontSize: 13, color: "#4B5960", letterSpacing: 0.6, flexShrink: 1 }}>THIS WEEK</Text>
+            <View style={{ flexShrink: 1 }}><Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#47698A", textDecorationLine: "underline" }}>Her report ›</Text></View>
+          </View>
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
             <Text style={{ fontFamily: font.body, fontSize: 14, color: "#1B2328", flexShrink: 1 }}>Shifts with a sitter</Text>
             <Text style={{ fontFamily: font.bodyBold, fontSize: 14, color: "#1B2328", flexShrink: 1 }}>3</Text>
