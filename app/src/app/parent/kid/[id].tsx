@@ -23,8 +23,8 @@ const HEART_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="#4B5960" stroke
 // tappable): they need the kid's own phone, which comes after phase 1 (P55z). The plan tile reads "Her plan" / "His plan" from the optional gender, "Plan" without one,
 // and opens her day (P20k): her routine and the family's to-dos in one timeline. No separate Routine row (it
 // opened the same day).
-// THIS WEEK counts her shifts (shift_kids) and "Last report" opens the latest completed one as her report (P5k, ?kidId=).
-// The whole card, with "Her report ›" in its header, opens Ava’s report over the week (P5h, /parent/kid/report).
+// The HER REPORT card (this week's shift count and her last shift, as plain text) is the one way into her reports:
+// the whole card opens Ava’s report (P5h, /parent/kid/report), where every shift of hers is listed.
 // A read-only member (P55h) reads it: no Edit, Care and safety opens the read-only view (P19v) instead of the editor
 // (P19e), the plan tile opens the day read-only (P20h), and the note "Jen manages Ava’s profile." at the end.
 export default function KidProfile() {
@@ -111,21 +111,20 @@ export default function KidProfile() {
         </Pressable>
       </View>
 
-      <Pressable accessibilityRole="button" accessibilityLabel={`${reportLink(kid.gender).replace(' ›', '')}, this week`} onPress={() => router.push(`/parent/kid/report?kidId=${kid.id}&range=week`)} style={({ pressed }) => [st.weekCard, pressed && { opacity: 0.85 }]}>
+      {/* One way into her reports: the whole card opens Ava’s report (P5h), where every shift of hers lives. */}
+      <Pressable accessibilityRole="button" accessibilityLabel={reportTitle(kid.gender)} onPress={() => router.push(`/parent/kid/report?kidId=${kid.id}&range=week`)} style={({ pressed }) => [st.weekCard, pressed && { opacity: 0.85 }]}>
         <View style={st.weekRow}>
-          <Text style={st.label}>THIS WEEK</Text>
-          <Text style={st.reportLink}>{reportLink(kid.gender)}</Text>
+          <Text style={st.label}>{reportTitle(kid.gender).toUpperCase()}</Text>
+          <Icon name="chevron-right" size={18} tint={color.ink2} />
         </View>
         <View style={st.weekRow}>
-          <Text style={st.weekText}>Shifts with a sitter</Text>
+          <Text style={st.weekText}>Shifts with a sitter this week</Text>
           <Text style={[st.weekText, { fontFamily: font.bodyBold }]}>{week.count}</Text>
         </View>
         {week.last ? (
           <View style={st.weekRow}>
-            <Text style={st.weekText}>Last report</Text>
-            <Pressable accessibilityRole="link" onPress={() => router.push(`/parent/shift/${week.last!.id}?kidId=${kid.id}`)} style={{ flexShrink: 1 }}>
-              <Text style={st.link}>{new Date(week.last.starts_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</Text>
-            </Pressable>
+            <Text style={st.weekText}>Last shift</Text>
+            <Text style={[st.weekText, { fontFamily: font.bodyBold }]}>{new Date(week.last.starts_at).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</Text>
           </View>
         ) : null}
       </Pressable>
@@ -135,8 +134,9 @@ export default function KidProfile() {
 }
 
 /** THIS WEEK header link: "Her report ›" / "His report ›", "Report ›" without a gender. */
-function reportLink(gender: Parameters<typeof pronouns>[0]) {
-  return gender ? `${pronouns(gender).poss[0].toUpperCase()}${pronouns(gender).poss.slice(1)} report ›` : 'Report ›';
+/** "Her report" / "His report" / "Report". */
+function reportTitle(gender: Parameters<typeof pronouns>[0]) {
+  return gender ? `${pronouns(gender).poss[0].toUpperCase()}${pronouns(gender).poss.slice(1)} report` : 'Report';
 }
 
 // P55 values
@@ -165,7 +165,5 @@ const st = StyleSheet.create({
   weekCard: { gap: 8, padding: 14, backgroundColor: '#FFFFFF', borderRadius: 24, ...cardShadow },
   label: { fontFamily: font.bodyBold, fontSize: 13, color: color.ink2, letterSpacing: 0.6 },
   weekRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  reportLink: { fontFamily: font.bodySemi, fontSize: 14, color: color.primary },
   weekText: { fontFamily: font.body, fontSize: 14, color: color.ink, flexShrink: 1 },
-  link: { fontFamily: font.bodySemi, fontSize: 14, color: color.primary, textDecorationLine: 'underline' },
 });
