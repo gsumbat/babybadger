@@ -46,8 +46,8 @@ const TILES: Record<string, Tile> = {
   book: { icon: 'plus', label: 'Book a shift', onPress: () => router.push('/parent/shift/new') },
   rules: { icon: 'clipboard', label: 'House rules', onPress: () => router.push('/parent/rules') },
   care: { icon: 'list', label: 'Care plan', onPress: () => router.push('/parent/care') },
-  // P13k: the kids list (devices there are Coming soon).
-  devices: { icon: 'smartphone', label: 'Kids & devices', onPress: () => router.push('/parent/kids') },
+  // P13k: kids' phones and trackers (Coming soon). The kids themselves are the Kids list above the tiles.
+  devices: { icon: 'smartphone', label: 'Devices', onPress: () => router.push('/parent/devices') },
   pay: { icon: 'credit-card', label: 'Pay sitter', onPress: soon('Pay sitter') },
   requirements: { icon: 'shield', label: 'Required', onPress: () => router.push('/parent/requirements') },
 };
@@ -166,9 +166,9 @@ export default function ParentHome({ full = false }: { full?: boolean }) {
       {/* P4b "Needs you": open pool requests (P46). Invoices aren't built. */}
       {!setup && !full && !helper && <ParentRequestsNeedYou familyId={fid} />}
 
-      {/* P4a has no grid. Find a sitter and Ask my pool aren't on Home (Sitters tab); Pay sitter says Coming soon; Kids & devices opens P13k; Required opens P7a. */}
+      {/* P4a has no grid. Find a sitter and Ask my pool aren't on Home (Sitters tab); Pay sitter says Coming soon; Devices opens P13k; Required opens P7a. */}
       {explore ? (
-        // P4e: "Invite a sitter", "House rules" and "Care plan" are built; Kids & devices is left out.
+        // P4e: "Invite a sitter", "House rules" and "Care plan" are built; Devices is left out.
         <>
           <View style={{ gap: 8, marginTop: 2 }}>
             <Text style={st.label}>WHAT DO YOU NEED?</Text>

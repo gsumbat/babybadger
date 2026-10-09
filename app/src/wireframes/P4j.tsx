@@ -86,9 +86,9 @@ export default function WF_P4j() {
               <SvgXml xml={SVG[4]} width={22} height={22} />
               <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Care plan</Text>
             </View>
-            <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 70, paddingTop: 14, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P13-KidsDevices.dc.html */}
+            <View style={{ flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 5, height: 70, paddingTop: 14, paddingRight: 4, paddingBottom: 0, paddingLeft: 4, backgroundColor: "#DCE7F1", borderRadius: 18, flexShrink: 1, flexGrow: 1, flexBasis: 0, minWidth: 0 }}>{/* -> P13k-Kids.dc.html */}
               <SvgXml xml={SVG[5]} width={22} height={22} />
-              <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Kids & devices</Text>
+              <Text style={{ fontFamily: font.bodyBold, fontSize: 12, color: "#34526E", lineHeight: 14, textAlign: "center" }}>Devices</Text>
             </View>
           </View>
         </View>

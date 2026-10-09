@@ -18,7 +18,7 @@ import { Text, TextInput } from '@/components/Text';
 
 // Wireframe P12b (settings · account; supersedes P12): grouped settings rows, account, sign out.
 // Family members opens P78 ("Jen, Dan · 2 of 4 seats", migration 30). Sitters opens P27, Homes and places P56, House rules P74,
-// Kids and devices P13k (the kids list; devices there are Coming soon). Rows whose screens aren't built show their value and
+// Devices and trackers P13k (kids' phones and trackers, all Coming soon; the kids are on Home). Rows whose screens aren't built show their value and
 // don't open anything: Consent records. Subscription: with billing on (EXPO_PUBLIC_BILLING=1)
 // it reads the plan ("Free trial · ends Nov 6", "Family · monthly", "Payment issue", "Start free trial") and opens
 // P39, or P36 when the family has no plan; with billing off it reads "Coming soon" and opens nothing. Alerts: "Arrivals and departures" is profiles.alert_arrivals (migration 21; trip alerts skip a
@@ -47,17 +47,15 @@ export default function Settings() {
   const [phoneOpen, setPhoneOpen] = useState(false);
   const { data, error } = useQuery(async () => {
     // house_rules arrives with migration 09, places with 16; until they're run the rows read "None yet".
-    const [kids, sitters, parents, rules, places] = await Promise.all([
-      api.kids(fid),
+    const [sitters, parents, rules, places] = await Promise.all([
       api.familySitters(fid),
       api.familyParents(fid),
       rulesApi.rules(fid).catch(() => []),
       placesApi.list(fid).catch(() => []),
     ]);
-    return { kids, sitters, parents, rules, places };
+    return { sitters, parents, rules, places };
   }, [fid]);
   const members = membersRowValue(data?.parents.length ? data.parents.map((p) => p.full_name) : [profile?.full_name ?? '']);
-  const kids = (data?.kids ?? []).map((k) => k.name).join(', ');
   const sitterLinks = data?.sitters ?? [];
   const sitters = sitterLinks.map((s) => firstName(s.profile?.full_name)).join(', ');
   const signed = sitterLinks.filter((s) => s.status === 'active').length;
@@ -74,7 +72,7 @@ export default function Settings() {
       <Text style={st.section}>FAMILY</Text>
       <Card style={st.card}>
         <SetRow label="Family members" value={members} onPress={() => router.push('/parent/members')} />
-        <SetRow label="Kids and devices" value={kids || 'None yet'} onPress={() => router.push('/parent/kids')} />
+        <SetRow label="Devices and trackers" value="Coming soon" onPress={() => router.push('/parent/devices')} />
         <SetRow label="Sitters" value={sitters || 'None yet'} onPress={familyRole === 'helper' ? undefined : () => router.push('/parent/sitter-list')} />
         <SetRow label="Homes and places" value={placesCountLabel(data?.places ?? [])} onPress={() => router.push('/parent/places')} />
         <SetRow label="House rules" value={rulesLabel(data?.rules.length ?? 0)} onPress={() => router.push('/parent/rules')} last />
