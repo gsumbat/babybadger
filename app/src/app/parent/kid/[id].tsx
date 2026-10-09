@@ -14,11 +14,13 @@ import { Text } from '@/components/Text';
 // Icons from wireframe P55.
 const PENCIL = '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
 const LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h0M4.5 12h0M4.5 18h0"/></svg>';
+const PIN = '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+const CHAT = '<svg viewBox="0 0 24 24" fill="none" stroke="#47698A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>';
 const HEART_PLUS = '<svg viewBox="0 0 24 24" fill="none" stroke="#4B5960" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z"/><path d="M12 10v5M9.5 12.5h5"/></svg>';
 
 // Wireframe P55 Child profile, from app/src/wireframes/P55.tsx. Left out until built: grade and school, the
-// kid's location line, the See on map / Message tiles (the plan tile keeps its third of the row), and the phone and
-// Who looks after rows. The plan tile reads "Her plan" / "His plan" from the optional gender, "Plan" without one,
+// kid's location line, and the phone and Who looks after rows. See on map / Message Ava show greyed out (not
+// tappable): they need the kid's own phone, which comes after phase 1 (P55z). The plan tile reads "Her plan" / "His plan" from the optional gender, "Plan" without one,
 // and opens her day (P20k): her routine and the family's to-dos in one timeline. No separate Routine row (it
 // opened the same day).
 // THIS WEEK counts her shifts (shift_kids) and "Last report" opens the latest completed one as her report (P5k, ?kidId=).
@@ -65,12 +67,20 @@ export default function KidProfile() {
       </View>
 
       <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View accessibilityRole="button" accessibilityState={{ disabled: true }} accessibilityHint="Coming later" style={[st.tile, st.tileOff]}>
+          <SvgXml xml={PIN} width={20} height={20} style={{ flexShrink: 0 }} />
+          <Text style={st.tileText}>See on map</Text>
+        </View>
+        <View accessibilityRole="button" accessibilityState={{ disabled: true }} accessibilityHint="Coming later" style={[st.tile, st.tileOff]}>
+          <SvgXml xml={CHAT} width={20} height={20} style={{ flexShrink: 0 }} />
+          <Text style={st.tileText} numberOfLines={1}>
+            Message {kid.name}
+          </Text>
+        </View>
         <Pressable accessibilityRole="button" onPress={() => router.push(`/parent/kid/routine?kidId=${kid.id}`)} style={st.tile}>
           <SvgXml xml={LIST} width={20} height={20} style={{ flexShrink: 0 }} />
           <Text style={st.tileText}>{kid.gender ? `${pronouns(kid.gender).poss[0].toUpperCase()}${pronouns(kid.gender).poss.slice(1)} plan` : 'Plan'}</Text>
         </Pressable>
-        <View style={{ flex: 1 }} />
-        <View style={{ flex: 1 }} />
       </View>
 
       {kid.allergies || rest ? (
@@ -138,6 +148,7 @@ const st = StyleSheet.create({
   listRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 58, paddingVertical: 8 },
   // "See on map / Message / Her plan" tiles: a third of the row each.
   tile: { flex: 1, minWidth: 0, height: 64, borderRadius: 18, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  tileOff: { opacity: 0.4 },
   tileText: { fontFamily: font.bodyBold, fontSize: 12, color: color.primaryStrong },
   listIcon: { width: 36, height: 36, flexShrink: 0, borderRadius: 12, backgroundColor: color.primaryTint, alignItems: 'center', justifyContent: 'center' },
   rowTitle: { fontFamily: font.bodySemi, fontSize: 15, color: color.ink },
